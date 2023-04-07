@@ -1,21 +1,28 @@
-# SDO Analysis Toolkit (SAT)
-[V 1.0]
-MATLAB Package for implementing Stochastic Dynamic Operator (SDO) methods from time series and point process data. 
+# SDO Analysis Toolkit (SAT) [V 1.0]
+MATLAB Package for implementing Stochastic Dynamic Operator (SDO) methods from time series and point process data. SDO methods improves upon the classical spike-triggered average for neural analysis. 
 
+If you use this software, please cite : ... 
 
-____*INSTALLATION*____: 
+__Prerequisites__: 
 
-Add 'sat-master' to path ('add Folder with Subfolders')
+- Class-Based Implementation requires MATLAB 2019a or newer.
+- Programmatic Implementation requires MATLAB 2015 or newer. 
 
-Demonstration of the STA and SDO methods, and their comparisons can be evaluated with 'ssta_sdo.m'
+## Installation
 
-Description of the included scripts may be found in the 'documentation' folder. 
+A full walkthrough for installing and using the <em> SDO Analysis Toolkit </em> can be found within '\sat-master\documentation'.
 
-SAT capabilities demonstrated using either 'sdoAnalysis_demo.m' or 'sdoAnalysis_demo_OOP.m' 
+1. Download the <em> SDO Analysis Toolkit </em> onto local device. 
+2. Add 'sat-master' to path ('add Folder with Subfolders') within MATLAB. 
+3. Place demonstration data ('xtData.mat', 'ppData.mat') within '\sat-master\demoData\'. 
+4. Run 'ssta_sdo.m' to produce plots which compare the STA vs. SDO methods within the trial dataset. 
+5. Run 'sdoAnalysis_demo.m' or 'sdoAnalysis_demo_OOP.m' for performing the complete trial analysis. 
+  1. When prompted, select 'xtData.mat' from within the '\sat-master\demoData\' folder. 
+  2. When prompted, select 'ppData.mat' from within the '\sat-master\demoData\' folder. 
 
-OOP-Based Class/Methods:
+## OOP-Based Class/Methods:
 
-_______*CLASSES*_______: 
+### Classes
 
 ppDataCell 	- Class for point-process (i.e. spike) data
 
