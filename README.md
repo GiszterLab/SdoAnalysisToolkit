@@ -1,6 +1,8 @@
 # SDO Analysis Toolkit (SAT) [V 1.0]
 MATLAB Package for implementing Stochastic Dynamic Operator (SDO) methods from time series and point process data. SDO methods improves upon the classical spike-triggered average for neural analysis. 
 
+![SDO Logo](https://github.com/GiszterLab/SdoAnalysisToolkit/STA_logo.png)
+
 If you use this software, please cite : ... 
 
 __Prerequisites__: 
