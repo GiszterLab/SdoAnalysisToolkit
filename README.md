@@ -1,6 +1,7 @@
 # SDO Analysis Toolkit (SAT)
 [V 1.0]
-MATLAB Package for Stochastic Analysis of Time Series and Point Process Data 
+MATLAB Package for implementing Stochastic Dynamic Operator (SDO) methods from time series and point process data. 
+
 
 ____*INSTALLATION*____: 
 
@@ -23,3 +24,5 @@ xtDataCell	- Class for time-series (e.g. EMG) data
 pxt 		    - Class for (observed) probability distribution data (at sampled time points)
 
 sdoMat  	  - Class for holding the SDO, along with other hypotheses
+
+sdoMultiMat - Class for computing multiple SDOs from ppDataCell and xtDataCell
