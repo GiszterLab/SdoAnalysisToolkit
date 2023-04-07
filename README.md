@@ -24,12 +24,12 @@ A full walkthrough for installing and using the <em> SDO Analysis Toolkit </em> 
 
 ### Classes
 
-ppDataCell 	- Class for point-process (i.e. spike) data
+**ppDataCell** 	- Class for point-process (i.e. spike) data
 
-xtDataCell	- Class for time-series (e.g. EMG) data 
+**xtDataCell**	- Class for time-series (e.g. EMG) data 
 
-pxt 		    - Class for (observed) probability distribution data (at sampled time points)
+**pxt** 		    - Class for (observed) probability distribution data (at sampled time points)
 
-sdoMat  	  - Class for holding the SDO, along with other hypotheses
+**sdoMat**  	  - Class for holding the SDO, along with other hypotheses
 
-sdoMultiMat - Class for computing multiple SDOs from ppDataCell and xtDataCell
+**sdoMultiMat** - Class for computing multiple SDOs from ppDataCell and xtDataCell
