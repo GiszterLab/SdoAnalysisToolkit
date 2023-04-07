@@ -2,7 +2,7 @@
 [V 1.0]
 MATLAB Package for Stochastic Analysis of Time Series and Point Process Data 
 
-INSTALLATION: 
+____*INSTALLATION*____: 
 
 Add 'sat-master' to path ('add Folder with Subfolders')
 
@@ -12,9 +12,14 @@ Description of the included scripts may be found in the 'documentation' folder.
 
 SAT capabilities demonstrated using either 'sdoAnalysis_demo.m' or 'sdoAnalysis_demo_OOP.m' 
 
-OOP-Based Class/Methods: 
-_______ CLASSES_______
+OOP-Based Class/Methods:
+
+_______*CLASSES*_______: 
+
 ppDataCell 	- Class for point-process (i.e. spike) data
+
 xtDataCell	- Class for time-series (e.g. EMG) data 
+
 pxt 		    - Class for (observed) probability distribution data (at sampled time points)
+
 sdoMat  	  - Class for holding the SDO, along with other hypotheses
