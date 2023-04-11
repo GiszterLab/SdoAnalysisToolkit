@@ -33,7 +33,7 @@ A full walkthrough for installing and using the <em> SDO Analysis Toolkit </em> 
 
 User data must be first formatted for use within the <em>Toolkit</em>. 
 
-Data Structures are contained within a {2, N_TRIALS} <em>cell</em>. 
+Example Data Structures are trialwise data contained within a {2, N_TRIALS} <em>cell</em>. 
 - The first row of each data structure contains primary user data, which has been bungled as described below. 
 - The second row corresponds to trialwise metadata which should be retained in the final element (Note that in this latter case, the parameters are passed passively). 
 - Primary data corresponds to a row within each trial. 
