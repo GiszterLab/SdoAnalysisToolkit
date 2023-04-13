@@ -29,6 +29,16 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         decomposeMethod     char {mustBeMember(decomposeMethod, {'pca', 'ica'})} = 'pca'; 
     end
     methods
+        %% __ CONSTRUCTOR
+        function obj = xtDataCell(N_TRIALS, N_CHANNELS)
+            S = SAT.xtDataHolder_new(N_TRIALS, N_CHANNELS); 
+            obj.data        = S(1,:); 
+            obj.metadata    = S(2,:); 
+            obj.nTrials     = N_TRIALS; 
+            obj.nChannels   = N_CHANNELS; 
+        end
+
+
         %% __ Populate/Import
         function obj = import(obj,dataCell) 
             %// Grab from the standard 'xtDataCell' cell-struct struct;
@@ -140,7 +150,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                     xtData2(m,:,tr) = fxt; 
                 end
             end
-            1; 
+            obj.importTensor(xtData2); 
         end
        
         % __ BIT-WISE FUNCTION OPERATION
@@ -237,8 +247,10 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                     N_TEN_TR = N_USE_TR; 
                     [sz_x,sz_y] = size(ten); 
                     if sz_x == N_USE_CH
+                        N_TEN_CH = sz_x; 
                         ten = reshape(ten, N_USE_CH, [], 1); 
                     elseif sz_y == N_USE_CH
+                        N_TEN_CH = sz_y; 
                         ten = rehape(ten', N_USE_CH, [], 1); 
                     else
                         error("Size of Input Tensor does not match expected parsing parameters"); 
