@@ -63,7 +63,7 @@ switch clssType
             xt = xtData(iCh).(p.fieldname); 
             sigLevels = pxTools.getXtSignalLevels(max(xt), min(xt), N_BINS, MAP_METHOD ); 
             sigLevelCell{iCh, N_TRIALS} = sigLevels; 
-            xtData(ich).signalLevels = sigLevels; 
+            xtData(iCh).signalLevels = sigLevels; 
         end
         %// Assign Params;     
     case 'cell'
