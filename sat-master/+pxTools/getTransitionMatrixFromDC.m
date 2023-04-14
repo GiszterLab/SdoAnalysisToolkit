@@ -4,7 +4,7 @@
 % Trevor S. Smith, 2022
 % Drexel University College of Medicine
 
-function [mat] = pxTools_getTransitionMatrixFromDC(xtDataCell, XT_DC_CH_NO, varargin)
+function [mat] = getTransitionMatrixFromDC(xtData, XT_DC_CH_NO, varargin)
 p = inputParser; 
 addParameter(p, 'N_BINS', 20); 
 addParameter(p, 'XT_MAP_MODE', 'log'); 
@@ -27,10 +27,13 @@ PX_NSHIFT   = pR.PX_NSHIFT;
 PX_ZDELAY   = pR.PX_ZDELAY; 
 
 %// Demo different state maps
-[~, xtDataCell] = createXtStateMap(xtDataCell, N_BINS, ... 
+[~, xtData] = pxTools.getXtStateMap(xtData, N_BINS, ... 
     'mapMode', XT_MAP_MODE); 
+
+%[~, xtDataCell] = createXtStateMap(xtDataCell, N_BINS, ... 
+%    'mapMode', XT_MAP_MODE); 
 try
-    XT_HZ = xtDataCell{1,1}(XT_DC_CH_NO).fs; 
+    XT_HZ = xtData{1,1}(XT_DC_CH_NO).fs; 
 catch
     XT_HZ = 2000; 
 end
@@ -38,8 +41,8 @@ end
 N_PX0_PTS = round(PX0_DURA_MS*XT_HZ/1000); 
 N_PX1_PTS = round(PX1_DURA_MS*XT_HZ/1000); 
 
-trList = 1:size(xtDataCell,2); 
-[pxt0Cell, pxt1Cell] = pxTools_getTrialwisePxt(xtDataCell, [], trList, XT_DC_CH_NO, ...
+trList = 1:size(xtData,2); 
+[pxt0Cell, pxt1Cell] = pxTools.getTrialwisePxt(xtData, [], trList, XT_DC_CH_NO, ...
     'pxNPoints', [N_PX0_PTS,N_PX1_PTS], ...
     'pxFilter', [PX_FSM_WID,PX_FSM_STD ], ...
     'pxShift', PX_NSHIFT, ...
