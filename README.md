@@ -12,7 +12,11 @@ __Prerequisites__:
 - Programmatic Implementation requires MATLAB 2015 or newer. 
 
 __Toolboxes__: 
+- <em> Statistics and Machine Learning Toolbox </em>
+- <em> Signal Processing Toolbox </em>
 - <em>Image Processing Toolbox </em> (Optional visualization)
+- <em> DSP System Toolbox </em> (Optional Notch Filtering Method on <em>xtDataCell</em>)
+
 
 ## Citation Requirement
 If you use any version of this software, please cite : ... 
