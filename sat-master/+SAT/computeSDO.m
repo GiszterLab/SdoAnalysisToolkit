@@ -249,7 +249,7 @@ else
         ppChRng0 = 1; %reset w/ start index on successful row
     end
     
-    [sdo] = mergeSDOChunkArray(sdoChunkArr); 
+    [sdo] = SAT.sdoUtils.mergeSDOChunkArray(sdoChunkArr); 
     
     %_________
     clear sdoChunkArr xtChRng0 xtRange0 xtRange1 ppChRng0 ppChRng1 

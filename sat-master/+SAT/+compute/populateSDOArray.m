@@ -125,7 +125,7 @@ if ~isempty(pxNPoints)
     N_PX1_PTS = pxNPoints(2); 
 elseif length(pxNPoints) == 1
     N_PX0_PTS = pxNPoints(1); 
-    N_PX1_PTS = pxNPointS(1); 
+    N_PX1_PTS = pxNPoints(1); 
 else
     N_PX0_PTS = 20; 
     N_PX1_PTS = 20; 

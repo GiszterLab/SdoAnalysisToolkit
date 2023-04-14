@@ -49,8 +49,8 @@ switch method
         
         
         %// spline pre-spike obs to estimate frequency (alpha vals)
-        px0px1 = pxTools_splinePx(px0px1,1); 
-        normMat = pxTools_splinePx(px0px1,2); 
+        px0px1 = pxTools.splinePx(px0px1,1); 
+        normMat = pxTools.splinePx(px0px1,2); 
 
     case 'unity'
         %// normalize joint SDO matrix matix to 1; apply equivalent norm
@@ -80,7 +80,5 @@ dNSdo(isnan(dNSdo)) = 0;
 
 jNSdo = reshape(jNSdo, N_BINS, N_BINS, []); 
 dNSdo = reshape(dNSdo, N_BINS, N_BINS, []); 
-
-1; 
 
 end
