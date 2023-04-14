@@ -202,7 +202,7 @@ switch celltype
                     if LEVEL == 3
                         %// filter-level background
                         fLen = min(el((el(:,col) > 1), col)); 
-                        x_bck = movmedian(xi, fLen); 
+                        x_bck = movmedian(x1, fLen); 
                         xt = x1 - x_bck + x0; 
                     else
                         xt = x1+x0; 
