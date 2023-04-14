@@ -173,8 +173,8 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 N_DIMS = ndims(xtTen1); 
                 if N_DIMS == 2 
                     N_TEN_TR = 1; 
-                    [N_TEN_CH, ~] = size(ten); 
-                    xtTen1 = reshape(xtTen1, 1, N_TEN_CH, N_TEN_PT); 
+                    [N_TEN_CH, ~] = size(xtTen1); 
+                    xtTen1 = reshape(xtTen1, 1, N_TEN_CH,[]); 
                 else
                     [N_TEN_TR, N_TEN_CH, ~] = size(xtTen1);
                 end
@@ -251,7 +251,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                         ten = reshape(ten, N_USE_CH, [], 1); 
                     elseif sz_y == N_USE_CH
                         N_TEN_CH = sz_y; 
-                        ten = rehape(ten', N_USE_CH, [], 1); 
+                        ten = reshape(ten', N_USE_CH, [], 1); 
                     else
                         error("Size of Input Tensor does not match expected parsing parameters"); 
                     end
