@@ -218,7 +218,7 @@ switch type
         %fSignal_bkend=sqrt(filtfilt(1/mov*ones(1,mov),1,signalH.^2));
         signalH = ffxt(B,A,signal); 
         fSignal = sqrt(ffxt(b2,1,signalH.^2)); 
-        
+        1; 
 end
 
 if TRANSPOSE
