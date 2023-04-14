@@ -1,13 +1,15 @@
 %% predictSDO
 %
+% NOT RECOMMENDED (Preferred to use 'pxt' and 'sdoMat' classes to generate predictions).  
+%
 %  Standalone Header Script for predicting (and plotting) state from the SDO
 % and a given dataset (xtDataCell + ppDataCell)
 %
-% 'sdo' should be loaded into memory, 'xtDataCell' and 'ppDataCell' should
+% 'sdo' should be loaded into memory, 'xtData' and 'ppData' should
 % either be loaded into memory or defined; 
 
-xtDataCellName  = 'emgCell';     
-ppDataCellName  = 'spikeTimeCell'; 
+xtDataName  = 'emgCell';     
+ppDataName  = 'spikeTimeCell'; 
 
 %// Positions are within the relative DATACELL
 XT_DC_CH_NO = 8; 
@@ -24,21 +26,21 @@ N_DT_INTERVALS = 1; %[numeric]
 PLOT_ON         = 1; 
 SAVE_FIG        = 1; 
 SAVE_FMT        = 'svg'; %['png'/'svg']; 
-SAVE_DIR        = "C:\Users\Frog\Desktop\2022_SDO_Paper_Figs\_MATLAB_svg\DFSF69-08182020-VExCh17-New\"; %targeted directory for saving figures; else will query.
+SAVE_DIR        = ""; %targeted directory for saving figures; else will query.
 
 %%
 %______
-if ~exist('xtDataCell', 'var')
-    xtDataCell = eval(xtDataCellName); 
+if ~exist('xtData', 'var')
+    xtData = eval(xtDataName); 
 end
-if ~exist('ppDataCell', 'var')
-    ppDataCell = eval(ppDataCellName); 
+if ~exist('ppData', 'var')
+    ppData = eval(ppDataName); 
 end
 
 %% Predict Post-spike Distributions
 
-[predicted_px, observed_px, ~, normTMat] = predictSDO_predictPx(...
-    sdo, xtDataCell, ppDataCell,...
+[predicted_px, observed_px, ~, normTMat] = SAT.predict.predictPx(...
+    sdo, xtData, ppData,...
     XT_DC_CH_NO,...
     PP_DC_CH_NO,...
     "xtID", XT_CH_NAME, ...
@@ -66,11 +68,11 @@ end
 %% Plot Predictions
 
 if PLOT_ON
-    plotProp = predictSDO_assignPlotterProperties(sfields); 
-    predictSdo.plotter;
+    plotProp = SAT.predict.assignPlotterProperties(sfields); 
+    SAT.predict.plotter;
 end
 
 %% Varspace Cleanup
-clear gg hh N_DT_INTERVALS nFields nFieldsObs ppDataCellName sfields sfieldsObs
+clear gg hh N_DT_INTERVALS nFields nFieldsObs ppDataName sfields sfieldsObs
 clear STATE_ASSIGNMENT clear normTMat
 

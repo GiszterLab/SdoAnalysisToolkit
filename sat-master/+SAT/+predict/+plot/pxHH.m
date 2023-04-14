@@ -19,7 +19,7 @@
 % Trevor S. Smith, 2023
 % Drexel University College of Medicine
 
-function predictSDO_plot_pxHH(matStruct, varargin)
+function pxHH(matStruct, varargin)
 p = inputParser; 
 addParameter(p, 'saveFig', 0); 
 addParameter(p, 'saveFormat', 'png');
@@ -46,7 +46,7 @@ figure;
 for f = 1:N_FIELDS
     subplot(2,N_COLS,f); 
     mat = matStruct.(sfields{f}); 
-    matType = sdotype(mat); 
+    matType = SAT.sdoUtils.sdotype(mat); 
     if strcmp(matType, 'L')
         mat = mat + eye(N_BINS); 
     end

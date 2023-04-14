@@ -2,7 +2,9 @@
 % Utility to test the state mapping and filtering parameters on the
 % background distribution of state. Useful for testing different parameters
 % to optimize the state transitions
-
+%
+% NOT RECOMMENDED: Use 'xtDataCell' class w/ 'plot' method to test
+% different state defintions
 
 N_BINS      = 20; 
 XT_MAP_MODE = 'log'; 
@@ -15,7 +17,7 @@ PX_ZDELAY   = 1;
 
 XT_CH_NO    = 8; 
 
-testMat = pxTools_getTransitionMatrixFromDC(xtDataCell, XT_DC_CH_NO, ...
+testMat = pxTools.getTransitionMatrixFromDC(xtDataCell, XT_DC_CH_NO, ...
     'N_BINS',       N_BINS, ...
     'XT_MAP_MODE',  XT_MAP_MODE, ...
     'PX0_DURA_MS',  PX0_DURA_MS, ...

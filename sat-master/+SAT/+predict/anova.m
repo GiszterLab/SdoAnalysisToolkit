@@ -17,17 +17,39 @@
 % Trevor S. Smith, 2023
 % Drexel University College of Medicine
 
-sfields = {'L0_running', 'L1_running', 'KLD', 'logLikelihood'}; 
-%sfields = {'KLD'}; 
-SIG_PVAL = 0.05; 
-PLOT = 1; 
-N_SHUFFLES = 1000; 
-STAT_TYPE = 'sum'; %['sum'/'mean'/'median'] 
+function anova(errorStruct, varargin)
+p = inputParser; 
+%addParameter(p, '
+addParameter(p, 'pVal', 0.05); 
+addParameter(P, 'nShuffles', 1000); 
+addParameter(p, 'statType', 'sum'); %['sum'/'mean'/'median'] 
+addParameter(p, 'saveFig', 0); 
+addParameter(p, 'saveFormat', 'png');
+addParameter(p, 'outputDirectory', []); 
+addParameter(p, 'plotProp',0); 
+parse(p, varargin{:}); 
+pR = p.Results; 
+
 % // Save Formats
-SAVE_FIG = 0; 
-SAVE_FMT = 'svg'; 
-SAVE_DIR = ""; %C:\Users\Frog\Desktop\"; 
+SIG_PVAL    = pR.pVal; 
+SAVE_FIG    = pR.saveFig;  
+SAVE_FMT    = pR.saveFormat;
+SAVE_DIR    = pR.outputDirectory; 
+STAT_TYPE   = pR.statType; 
+N_SHUFFLES  = pR.nShuffles; 
+
+sfields = {'L0_running', 'L1_running', 'KLD', 'logLikelihood'}; 
+
 N_FIELDS = length(sfields); 
+
+if isstruct(pR.plotProp) 
+    %CUSTOM_PLOT = 1; 
+    plotProp = pR.plotProp; 
+else
+    %CUSTOM_PLOT = 0; 
+    plotProp = []; 
+end
+
 
 %// Note that we no longer are evaluting an ANOVA of the shuffled
 %distributions due to the high DOFs from shuffling. 
@@ -38,7 +60,7 @@ sigStruct = struct( ...
     'multCompare',  cell(1, N_FIELDS)); 
 
 for f = 1:N_FIELDS
-    [sigStruct(f).anova, sigStruct(f).multCompare] = predictSDO_testSig(errorStruct, ...
+    [sigStruct(f).anova, sigStruct(f).multCompare] = SAT.predict.testSig(errorStruct, ...
         'pVal',         SIG_PVAL, ... 
         'nShuffles',    N_SHUFFLES, ... 
         'dataField',    sfields{f}, ...
@@ -50,5 +72,6 @@ for f = 1:N_FIELDS
     sigStruct(f) = sfields{f}; 
 end
     
-1;
+
+end
 

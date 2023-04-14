@@ -22,7 +22,8 @@ end
 %totalNSpks = N_PP_CHANNELS; 
 %MAX_PP_PER_CHUNK;
 
-sdoFlat = computeSDO_sdo_new(N_XT_CHANNELS); 
+sdoFlat = SAT.compute.sdoStruct_new(N_XT_CHANNELS); 
+%sdoFlat = computeSDO_sdo_new(N_XT_CHANNELS); 
 
 % // fields to pass, average, and append
 pssFields = {'signalType', 'levels', 'unit'}; 
