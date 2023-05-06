@@ -23,14 +23,17 @@
 % Trevor S. Smith, 2022
 % Drexel University College of Medicine
 
-function [h0Array] = pxTools_getH0Array(N_BINS, PX_FSM_WID, PX_FSM_STD, varargin)
+function [h0Array] = getH0Array(N_BINS, PX_FSM_WID, PX_FSM_STD, varargin)
 defaultType = 'M'; 
 expectType =  {'M', 'L', 'm', 'l',}; 
 p = inputParser; 
 addOptional(p, 'type', defaultType, ... 
     @(x) any(validatestring(x, expectType))); %['M'/'L']
+addOptional(p, 'normalize', 0); 
 parse(p, varargin{:}); 
 pR = p.Results; 
+
+NORM = pR.normalize; 
 
 arrType = pR.type; 
 
@@ -52,6 +55,10 @@ arrType = pR.type;
             %h0Array(:,bin) = temp(N_BINS:end)/sum(temp(N_BINS:end));
             h0Array(:,bin) = temp(N_BINS:end); 
         end
+        if NORM
+            h0Array = normpdfcol2unity(h0Array); 
+        end
+
     end
     
     switch arrType
