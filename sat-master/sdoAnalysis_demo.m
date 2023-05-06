@@ -4,6 +4,9 @@
 % run an SDO analysis in completion using default settings with direct 
 % script calls. 
 
+% The two provided examples below were used in the demonstration figures in
+% Smith, et al, 2023. 
+
 % Trevor S. Smith, 2022
 % Drexel University College of Medicine
 
@@ -27,18 +30,20 @@ end
 
 %
 
-SAT.validateDataCells(xtData, ppData, 1); 
+SAT.validateDataHolders(xtData, ppData, 1); 
 
 % // Run SDO analysis w/ default parameters; 
-%SAT.computeSDO; 
+SAT.computeSDO; 
 
 %// These can be changed to any value; we selected these for the demo and
 %documentation.
 
-%XT_DC_CH_NO = 8; 
-%PP_DC_CH_NO = 12; 
-XT_DC_CH_NO = 6; 
-PP_DC_CH_NO = 4; 
+% __ Single Motor Unit x Synergist EMG
+XT_DC_CH_NO = 8; 
+PP_DC_CH_NO = 12; 
+% __ Spinal Interneuron x EMG
+%XT_DC_CH_NO = 6; 
+%PP_DC_CH_NO = 4; 
 
 %// Find the reference fields in the SDO. 
 XT_SDO_CH_NO = XT_DC_CH_NO; 
@@ -51,7 +56,6 @@ PP_SDO_CH_NO = PP_DC_CH_NO;
 
 %// Plot SDO 
 SAT.plotSDO(sdo, XT_SDO_CH_NO, PP_SDO_CH_NO); 
-%}
 
 %_____ PREDICT SDO _________
 %// Use SDO to predict on data it was constructed against; 

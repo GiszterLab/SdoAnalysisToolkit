@@ -31,13 +31,16 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
     methods
         %% __ CONSTRUCTOR
         function obj = xtDataCell(N_TRIALS, N_CHANNELS)
+            arguments
+                N_TRIALS    {mustBeInteger} = 0; 
+                N_CHANNELS  {mustBeInteger} = 0; 
+            end
             S = SAT.xtDataHolder_new(N_TRIALS, N_CHANNELS); 
             obj.data        = S(1,:); 
             obj.metadata    = S(2,:); 
             obj.nTrials     = N_TRIALS; 
             obj.nChannels   = N_CHANNELS; 
         end
-
 
         %% __ Populate/Import
         function obj = import(obj,dataCell) 
@@ -198,13 +201,22 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 obj
                 METHOD char {mustBeMember(METHOD, {'ica', 'pca', 'max'})}= obj.decomposeMethod; 
             end
-            xt = getTensor(obj); 
-            xtArr = reshape(xt, obj.nChannels, [], 1); %2D; 
-            [~, W] = iterativeVectorDecomposition(xtArr, METHOD); 
-            obj.weightMatrix = W; 
+            switch METHOD
+                % -- Temporary; ts-ICA has trialwise optimization -- 
+                case {'ica'}
+                    xtS = obj.data;
+                    xt = cellstructvcat(xtS, obj.dataField);
+                    [~, ~, ~, W, A, S, ~, ~] = ts_ica(xt, ...
+                        'decimate', 1, 'verbose', 1); 
+                    obj.weightMatrix = W*A*S; 
+                case {'pca', 'max'}
+                    xt = getTensor(obj); 
+                    xtArr = reshape(xt, obj.nChannels, [], 1); %2D; 
+                     [~, W] = iterativeVectorDecomposition(xtArr, METHOD); 
+                     obj.weightMatrix = W; 
+            end
             obj.nActivationsUsed = obj.nChannels; 
         end
-        
         
         %% Auxillary Operation
         function obj = importTensor(obj, ten, vars)
@@ -220,13 +232,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             N_USE_TR = length(vars.useTrials); 
 
             trLenPt = obj.trTimeLen*obj.fs+1; 
-
-            % OLD !!!
-            %// Tensor assumed as [N_TRIALS x N_CHANNELS x N_POINTS] -->
-            
-            %// TRIM whether to adapt the xtDC to tensor or tensor to xtDC
-            
-            %// Tensor (now) assumed to be [N_CHANNELS, N_POINTS, N_TRIALS)
 
             N_TEN_DIM = ndims(ten); 
             if N_TEN_DIM == 3
@@ -280,7 +285,22 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         
         %% DATA Extraction Methods
         
+        function ten = getTensor(obj, useChannels, useTrials, vars)
+            %// public implementation of superclass method
+            arguments
+                obj
+                useChannels         double = 1:obj.nChannels; 
+                useTrials           double = 1:obj.nTrials; 
+                vars.DATAFIELD      char = obj.dataField;
+                vars.CONFORM_METHOD char {mustBeMember(vars.CONFORM_METHOD, {'pad', 'nanpad', 'trim'})} = 'pad'; 
+            end
+                
+            ten = getTensor@dataCellSuperClass(obj, useChannels, useTrials, ...
+                'DATAFIELD', vars.DATAFIELD, 'CONFORM_METHOD', vars.CONFORM_METHOD); 
+        end
+
         %// Extract a N_Channels x N_Points x N_Trials datatensor
+        %{
         function ten = getTensor(obj, useChannels, useTrials, vars)
             arguments
                 obj
@@ -323,7 +343,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 ten(:,1:tLast,tri) = xtData(:,1:tLast); 
             end                  
         end
-        
+        %}
         %% __ Write xtdata to a CSV file
         % __>> Allow for a tidy data format. 
         %{
@@ -349,6 +369,30 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 dataCellArr = {obj.data{1,useTrials}(:).(DATAFIELD)}'; 
             end
             dataArr = cellvcat(dataCellArr(useChannels,:)); 
+            xtDataCell.plot_with_offset(dataArr, OFFSET); 
+            %
+            if ~isempty(OFFSET)
+                offset = OFFSET; 
+            else
+                offset = 0.5*max( abs(diff(dataArr,1)), [], 'all'); 
+            end
+            xticklabels(xticks/obj.fs); 
+            xlabel("Time (S)");      
+            if N_PLOT_ROWS > 1
+                nameDist = -offset*(N_PLOT_ROWS-1):offset:0; 
+                yticks(nameDist); 
+                yticklabels(flip(obj.electrode(useChannels))); 
+            end
+        end
+    end
+    methods (Static)
+        % __ Generally used plotter between channels w/ a common offset; 
+        function plot_with_offset(dataArr, OFFSET)
+            arguments
+                dataArr
+                OFFSET double = []; 
+            end
+            N_PLOT_ROWS = size(dataArr, 1); 
 
             %// Estimate the ideal offset for co-plotting
             if isempty(OFFSET)      
@@ -366,14 +410,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             end
             ylabel(strcat("Channel Offset = ", num2str(offset))); 
             title("Co-Plotted X(t) Data")
-            xticklabels(xticks/obj.fs); 
-            xlabel("Time (S)");      
-            if N_PLOT_ROWS > 1
-                nameDist = -offset*(m-1):offset:0; 
-                yticks(nameDist); 
-                yticklabels(flip(obj.electrode(useChannels))); 
-            end
         end
+
     end
-                
 end

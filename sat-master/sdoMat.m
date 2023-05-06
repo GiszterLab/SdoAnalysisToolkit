@@ -2,7 +2,7 @@
 % OOP-based data holder for SDO methods
 % -- Wrapper for existing methods 
 %
-% 1) sdoMat may be generated from 2 'pxt' classes
+% 1) sdoMat may be generated from 2 'pxtDataCell' classes
 % 2) sdoMat may be generated fom the 'sdo' common data structure
 % 3) sdoMat may be extracted from an 'sdoMultiMat' Class
 
@@ -59,7 +59,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
            if isstruct(elem)
                obj = obj.importSdoStruct(obj, elem, VAR_1, VAR_2); 
            end
-           if isa(elem, 'pxt')
+           if isa(elem, 'pxtDataCell')
                obj = obj.computeSdo(elem, VAR_1); 
            end
         end
@@ -99,10 +99,10 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
         function obj = computeSdo(obj, pxt_0, pxt_1)
             arguments
                 obj
-                pxt_0 pxt
-                pxt_1 pxt
+                pxt_0 pxtDataCell
+                pxt_1 pxtDataCell
             end
-            %// one-off generation from pxt classes (All necessary
+            %// one-off generation from pxtDataCell classes (All necessary
             %params are upstream)
             if isa(pxt_0.data, 'cell')
                 ISCELL = 1; 
@@ -296,23 +296,24 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
                 'outputDirectory', options.outputDirectory); 
         end
         
-        %% Export 2 pxt
+        %% Export to pxtDataCell
         %// use transition matrices of SDO to predict pxt1 from an
-        %input pxt
+        %input pxtDataCell
         function pxt_est = getPredictionPxt(obj, px0, duraMs)
             arguments
                 obj
-                px0 pxt
+                px0 pxtDataCell
                 duraMs double = 0; 
             end
             
             if ~obj.generatedTransitionMatrices
-                disp("Transition Matrices have not Generated."); 
+                disp("Transition Matrices have not Generated yet!"); 
+                return
             end
 
             %TODO: Check for mismatch in filters/etc. 
             
-            pxt_est = pxt(); 
+            pxt_est = pxtDataCell(); 
             pxt_est.data        = cell(1, obj.nPxtTypes); 
             pxt_est.pxtNames    = cell(1, obj.nPxtTypes);  
             if isa(px0.data, 'cell')
@@ -336,16 +337,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
                 'ppChName', 'nPxtTypes', 'nEvents', 'xtProperties', ...
                 'ppProperties', 'nStates', 'markovMatrix', 'stateMapping'}); 
     
-
-            %pxt_est.xtName          = obj.xtName; 
-            %pxt_est.ppName          = obj.ppName; 
-            %pxt_est.xtChName        = obj.xtChName; 
-            %pxt_est.ppChName        = obj.ppChName; 
-            %pxt_est.nPxtTypes       = obj.nPxtTypes; 
-            %pxt_est.nEvents         = obj.nEvents; 
-            %pxt_est.xtProperties    = obj.xtProperties; 
-            %pxt_est.ppProperties    = obj.ppProperties; 
-            %pxt_est.nStates         = obj.nStates; 
             %__ Be Cautious !!
             %pxt_est.markovMatrix    = obj.markovMatrix; %// this isn't exactly the same. Px of prediction  
             % __ Unique/ Differing Calls
