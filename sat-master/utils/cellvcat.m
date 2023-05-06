@@ -59,6 +59,12 @@ cl = cl(nonEmptyRows, :); %reset array
 
 [sz0y, sz0x] = size(cl); 
 
+if (sz0y == 0) || (sz0x == 0)
+    %// if any empties, return blank
+    arr = cl; 
+    return
+end
+
 if sz0y == 1 && any(~nonEmptyRows)
     %// if we removed rows (i.e. passed in a cell), and only 1 element
     %remains, output reduced cell
