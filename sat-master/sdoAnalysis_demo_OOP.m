@@ -45,11 +45,11 @@ ppdc.shuffle;
 
 % __ Generate pre-spike (px0) and post-spike (px1) 'pxt' classes; 
 %// Prespike
-px0 = pxt(); 
+px0 = pxtDataCell(); 
 px0.duraMs = -10; % Negative here to refer to data -before- spiking event;
 px0.import(xtdc, ppdc, XT_CH_NO, PP_CH_NO); 
 %// PostSpike
-px1 = pxt(); 
+px1 = pxtDataCell(); 
 px1.import(xtdc, ppdc, XT_CH_NO, PP_CH_NO); 
 
 % __ compute the sdo from the 'sdoMat' class as the difference between probability distributions; 
