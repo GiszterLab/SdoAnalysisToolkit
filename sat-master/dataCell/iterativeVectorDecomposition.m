@@ -12,7 +12,8 @@
 %       dimension
 %   - vExtract  : ['ica'/'max'/'supplied'] ; vector extraction method
 %   - W         : weighting matrix (optional) for each iterative component
-
+%
+% TODO: Incorporate the ICA component
 
 % Trevor S. Smith, 2022
 % Drexel University College of Medicine
@@ -54,6 +55,16 @@ function [pulseArr, pulseVect] = iterativeVectorDecomposition(Xt, vExtract, W)
             % ...
             % --> Should pipe through our ICA script
             
+            MAX_N_POINTS = 1e9; %// ten million; 
+            %// Auto-decimate based on max val; 
+
+            1; 
+
+
+            [U_act, nXt, invWAS, W, A, S, A0, C] = ts_ica (Xt ); 
+
+
+
             disp ("ICA not included yet!"); 
 
             return
@@ -72,7 +83,6 @@ function [pulseArr, pulseVect] = iterativeVectorDecomposition(Xt, vExtract, W)
     end
             
             
-
     for dd = 1:nDim
         switch vExtract
             case {'ica', 'ICA'}
