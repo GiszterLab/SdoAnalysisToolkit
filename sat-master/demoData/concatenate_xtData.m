@@ -33,6 +33,9 @@ end
 %_____ 
 
 ffNameFinal = fullfile(fDir, "xtData.mat"); 
+
+disp(strcat("Writing out to ", ffNameFinal)); 
+
 save(ffNameFinal, 'xtData'); 
 
 disp("All files successfully concatenated."); 
