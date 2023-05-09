@@ -1,6 +1,5 @@
 %% xtDataCell Class (OOP)
-% Eventual upgrade script for wrapping the xtData, containing the methods
-% we need for manipulating these structures w/ increased ease
+% Class for manipulating X(t) data.
 
 % xtDataCell class used here to contain time series type data; 
 
@@ -26,7 +25,11 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         %__ Descriptive
         weightMatrix        = 0; %// for describing the relationship between components; 
         nActivationsUsed    {mustBeInteger, mustBeNonnegative} = 0; 
-        decomposeMethod     char {mustBeMember(decomposeMethod, {'pca', 'ica'})} = 'pca'; 
+        decomposeMethod     char {mustBeMember(decomposeMethod, {'pca', 'ica'})} = 'pca';
+    end
+    properties (Access = protected) 
+        %// for stability
+        sampledData = false; 
     end
     methods
         %% __ CONSTRUCTOR
@@ -41,7 +44,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.nTrials     = N_TRIALS; 
             obj.nChannels   = N_CHANNELS; 
         end
-
         %% __ Populate/Import
         function obj = import(obj,dataCell) 
             %// Grab from the standard 'xtDataCell' cell-struct struct;
@@ -78,17 +80,21 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                         obj.channelAmpMin(ch,tr) = 0; 
                     end
                 end
-            end       
+            end 
+            obj.sampledData = true; 
         end
         
         %% OPERATION METHODS
-        
         % __ RESAMPLE SIGNAL FREQUENCY
         function obj = resample(obj, DESIRED_HZ, DATAFIELD) 
             arguments
                 obj
                 DESIRED_HZ double   = obj.fs; 
                 DATAFIELD char      = obj.dataField; 
+            end
+            if ~obj.sampledData 
+                disp("No Data sampled in xtDataCell"); 
+                return
             end
             %// Up/Down Sample the xtDC to a different Hz; 
             for tr = 1:obj.nTrials
@@ -102,12 +108,15 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             end
             obj.fs = DESIRED_HZ; 
         end
-        % __ DISCRETIZE (Pre-Req for Pxt-mapping)
+        % __ DISCRETIZE (Prerequsite for Pxt-mapping)
         function obj = discretize(obj)
            % __ >> Using the observed channel max/min apply a statemapping method;  
            %// generate 'sigLevels', and apply this discretization schema
            %to xtData
-           
+            if ~obj.sampledData 
+                disp("No Data sampled in xtDataCell"); 
+                return
+            end           
            for ch = 1:obj.nChannels
                xtMaxArr = obj.channelAmpMax(ch,:); 
                xtMinArr = obj.channelAmpMin(ch,:); 
@@ -141,6 +150,10 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                     'rmsmov','bandpass', 'butter', 'emgButter'})}
                 N_POINTS
                 F_VAR = 1; %auxillary variable for ffilt
+            end
+            if ~obj.sampledData 
+                disp("No Data sampled in xtDataCell"); 
+                return
             end
             xtData = getTensor(obj); 
             xtData2 = xtData; 
@@ -281,6 +294,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                     obj.data{1,tr}(ch).(obj.dataField) = xt(1:xtLen); 
                 end
             end
+            obj.sampledData = true; 
         end
         
         %% DATA Extraction Methods
@@ -294,56 +308,16 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 vars.DATAFIELD      char = obj.dataField;
                 vars.CONFORM_METHOD char {mustBeMember(vars.CONFORM_METHOD, {'pad', 'nanpad', 'trim'})} = 'pad'; 
             end
-                
+            if ~obj.sampledData 
+                disp("No Data sampled in xtDataCell"); 
+                ten = []; 
+                return
+            end    
+
             ten = getTensor@dataCellSuperClass(obj, useChannels, useTrials, ...
                 'DATAFIELD', vars.DATAFIELD, 'CONFORM_METHOD', vars.CONFORM_METHOD); 
         end
 
-        %// Extract a N_Channels x N_Points x N_Trials datatensor
-        %{
-        function ten = getTensor(obj, useChannels, useTrials, vars)
-            arguments
-                obj
-                useChannels         double = 1:obj.nChannels; 
-                useTrials           double = 1:obj.nTrials; 
-                vars.DATAFIELD      char = obj.dataField;
-                vars.CONFORM_METHOD char {mustBeMember(vars.CONFORM_METHOD, {'pad', 'nanpad', 'trim'})} = 'pad'; 
-            end
-            N_TRIALS    = length(useTrials); 
-            N_XT_CH     = length(useChannels);  
-            
-            switch vars.CONFORM_METHOD
-                case {'Pad', 'pad'}
-                    TRIM = 0; 
-                    %// Zero Pad signals to maximum trial length; 
-                    maxTLen = max(obj.trTimeLen(useTrials)); 
-                    maxLen = ceil(maxTLen*obj.fs+1/obj.fs); 
-                    ten = zeros(N_XT_CH, maxLen, N_TRIALS); 
-                case {'nanpad'}
-                    TRIM = 0; 
-                    maxTLen = max(obj.trTimeLen(useTrials)); 
-                    maxLen = ceil(maxTLen*obj.fs+1/obj.fs); 
-                    ten = nan*ones(N_XT_CH, maxLen, N_TRIALS); 
-                case {'Trim', 'trim'}
-                    TRIM = 1; 
-                    %// Trim signals to shortest trial
-                    minTLen = min(obj.trTimeLen(useTrials)); 
-                    minLen  = ceil(minTLen*obj.fs+1/obj.fs);  
-                    ten = zeros(N_XT_CH, minLen, N_TRIALS); 
-            end
-            for tri = 1:N_TRIALS
-                tr = useTrials(tri); 
-                xtData = cellvcat({(obj.data{1,tr}(useChannels).(vars.DATAFIELD))});
-                if (TRIM == 1)
-                    tLast = minLen; 
-                    xt = xt(1:minLen); 
-                else
-                    tLast = size(xtData,2); 
-                end
-                ten(:,1:tLast,tri) = xtData(:,1:tLast); 
-            end                  
-        end
-        %}
         %% __ Write xtdata to a CSV file
         % __>> Allow for a tidy data format. 
         %{
@@ -360,7 +334,11 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 OFFSET      double = []; 
                 DATAFIELD   char   = obj.dataField; 
             end
-           
+           if ~obj.sampledData 
+                disp("No Data sampled in xtDataCell"); 
+                return
+            end
+
             N_PLOT_TRIALS = length(useTrials); 
             N_PLOT_ROWS = length(useChannels); 
             if N_PLOT_TRIALS > 1
