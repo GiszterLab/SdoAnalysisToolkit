@@ -20,6 +20,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         fs          double = 0; 
         trTimeLen   = []; 
         dataField   char = [];  
+        dataSource  char = []; 
         % __ Shuffling Parameters; 
         nShuffles   {mustBeInteger} = 1000; 
         shuffMethod char    {mustBeMember(shuffMethod, {'isi', 'cif'})} = 'isi'; 
@@ -42,6 +43,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.electrode   = {dataCell{1,1}.electrode}; 
             obj.fs          = dataCell{1,1}.fs;    
             obj.dataField   = 'times'; %temporary
+            obj.dataSource  = inputname(2); 
             obj.trTimeLen   = zeros(1,obj.nTrials); 
             
             obj.data = SAT.ppDataHolder_new(obj.nTrials, obj.nChannels); 

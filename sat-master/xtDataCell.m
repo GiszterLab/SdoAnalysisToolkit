@@ -16,6 +16,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         fs                  double {mustBeNonnegative} = 0
         trTimeLen           = []; 
         dataField           = []; 
+        dataSource          = []
         % __ Ranging / Discretization Vars; 
         channelAmpMax       = []; %holder for [ch x tr] dynamic max amplitude
         channelAmpMin       = []; %holder for [ch x tr] dynamic min amplitude
@@ -61,6 +62,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.electrode   = {dataCell{1,1}.electrode}; 
             obj.fs          = dataCell{1,1}.fs; 
             obj.dataField   = 'envelope'; %temporary for XTDC
+            obj.dataSource  = inputname(2); 
             
             % __ collect dynamic amplitude 
             obj.channelAmpMax = zeros(obj.nChannels, obj.nTrials); 
