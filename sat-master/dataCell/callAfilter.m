@@ -2,9 +2,7 @@
 % A list of generic filtering methods to smooth timeseries data. Contains
 % filters which operate in either the time or frequency domain. Some of
 % these are redundant w/ the standard DSP toolbox, but are included for a
-% commonality of utility.
-%
-% 
+% commonality of utility
 %
 % Upgrade to ffxt from filtfilt to reduce ringing artifacts from short
 % timeseries datasets when filtering in frequency
@@ -90,7 +88,8 @@ end
 
 [sz_y, sz_x] = size(signal); 
 TRANSPOSE = 0; 
-%// we use a row-vector notation for our fsig
+%// we use a row-vector notation for our input to this function, but MATLAB
+%by default uses column-vector notation; transpose as necessary
 if sz_y > 1 && sz_x < 2
     TRANSPOSE = 1; 
     signal = signal'; 
@@ -128,6 +127,7 @@ switch type
         
     case {'rmsmov', 'rms', 'RMS', 'RMSmov', 'movRMS'}
         %// Root-mean Squared Filtering
+        signal = abs(signal); 
         sig2 = signal.^2; 
         mov = SUPPORT_VAR; 
         b = 1/mov*ones(1,mov); 

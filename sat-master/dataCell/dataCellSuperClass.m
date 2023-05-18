@@ -18,7 +18,7 @@ classdef dataCellSuperClass < handle
             % ___ Strip
             obj_out.data        = obj_out.data(1,TRIAL_IDX); 
             obj_out.metadata    = obj_out.metadata(1,N_USE_TR); 
-            obj_out.electrode   = obj_out.electrode{ROW_IDX}; 
+            obj_out.sensor   = obj_out.sensor{ROW_IDX}; 
             obj_out.trTimeLen   = obj_out.trTimeLen(TRIAL_IDX); 
             obj_out.nTrials     = N_USE_TR; 
             try
