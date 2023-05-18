@@ -12,11 +12,11 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         metadata            = []; 
         nTrials             {mustBeInteger} = 0; 
         nChannels           {mustBeInteger} = 0; 
-        electrode           = []; 
+        sensor           = []; 
         fs                  double {mustBeNonnegative} = 0
         trTimeLen           = []; 
         dataField           = []; 
-        dataSource          = []
+        dataSource          = []; 
         % __ Ranging / Discretization Vars; 
         channelAmpMax       = []; %holder for [ch x tr] dynamic max amplitude
         channelAmpMin       = []; %holder for [ch x tr] dynamic min amplitude
@@ -64,11 +64,15 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 disp("WARNING! Metadata not imported"); 
                 obj.data    = cell(size(obj.data)); 
             end
-            % -->> We will need to pass a validation here; 
-            obj.electrode   = {dataCell{1,1}.electrode}; 
+            % -->> TODO: We will need to pass a validation here; 
+            try
+                obj.sensor   = {dataCell{1,1}.sensor};
+            catch
+                %// depreciated legacy field
+                obj.sensor  = {dataCell{1,1}.electrode}; 
+            end
             obj.fs          = dataCell{1,1}.fs; 
-            obj.dataField = FIELDNAME; 
-            %obj.dataField   = 'envelope'; %temporary for XTDC
+            obj.dataField   = FIELDNAME; 
             obj.dataSource  = inputname(2); 
             
             % __ collect dynamic amplitude 
@@ -367,7 +371,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             if N_PLOT_ROWS > 1
                 nameDist = -offset*(N_PLOT_ROWS-1):offset:0; 
                 yticks(nameDist); 
-                yticklabels(flip(obj.electrode(useChannels))); 
+                yticklabels(flip(obj.sensor(useChannels))); 
             end
         end
     end

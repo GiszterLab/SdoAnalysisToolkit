@@ -78,17 +78,21 @@ classdef sdoMultiMat < handle
             %__ Append Params; 
             params.xt.xtDataName            = ''; 
             params.xt.DataFieldname         = xtdc.dataField; 
-            params.xt.IDFieldname           = 'electrode'; 
+            params.xt.IDFieldname           = 'sensor'; 
             params.xt.MapMethod             = xtdc.mapMethod; 
             params.xt.MaxMode               = xtdc.maxMode; 
             params.pp.ppDataName            = ''; 
-            params.pp.IDFieldname           = 'electrode';
+            params.pp.IDFieldname           = 'sensor';
             params.px.px0DurationMs         = obj.px0DuraMs; 
             params.px.px1DurationMs         = obj.px1DuraMs; 
             params.px.smoothingFilterWidth  = obj.filterWid; 
             params.px.smoothingFilterStd    = obj.filterStd; 
+            % __ Depreciate one of these; Both here for redundancy
             params.px.x1StartShift          = obj.nShift; 
             params.px.x0x1Delay             = obj.zDelay; 
+            params.px.nShift                = obj.nShift; 
+            params.px.zDelay                = obj.zDelay; 
+            %___
             obj.xtProperties = params.xt; 
             obj.ppProperties = params.pp; 
             %__ 
