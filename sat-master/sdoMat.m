@@ -171,7 +171,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
                 xtdc xtDataCell
             end
             %// We can directly extract statemapping from xtdc
-            XT_CH_NO = find(strcmp(obj.xtChName, xtdc.electrode)); 
+            XT_CH_NO = find(strcmp(obj.xtChName, xtdc.sensor)); 
             xData = getTensor(xtdc, XT_CH_NO, 'DATAFIELD', 'stateSignal', 'CONFORM_METHOD', 'trim');
             flatMat = reshape(squeeze(xData), 1, []); 
             SAM_PER_MS = obj.fs/1000; 

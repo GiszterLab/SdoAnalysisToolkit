@@ -16,7 +16,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         metadata    = []; 
         nTrials     {mustBeInteger} = 0; 
         nChannels   {mustBeInteger} = 0; 
-        electrode   = []; 
+        sensor      = []; 
         fs          double = 0; 
         trTimeLen   = []; 
         dataField   char = [];  
@@ -34,13 +34,20 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             %// Generic Input from the point-process type datasets; 
             % --> Theoretically, we could use whatever type of
             % spike/wavelet type extraction... 
+
             % --> Temporarily get this from 
-            
+            if isfield(dataCell{1,1}, 'sensor')
+                nameField = 'sensor'; 
+            else
+                %// depreciated legacy name
+                nameField = 'electrode';   
+            end
+
             [~, obj.nTrials] = size(dataCell); 
             obj.nChannels   = length(dataCell{1,1}); 
             obj.metadata    = dataCell(2,:); 
-            % -->> We will need to pass a validation here; 
-            obj.electrode   = {dataCell{1,1}.electrode}; 
+            % -->> TODO: We will need to pass a validation here; 
+            obj.sensor      = {dataCell{1,1}.(nameField)}; 
             obj.fs          = dataCell{1,1}.fs;    
             obj.dataField   = 'times'; %temporary
             obj.dataSource  = inputname(2); 
@@ -50,7 +57,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             %// Grab elements from the existing 'spikeTimeCell'; 
             for tr = 1:obj.nTrials
                 for ch = 1:obj.nChannels
-                    obj.data{1,tr}(ch).electrode        = dataCell{1,tr}(ch).electrode; 
+                    obj.data{1,tr}(ch).sensor           = dataCell{1,tr}(ch).(nameField); 
                     obj.data{1,tr}(ch).(obj.dataField)  = dataCell{1,tr}(ch).time; 
                     obj.data{1,tr}(ch).envelope         = dataCell{1,tr}(ch).waves; 
                     obj.data{1,tr}(ch).nEvents          = dataCell{1,tr}(ch).counts; 
@@ -208,7 +215,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             xtDC.metadata    = obj.metadata; 
             xtDC.nTrials     = obj.nTrials; 
             xtDC.nChannels   = obj.nChannels; 
-            xtDC.electrode   = obj.electrode; 
+            xtDC.sensor   = obj.sensor; 
             xtDC.fs          = SAMPLE_HZ; 
             xtDC.trTimeLen   = obj.trTimeLen; 
             xtDC.dataField   = 'envelope'; %obj.dataField; 
@@ -220,7 +227,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 timeArr = 0:1/xtDC.fs: (xtDC.trTimeLen(tr)- 1/xtDC.fs); 
                 %___
                 dataStruct = struct( ... 
-                    'electrode',     xtDC.electrode, ...
+                    'sensor',     xtDC.sensor, ...
                     'fs',           xtDC.fs, ... 
                     'time',          cell(1,xtDC.nChannels), ... 
                     xtDC.dataField,  cell(1,xtDC.nChannels) ); 
@@ -282,7 +289,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             end
             hold off 
             yticks(-N_USE_CHANNELS+1:0); 
-            yticklabels(flip(obj.electrode(useChannels))); 
+            yticklabels(flip(obj.sensor(useChannels))); 
             xlabel("Time (S)");     
         end
         function plotWaves(obj, useTrials, useRows, PLOT_ALL)

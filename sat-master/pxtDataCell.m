@@ -60,8 +60,8 @@ classdef pxtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             % __ Sample Data; 
             obj.xtName          = xtdc.dataField; 
             obj.ppName          = ppdc.dataField; 
-            obj.xtChName        = xtdc.electrode{XT_CH_NO}; 
-            obj.ppChName        = ppdc.electrode{PP_CH_NO}; 
+            obj.xtChName        = xtdc.sensor{XT_CH_NO}; 
+            obj.ppChName        = ppdc.sensor{PP_CH_NO}; 
             obj.xtProperties    = xtdc.metadata; 
             obj.ppProperties    = ppdc.metadata; 
             % __ Inherit; 
