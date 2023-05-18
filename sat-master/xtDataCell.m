@@ -46,7 +46,13 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.nChannels   = N_CHANNELS; 
         end
         %% __ Populate/Import
-        function obj = import(obj,dataCell) 
+        function obj = import(obj,dataCell, FIELDNAME)
+            arguments
+                obj
+                dataCell
+                FIELDNAME = 'envelope'; 
+            end
+
             %// Grab from the standard 'xtDataCell' cell-struct struct;
             [~, obj.nTrials] = size(dataCell); 
             
@@ -61,7 +67,8 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             % -->> We will need to pass a validation here; 
             obj.electrode   = {dataCell{1,1}.electrode}; 
             obj.fs          = dataCell{1,1}.fs; 
-            obj.dataField   = 'envelope'; %temporary for XTDC
+            obj.dataField = FIELDNAME; 
+            %obj.dataField   = 'envelope'; %temporary for XTDC
             obj.dataSource  = inputname(2); 
             
             % __ collect dynamic amplitude 
@@ -179,7 +186,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 functionHandle function_handle 
             end
             % --> take one dc operation by the other dc
-            % __ EXTRACT; OPERATE; REPACKAGE
             
             xtTen1 = obj.getTensor; 
             xtTen2 = xtdc.getTensor; 
