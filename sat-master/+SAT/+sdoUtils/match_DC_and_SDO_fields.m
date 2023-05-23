@@ -1,4 +1,5 @@
-%// Utility function used to validate the possible matching inputs between
+%% match_DC_and_SDO_fields
+% Ad-hoc utility function used to validate the possible matching inputs between
 % fieldname string and numerical index for the dataCell and the SDO; 
 %
 % INPUTS: 
@@ -15,9 +16,22 @@
 %  DC_ID_NAME
 %       - String/Char to directly test string/chars in sdoNameList against.
 
-% Added patches for better resliancy when comparing between cell arrays. 
 
-% Trevor Smith
+% Copyright (C) 2023  Trevor S. Smith
+%  Drexel University College of Medicine
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 function [DC_CH_NO, SDO_CH_NO] = match_DC_and_SDO_fields(dataCell, sdoNameList, DC_CH_NO, DC_FIELDNAME, DC_ID_NAME)
     if ~exist('DC_FIELDNAME', 'var')

@@ -17,8 +17,21 @@
 %   - dist : [1 x N_OBS] or {1 x N_HH} of arrays, containing the
 %   observation-wise CVM between distributions. 
 
-% Trevor S. Smith, 2023
-% Drexel University College of Medicine
+% Copyright (C) 2023  Trevor S. Smith
+%  Drexel University College of Medicine
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 function [dist] = cvm( px_edf, px_model, SMOOTH_REF, SMOOTH_HH)
 if ~exist('SMOOTH_REF', 'var')

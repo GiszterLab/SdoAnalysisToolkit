@@ -1,4 +1,4 @@
-%% predictSDO_testSig
+%% (predictSDO) testSig
 % Extension to testing significance for error rates within the
 % 'ErrorStruct' standard structure for predictions
 %
@@ -34,20 +34,23 @@
 %   multicomp_cll   - {1 x N_Hypotheses} Cell array containing the post-hoc
 %       multiple comparisons tabular output data. 
 
-
-% REWRITE: 
-% --> Let's try to make this as easy to interpret at possible; We'll use a
-% paired-reshuffling method to generate normal distributions of cumulative
-% error'
-% --> Resultant distributions will effectively be normal; we can use standard t tests/etc to test.  
+% Copyright (C) 2023  Trevor S. Smith
+%  Drexel University College of Medicine
 % 
-% --> Then we can run ANOVA on these normal distributions, followed by a
-% multicompare test to find sig differences between groups; 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-% Trevor S. Smith, 2023
-% Drexel University College of Medicine
-
-function [anova_cll,multcomp_cll]= predictSDO_testSig(errorStruct, varargin)
+function [anova_cll,multcomp_cll]= testSig(errorStruct, varargin)
 p = inputParser; 
 addParameter(p, 'pVal', 0.05); 
 addParameter(p, 'nShuffles', 1000); 

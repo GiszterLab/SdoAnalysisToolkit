@@ -1,5 +1,6 @@
-%% predictSDO_assignPlotterProperties
+%% (predictSDO) assignPlotterProperties
 %
+% For use within the SDO Analysis Toolkit.
 % Generates the 'plotProp' struct, a structure which contains information
 % about -how- to plot different hypotheses on common plots. This allows the
 % common plotters to be less strictly defined in -how- they generate plots
@@ -27,7 +28,7 @@
 % Trevor S. Smith, 2022
 % Drexel University College of Medicine
 
-function [plotProp] = predictSDO_assignPlotterProperties(fieldNames) 
+function [plotProp] = assignPlotterProperties(fieldNames) 
 
 N_FIELDS = length(fieldNames); 
 

@@ -1,4 +1,5 @@
-%% Calc Prediction Error (TS)
+%% Calc Prediction Error
+% For use within the SDO Analysis Toolkit.
 % Generate the differences between the predicted t1 state and the observed
 % t1 state for all cases of predictions shown. 
 %
@@ -16,7 +17,21 @@
 %
 %TODO: Deal w/ empty x0StateArr
 
-% Trevor Smith, 3.16.2021
+% Copyright (C) 2023  Trevor S. Smith
+%  Drexel University College of Medicine
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 function errorArr = calcPredictionError(x0StateArr, x1StateArr, pdStateArr, x1PxArr, pdPxArr, N_BINS, varargin)
 p = inputParser; 

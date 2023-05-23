@@ -1,7 +1,8 @@
 %% plotSDO_quiverSDO
 %
 % Plots the Quiver SDO, a representation of the coarse transition SDO in a
-% 1D fashion. The Diagonal component of the SDO is now treated as a linear
+% 1D fashion. For  use within the SDO Analysis Toolkit.
+% The Diagonal component of the SDO is now treated as a linear
 % component, with directional components coming off for transitions
 % above/below diagonal (transition to higher/lower states)
 %
@@ -24,13 +25,25 @@
 %       'headPos'        : ['end'/'center']: Position for the arrowheads of
 %           the quiver plots. Defaults to 'end'
 
-% Trevor S. Smith, 2022
-% Drexel University College of Medicine
+% Copyright (C) 2023  Trevor S. Smith
+%  Drexel University College of Medicine
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function plotSDO_quiverSDO(sdoMatrix, varargin)
+function quiverSDO(sdoMatrix, varargin)
 defaultHeadPos      = 'end'; %// ['end'/'center']
 expectedHeadpos     = {'end', 'center'}; 
-%validNumber = @(x) isnumeric(x); 
 p = inputParser; 
 addParameter(p, 'filter', 1); 
 addParameter(p, 'saveFig', 0); 

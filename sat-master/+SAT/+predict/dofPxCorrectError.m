@@ -1,5 +1,6 @@
 %% Error Struct DOF-PX Correct
 %
+% For use within the SDO Analysis Toolkit.
 % Function to perform an (Optional) Modification to the
 % 'errorStruct' data structure containing the prediction errors from the 7HH
 % for a given probability distribution relative to some observed value. 
@@ -19,12 +20,23 @@
 %  state). 
 %
 % CORRECT = [1/0] : If 1, apply 1/px scaling. If 0, remove 1/px scaling,
-% if applicable. Or maybe.... sqrt(N-1)?
+% if applicable.
 
-% Trevor S. Smith, 2023
-% Drexel University College of Medicine
-
-% --> We still don't have a good scaling ratio yet... 
+% Copyright (C) 2023  Trevor S. Smith
+%  Drexel University College of Medicine
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 function [errorStruct] = dofPxCorrectError(errorStruct, CORRECT, METHOD)
@@ -32,7 +44,7 @@ if ~exist('CORRECT', 'var')
     CORRECT = 1; 
 end
 if ~exist('METHOD', 'var')
-    SCF_TYPE = 'popDOF'; 
+    SCF_TYPE = 'DOF'; 
 else
     SCF_TYPE = METHOD; 
 end
@@ -45,9 +57,6 @@ fNames = {errorStruct(:).fieldname};
 N_STATES = length(errorStruct(1).L0_running_x_state); 
 
 px0 = histcounts(errorStruct(1).x0States, 1:N_STATES+1, 'Normalization', 'probability'); 
-
-%SCF_TYPE = 'invpx'; 
-SCF_TYPE = 'DOF'; 
 
 nSpikes = length(errorStruct(end).x0States); 
 switch SCF_TYPE

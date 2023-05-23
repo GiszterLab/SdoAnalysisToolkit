@@ -3,14 +3,21 @@
 % assumes that the 1st dimension is constant across all rows; tranpose if
 % this assumption is violated
 
-% 4.27.22 Update: Permits concentation of cell arrays of cells; requires the
-% cellstructures to be conformable, but permits terminal contents of the cells
-% to vary
-
-% 4.28.22 Forking from base script; permits cellwise concatenation of
-% structure elements contained within a cell arr; e.g.
-% (cell{struct.field(row)}, used to combine like-elements from within the
-% compiledDataCellArr as broken down by different elements (e.g. 'waves')
+% Copyright (C) 2023 Trevor S. Smith
+% Drexel University College of Medicine
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 function [arr] = cellstructvcat(cl, SFIELD, SUBCELL_ROW_NO, LEVEL)

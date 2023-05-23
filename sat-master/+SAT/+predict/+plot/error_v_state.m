@@ -1,4 +1,4 @@
-%% Predict Spike Plotter -- Plot Error rate vs. State
+%% (Predict Spike Plotter -- Plot) Error rate vs. State
 %
 % Plots the average prediction error by states, as calculated from the
 % prespike components
@@ -20,9 +20,23 @@
 %           properties for the hypotheses
 %       - method        - 'mean', 'median', or 'mode'. Default 'mean'
 
-% Trevor S. Smith
+% Copyright (C) 2023  Trevor S. Smith
+%  Drexel University College of Medicine
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function predictSDO_plot_error_v_state(errorStruct, varargin)
+function error_v_state(errorStruct, varargin)
 %%
 p = inputParser; 
 addParameter(p, 'saveFig', 0); 
