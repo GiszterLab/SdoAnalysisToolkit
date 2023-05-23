@@ -1,6 +1,6 @@
 %% SDO Matrix
-% OOP-based data holder for SDO methods
-% -- Wrapper for existing methods 
+% Data Class for dealing with the SDO matrices. For use with the SDO
+% Analysis Toolkit. 
 %
 % 1) sdoMat may be generated from 2 'pxtDataCell' classes
 % 2) sdoMat may be generated fom the 'sdo' common data structure
@@ -8,8 +8,23 @@
 
 % TODO: Further optimization, parameter reduction
 
-% Trevor S. Smith, 2023
+%_______________________________________
+% Copyright (C) 2023 Trevor S. Smith
 % Drexel University College of Medicine
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
+%__________________________________________
 
 classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
     properties (Access = public)
