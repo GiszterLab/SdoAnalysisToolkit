@@ -1,8 +1,8 @@
-%% PlotSDO_2DArraySig
+%% (plot) ArraySig
 %
 % Plot the elementwise significance of the SDO relative to the shuffles. 
 % Plot the CDF of the cumulative magnitude of responses relative to
-% shuffles. 
+% shuffles. For use within the SDO Analysis Toolkit.
 % 
 % PREREQUISITES:
 %   computeSDO()
@@ -20,10 +20,23 @@
 %       'outputDirectory': string/char. If not passed here, query user for
 %           save position
 
-% Maryam Abolfath-Beygi, 2018
-% Trevor S. Smith, 2022
+% Copyright (C) 2018 Maryam Abolfath-Beygi
+% Copyright (C) 2022 Trevor S. Smith
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function plotSDO_2DArraySig(sdo, XT_CH_NO, PP_CH_NO, varargin)
+function arraySig(sdo, XT_CH_NO, PP_CH_NO, varargin)
 p = inputParser; 
 addOptional(p, 'zTransform', 0); 
 addParameter(p, 'saveFig', 0); 

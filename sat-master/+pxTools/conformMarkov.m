@@ -1,16 +1,12 @@
-%% Gaussian Kernel 
-%// grab a generic gaussian kernel for 1D filtering of discrete-sampled
-% points
-%
-% INPUTS
-%   WID (Integer) - Number of states/positions adjacent to mean to estimate
-%       the kernel over
-%   STD (Integer) - The standard deviation of the gaussian
-% OUTPUT
-%   kn - Kernel for filtering, sum normalized to 1. 
+%% conformMarkov
+% Small utility to take a 2D array, assumed to be a (left) Markov
+% Stochastic Matrix, and conform it. Assume all elements >=0
+% 1) Rescale columns to sum to 1. 
+% 2) Ensure non-populated columns have a 1 on diagonal to preserve
+% probability. 
 
-% Copyright (C) 2023 Trevor S. Smith
-% Drexel University College of Medicine
+% Copyright (C) 2023  Trevor S. Smith
+%  Drexel University College of Medicine
 % 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -25,15 +21,16 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function [kn] = getgausskernel(WID, STD)
-if ~exist('WID', 'var')
-    WID = 1; 
-end
-if ~exist('STD', 'var')
-    STD = 1; 
-end
+function [mkvOut] = conformMarkov(mkv)
 
-fcoeff=exp(-(-WID:WID).^2/(2*STD^2));
-kn=fcoeff/sum(fcoeff);
-
+N_STATES = length(mkv); 
+colSum = sum(mkv); 
+% -- Rescale
+LI = colSum>0; %logical index
+iDiag = ones(1, N_STATES); 
+iDiag(LI) = 1./colSum(LI); 
+% -- Populate
+scMat = mkv*diag(iDiag); %scale cols
+mkvOut = eye(N_STATES); 
+mkvOut(:,LI) = scMat(:,LI); 
 end

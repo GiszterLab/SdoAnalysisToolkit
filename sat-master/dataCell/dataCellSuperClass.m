@@ -1,6 +1,22 @@
 %% dataCellSuperClass
 %
-% || -- Superclass for generic methods of working w/ dataCells
+% || -- Superclass for generic methods of working w/ dataCell classes
+
+% Copyright (C) 2023 Trevor S. Smith
+% Drexel University College of Medicine
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 classdef dataCellSuperClass < handle
     % _____ General Utils
@@ -18,7 +34,7 @@ classdef dataCellSuperClass < handle
             % ___ Strip
             obj_out.data        = obj_out.data(1,TRIAL_IDX); 
             obj_out.metadata    = obj_out.metadata(1,N_USE_TR); 
-            obj_out.sensor   = obj_out.sensor{ROW_IDX}; 
+            obj_out.sensor      = obj_out.sensor{ROW_IDX}; 
             obj_out.trTimeLen   = obj_out.trTimeLen(TRIAL_IDX); 
             obj_out.nTrials     = N_USE_TR; 
             try
@@ -85,25 +101,18 @@ classdef dataCellSuperClass < handle
                 case {'Pad', 'pad'}
                     TRIM = 0; 
                     %// Zero Pad signals to maximum trial length; 
-                    %maxTLen = max(obj.trTimeLen(useTrials)); 
-                    %maxLen = ceil(maxTLen*obj.fs+1/obj.fs); 
                     maxLen = max(nElem, [], 'all'); 
                     ten = zeros(N_USE_CH, maxLen, N_TRIALS); 
                 case {'nanpad'}
                     TRIM = 0; 
-                    %maxTLen = max(obj.trTimeLen(useTrials)); 
-                    %maxLen = ceil(maxTLen*obj.fs+1/obj.fs); 
                     maxLen = max(nElem, [], 'all'); 
                     ten = nan*ones(N_USE_CH, maxLen, N_TRIALS); 
                 case {'Trim', 'trim'}
                     TRIM = 1; 
                     %// Trim signals to shortest trial
-                    %minTLen = min(obj.trTimeLen(useTrials)); 
-                    %minLen  = ceil(minTLen*obj.fs+1/obj.fs);  
                     minLen = min(nElem(nElem>0), [], 'all'); 
                     ten = zeros(N_USE_CH, minLen, N_TRIALS); 
             end
-            %}
 
             for tri = 1:N_TRIALS
                 tr = useTrials(tri); 
@@ -121,6 +130,34 @@ classdef dataCellSuperClass < handle
             end                  
         end
         %___ 
+    end
+    methods (Static)
+        %// for stability reasons, this methods should be concretely implemented
+        % separately in inheriting classes
+        function [dataCellOut] = cloneDataRow(dataCell, SROW_IDX, N_CLONES)
+            arguments
+                dataCell
+                SROW_IDX {mustBeInteger} = 1:length(dataCell{1,1}); 
+                N_CLONES {mustBeInteger} = 1; 
+            end
+            dataCellOut = cell(size(dataCell)); 
+            N_SROWS = length(SROW_IDX); 
+            %N_SROWS = length(obj.data{1,1}); 
+            N_TRIALS = size(dataCell,2); 
+            for tr = 1:N_TRIALS
+                S = []; 
+                for r=1:N_SROWS
+                    if any(r == SROW_IDX)
+                        S = [S repelem(dataCell{1,tr}(r), N_CLONES)]; 
+                    else
+                        S = [S dataCell{1,tr}(r)]; 
+                    end
+                end
+                dataCellOut{1,tr} = S; 
+                % __ 
+            end
+        end
+        %__________________
     end
 
 end
