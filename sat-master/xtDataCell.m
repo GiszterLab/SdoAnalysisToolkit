@@ -273,7 +273,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             N_USE_CH = length(vars.useChannels); 
             N_USE_TR = length(vars.useTrials); 
 
-            trLenPt = obj.trTimeLen*obj.fs+1; 
+            trLenPt = ceil(obj.trTimeLen*obj.fs+1); 
 
             N_TEN_DIM = ndims(ten); 
             if N_TEN_DIM == 3
@@ -311,7 +311,11 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 tr = vars.useTrials(tri); 
                 for chi = 1:N_TEN_CH
                     ch = vars.useChannels(chi); 
-                    xt = squeeze(ten(ch,:,tr));
+                    if N_TEN_DIM > 2
+                        xt = squeeze(ten(ch,:,tr));
+                    else
+                        xt = ten(ch,:); 
+                    end
                     xtLen = length(xt); 
                     if xtLen > trLenPt(tr) 
                         % ___ TRIM
