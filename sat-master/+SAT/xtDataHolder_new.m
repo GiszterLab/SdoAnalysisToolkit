@@ -16,11 +16,19 @@
 %
 % xtDataCell is a 2x NumberTrials cell; Each element in the first row is a
 % struct containing trial data with fields; 
-%   - 'electrode' : [string/char] Unique channel identifier
-%   - 'envelope'  : [1x N Doubles Array] Processed timeseries data 
-%    - 'fs'       : [integer] Sample frequency for timeseries data
-%   - 'times'      : [1xN Doubles Array] Matching time elements for data to
+%   - 'sensor'      : [string/char] Unique channel identifier
+%   - 'fs'          : [integer] Sample frequency for timeseries data
+%   - 'times'       : [1xN Doubles Array] Matching time elements for data to
 %       position. Units must be as in the point process dataset. 
+%   - 'envelope'    : [1xN Doubles Array] Processed timeseries data 
+%   - 'raw'         : [1xN Doubles Array] Original data
+%   - 'offset'      : [1x1 or 1xN] Doubles array. If 1x1, a constant offset
+%       used to level envelope. If 1xN, elementwise offset between
+%       processed and original data. 
+%   - 'stateSignal'  : [1xN] Integer array. The state-discretized signal. 
+%   - 'signalLevels' : [1xN_STATES+1] doubles vector containing the bin
+%       edges for quantizing signal to state. 
+
 % The second row of xtDataCell is reserved for any parameters or metadata
 % associated with the same trial (column). This cell is passed to the sdo
 % structure. Ideally the elements will be in the form of a struct; 
@@ -55,12 +63,18 @@ if ~exist('N_XT_CHANNELS', 'var')
     N_XT_CHANNELS = 1; 
 end
 
+%// Standardized fields used/populated for dataCell. 
 xtDC = struct(...
-    'sensor',    cell(1,N_XT_CHANNELS), ...
-    'envelope',     cell(1,N_XT_CHANNELS), ...
-    'fs',           cell(1,N_XT_CHANNELS), ...
-    'times',        cell(1,N_XT_CHANNELS)); 
+    'sensor',           cell(1, N_XT_CHANNELS), ...
+    'fs',               cell(1, N_XT_CHANNELS), ...
+    'times',            cell(1, N_XT_CHANNELS), ... 
+    'envelope',         cell(1, N_XT_CHANNELS), ...
+    'raw',              cell(1, N_XT_CHANNELS), ... 
+    'offset',           cell(1, N_XT_CHANNELS), ... 
+    'stateSignal',      cell(1, N_XT_CHANNELS), ... 
+    'signalLevels',     cell(1, N_XT_CHANNELS) ); 
 
+%// Standardized fields for metadata; 
 xtMC = struct(...
     'trialNumber', 0); 
 
