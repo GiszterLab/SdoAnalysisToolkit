@@ -43,6 +43,19 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
     end
     %
     methods
+        %% __ CONSTRUCTOR
+        function obj = ppDataCell(N_TRIALS, N_CHANNELS)
+            arguments
+                N_TRIALS    {mustBeInteger} = 0; 
+                N_CHANNELS  {mustBeInteger} = 0; 
+            end
+            S = SAT.ppDataHolder_new(N_TRIALS, N_CHANNELS); 
+            obj.data        = S(1,:); 
+            obj.metadata    = S(2,:); 
+            obj.nTrials     = N_TRIALS; 
+            obj.nChannels   = N_CHANNELS; 
+        end
+
         %% Operation Methods 
         function obj = import(obj,dataCell)
             %// Generic Input from the point-process type datasets; 
@@ -72,9 +85,16 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             for tr = 1:obj.nTrials
                 for ch = 1:obj.nChannels
                     obj.data{1,tr}(ch).sensor           = dataCell{1,tr}(ch).(nameField); 
-                    obj.data{1,tr}(ch).(obj.dataField)  = dataCell{1,tr}(ch).time; 
-                    obj.data{1,tr}(ch).envelope         = dataCell{1,tr}(ch).waves; 
-                    obj.data{1,tr}(ch).nEvents          = dataCell{1,tr}(ch).counts; 
+                    try
+                        obj.data{1,tr}(ch).(obj.dataField)  = dataCell{1,tr}(ch).times; 
+                        obj.data{1,tr}(ch).nEvents          = dataCell{1,tr}(ch).nEvents; 
+                        obj.data{1,tr}(ch).envelope         = dataCell{1,tr}(ch).envelope; 
+                    catch
+                        %// depreciated naming
+                        obj.data{1,tr}(ch).(obj.dataField)  = dataCell{1,tr}(ch).time; 
+                        obj.data{1,tr}(ch).nEvents          = dataCell{1,tr}(ch).counts; 
+                        obj.data{1,tr}(ch).envelope         = dataCell{1,tr}(ch).waves; 
+                    end
                 end
             end
             % __ >> Trialwise Max value = trMaxTime
@@ -315,11 +335,22 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             end            
             %// Call External Function; 
             try
-                plot_spikeWaveforms(obj.data, useTrials, useRows, PLOT_ALL, 'envelope');
+                plot_spikeWaveforms(obj.data, useTrials, useRows, PLOT_ALL, 'useField', 'envelope');
             catch
                 %// depreciated
-                plot_spikeWaveforms(obj.data, useTrials, useRows, PLOT_ALL, 'waves');
+                plot_spikeWaveforms(obj.data, useTrials, useRows, PLOT_ALL, 'useField', 'waves');
             end
+        end
+        %__ Plot all
+        function plot(obj, useTrials, useRows, PLOT_ALL)
+            arguments
+                obj
+                useTrials {mustBeNumeric} = 1:obj.nTrials; 
+                useRows  {mustBeNumeric} = 1:obj.nChannels; 
+                PLOT_ALL  = 0; 
+            end   
+            plotSpikes(obj, useTrials, useRows, PLOT_ALL); 
+            plotWaves( obj, useTrials, useRows, PLOT_ALL); 
         end
     end  
 end
