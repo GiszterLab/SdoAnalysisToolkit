@@ -279,6 +279,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             if N_TEN_DIM == 3
                 [N_TEN_CH, ~, N_TEN_TR] = size(ten); 
             elseif N_TEN_DIM == 2
+                N_TEN_TR = 1; 
                 if N_USE_CH == 1
                     %// Replace one channel across trials; 
                     N_TEN_CH = N_USE_CH; 
@@ -359,19 +360,20 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         end
         %}
         %% ___ Plotter/ Visualization Methods; 
-        function plot(obj, useTrials, useChannels, OFFSET, DATAFIELD)
+        function plot(obj, useTrials, useChannels, OFFSET, vars)
             arguments
                 obj
                 useTrials   double = 1:obj.nTrials; 
                 useChannels double = 1:obj.nChannels;  
-                OFFSET      double = []; 
-                DATAFIELD   char   = obj.dataField; 
+                OFFSET      double = [];  
+                vars.datafield char = obj.dataField; 
+                vars.trialTicks {mustBeNumericOrLogical} = 0; 
             end
-           if ~obj.sampledData 
+            if ~obj.sampledData 
                 disp("No Data sampled in xtDataCell"); 
                 return
             end
-
+            DATAFIELD = vars.datafield; 
             N_PLOT_TRIALS = length(useTrials); 
             N_PLOT_ROWS = length(useChannels); 
             if N_PLOT_TRIALS > 1
@@ -387,6 +389,18 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             else
                 offset = 0.5*max( abs(diff(dataArr,1)), [], 'all'); 
             end
+            %__ Probably useful for a parser here
+            if vars.trialTicks
+                trPopNum = obj.trTimeLen(useTrials); 
+                xMin = min( -(N_PLOT_ROWS-1)*offset+dataArr(N_PLOT_ROWS,:)); 
+                xMax = max(dataArr(1,:)); 
+                for tr = 1:N_PLOT_TRIALS
+                    t0 = round(sum(trPopNum(1:tr))*obj.fs); 
+                    line([t0,t0], [xMin, xMax], 'lineStyle', '--', 'color', 'k'); 
+                    text(t0-trPopNum(tr)*obj.fs, xMin, strcat("Trial #", num2str(useTrials(tr)) )); 
+                end            
+            end
+            %___ 
             xticklabels(xticks/obj.fs); 
             xlabel("Time (S)");      
             if N_PLOT_ROWS > 1
