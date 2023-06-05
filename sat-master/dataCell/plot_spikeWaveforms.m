@@ -21,30 +21,16 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function plot_spikeWaveforms(spikeTimeCell, useTrials, useUnits, PLOT_ALL, PPFIELD)
-if ~exist('useTrials', 'var')
-    useTrials = []; 
-end
-if ~exist('useUnits', 'var')
-    useUnits = []; 
-    %useUnits = length(spikeTimeCell{1,1}); 
-end
-if ~exist('PLOT_ALL', 'var')
-    PLOT_ALL = 0;
-end
-if ~exist('PPFIELD', 'var')
-    PPFIELD = []; 
-end
-if isempty(useUnits)
-    useUnits = 1:length(spikeTimeCell{1,1});
-end
-if isempty(useTrials)
-    useTrials = size(spikeTimeCell,2); 
-end
-if isempty(PPFIELD)
-    PPFIELD = 'envelope'; 
+function plot_spikeWaveforms(spikeTimeCell, useTrials, useUnits, PLOT_ALL, vars)
+arguments
+    spikeTimeCell
+    useTrials   = 1:length(spikeTimeCell{1,1}); 
+    useUnits    = size(spikeTimeCell,2); 
+    PLOT_ALL    = 0; 
+    vars.useField = 'envelope'; 
 end
 
+PPFIELD = vars.useField; 
 N_UNITS = length(useUnits); 
 N_TRIALS = length(useTrials); 
 
@@ -81,7 +67,11 @@ for ui = 1:N_UNITS
     end 
     plot(mean(spkCll{ui}), 'color', [0.1,0.1,0.1, 1], 'lineWidth', 1.5); 
     axis([1, 52, -inf, inf]); 
-    title(spikeTimeCell{1,1}(u).electrode); 
+    try
+         title(spikeTimeCell{1,1}(u).sensor);        
+    catch
+        title(spikeTimeCell{1,1}(u).electrode); 
+    end
     text(52, 0, strcat("N=", num2str(size(spkCll{ui},1)))); 
 end
 

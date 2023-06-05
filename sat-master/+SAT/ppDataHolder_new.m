@@ -17,9 +17,10 @@
 % ppDataCell is a 2x NumberTrials cell; Each element in the first row is a
 % struct containing trial data with fields; 
 %   - 'electrode' : [string/char] Unique channel identifier
-%   - 'time'      : [1xN Doubles Array] Event times for point process
+%   - 'times'      : [1xN Doubles Array] Event times for point process
 %       (must be in same units as compared timeseries datacell)
-%   - 'counts'    : [integer] sum of event times; 
+%   - 'envelope'  : [NxM] Doubles array containing the spike waveforms
+%   - 'nEvents'   : [integer] sum of event times; 
 % The second row of ppDataCell is reserved for any parameters or metadata
 % associated with the same trial (column). This cell is passed to the sdo
 % structure. Ideally the elements will be in the form of a struct; 
@@ -56,8 +57,9 @@ end
 
 ppDC = struct( ...
     'sensor',           cell(1,N_PP_CHANNELS), ...
-    'time',             cell(1,N_PP_CHANNELS), ...
-    'counts',           cell(1,N_PP_CHANNELS)); 
+    'times',            cell(1,N_PP_CHANNELS), ...
+    'envelope',         cell(1,N_PP_CHANNELS), ... 
+    'nEvents',          cell(1,N_PP_CHANNELS)); 
 
 ppMC = struct( ...
     'trialNumber', 0); 

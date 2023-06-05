@@ -105,10 +105,10 @@
 %%
 function [sdo] = populateSDOArray(xtData, ppData, pxNPoints, varargin)
 p = inputParser; 
-addParameter(p, 'xtIDField', 'electrode'); 
-addParameter(p, 'ppIDField', 'electrode'); 
+addParameter(p, 'xtIDField', 'sensor'); 
+addParameter(p, 'ppIDField', 'sensor'); 
 addParameter(p, 'fieldName', 'envelope'); 
-addParameter(p, 'ppDataField', 'time'); 
+addParameter(p, 'ppDataField', 'times'); 
 addParameter(p, 'pxFilter', [1,1]); 
 addParameter(p, 'pxShift',  1, @isscalar); 
 addParameter(p, 'pxDelay', 0, @isscalar);
@@ -177,7 +177,12 @@ for tr=1:N_TRIALS
                     shuffSpikeCell{u,tr} = cifReshuffle(ppData{1,tr}(u).(PP_DATAFIELD), XT_HZ, N_SHUFF, CIF_TAU, 'method', CIF_FIR); 
             end
         else
-            shuffSpikeCell{u,tr} = repmat(ppData{1,tr}(u).time, N_SHUFF, 1); 
+            try 
+                shuffSpikeCell{u,tr} = repmat(ppData{1,tr}(u).times, N_SHUFF, 1); 
+            catch 
+                shuffSpikeCell{u,tr} = repmat(ppData{1,tr}(u).time, N_SHUFF, 1); 
+            end
+
         end
         shuffRasterCell{u,tr}= round(shuffSpikeCell{u,tr}* XT_HZ);
     end

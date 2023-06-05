@@ -21,10 +21,16 @@
 %           - (Time Domain) Moving average filter w/ exponentially weighed kernel
 %       -- 'rmsmov'
 %           - (Time Domain) Root-mean-square calculated within a defined window. 
+%       -- 'hamming' 
+%           - (Time Domain) Hamming Window of nPoints. If auxVar == 1; rectify 
+%       -- 'hanning' 
+%           - (Time Domain) Hanning Window of nPoints. If auxVar == 1; rectify 
+%       -- 'blackman'
+%           - (Time Domain) Blackman Window of nPoints. If auxVar == 1; rectify 
 %       -- 'bandpass'
 %           - (Frequency Domain) Pass-band filter with endpoint artifact attenuation
 %       -- 'butter',
-%           - (Frequency Domain) (HIgh pass????) filter
+%           - (Frequency Domain) (High pass????) filter
 %       -- 'emgbutter'
 %           - (Frequency Domain) 10 Hz HiPass + X Hz Lowpass
 %       -- 'notch'
@@ -146,6 +152,31 @@ switch type
         b = 1/mov*ones(1,mov); 
         fsig2 = filtfilt(b,1,sig2); 
         fSignal = sqrt(fsig2); 
+
+    case 'hamming'
+        %// Hamming-Type window; Requires the DSP toolbox
+        if SUPPORT_VAR == 1
+            signal = abs(signal); 
+        end
+        b = hamming(N_POINTS); 
+        filtfilt(b,1,signal)
+
+    case 'hanning'
+        %// Hanning-Type window; Requires the DSP toolbox
+        if SUPPORT_VAR == 1
+            signal = abs(signal); 
+        end
+        b = hann(N_POINTS); 
+        filtfilt(b,1,signal); 
+
+    case 'blackman'
+        %// Blackman type window; Requires the DSP toolbox
+        if SUPPORT_VAR == 1
+            signal = abs(signal); 
+        end
+        b = blackman(N_POINTS); 
+        filtfilt(b,1,signal); 
+
         
     %% Frequency-based Filters
     case {'bandpass', 'bp'} 

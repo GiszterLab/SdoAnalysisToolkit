@@ -69,7 +69,38 @@ classdef dataCellSuperClass < handle
             %___ HOMOGENOUS DATA TRIM
         % --> Used to ensure from all trials are the same size; 
         % __ DISCRETIZE (Pre-Req for Pxt-mapping)
+    
+        %// copy matching datafields/fieldnames from dc into obj; 
+        % --> Requires the target and link to have the same fieldnames;
+        % Essentially a limited copy; 
+        function obj = copyDataFields(obj, dc, getDataFields)
+            %// modified clone of 'copyProperties'
+            arguments
+                obj
+                dc
+                getDataFields = []; 
+            end
+            if isempty(getDataFields)
+                fn1 = fieldnames(obj.data{1,1}); 
+                fn2 = fieldnames(dc.data{1,1}); 
+                getDataFields = intersect(fn1, fn2); 
+            end
+            if ~isa(getDataFields, 'cell')
+                getDataFields = {getDataFields}; 
+            end
+            N_FIELDS = length(getDataFields); 
+            N_TRIAL_ROWS = length(obj.data{1,1}); 
+            for tr = 1:obj.nTrials
+                for row = 1:N_TRIAL_ROWS
+                    for ff = 1:N_FIELDS
+                        obj.data{1,tr}(row).(getDataFields{ff}) = dc.data{1,tr}(row).(getDataFields{ff}); 
+                    end
+                end
+            end
+        end
+
     end
+
     %____ Methods (Shared by some classes)
     methods (Hidden = true)
         %// somewhat clumsy way to set function only to some datacell
@@ -122,7 +153,7 @@ classdef dataCellSuperClass < handle
                 end
                 if (TRIM == 1)
                     tLast = minLen; 
-                    xt = xt(1:minLen); 
+                    xtData = xtData(1:minLen); 
                 else
                     tLast = size(xtData,2); 
                 end
@@ -142,7 +173,6 @@ classdef dataCellSuperClass < handle
             end
             dataCellOut = cell(size(dataCell)); 
             N_SROWS = length(SROW_IDX); 
-            %N_SROWS = length(obj.data{1,1}); 
             N_TRIALS = size(dataCell,2); 
             for tr = 1:N_TRIALS
                 S = []; 
