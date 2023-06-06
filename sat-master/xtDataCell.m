@@ -79,7 +79,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 obj.metadata    = dataCell(2,:);
             catch
                 disp("WARNING! Metadata not imported"); 
-                obj.data    = cell(size(obj.data)); 
+                obj.metadata    = cell(size(obj.data)); 
             end
             % -->> TODO: We will need to pass a validation here; 
             try
