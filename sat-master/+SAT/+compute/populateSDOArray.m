@@ -108,7 +108,7 @@ p = inputParser;
 addParameter(p, 'xtIDField', 'sensor'); 
 addParameter(p, 'ppIDField', 'sensor'); 
 addParameter(p, 'fieldName', 'envelope'); 
-addParameter(p, 'ppDataField', 'times'); 
+addParameter(p, 'ppDataField', 'time'); 
 addParameter(p, 'pxFilter', [1,1]); 
 addParameter(p, 'pxShift',  1, @isscalar); 
 addParameter(p, 'pxDelay', 0, @isscalar);
