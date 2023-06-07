@@ -21,6 +21,8 @@ __Toolboxes__:
 ## Citation Requirement
 If you use any version of this software, please cite : ... 
 
+If you modify or adapt the <em>Toolkit</em>, please contact the authors share your modifications under the 'Discussions' tab. 
+
 ## Installation
 
 A full walkthrough for installing and using the <em> SDO Analysis Toolkit </em> can be found within '\sat-master\documentation'.
