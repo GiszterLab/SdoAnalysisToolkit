@@ -64,7 +64,8 @@ if N > N_FIELDS; return; end
 
 % -- [H3] (simple) STA
 el_3 = fieldNames{3};                %// Dashed- (dark)blue
-plotProp.(el_3).color           = [034,000,204]/255; 
+plotProp.(el_3).color           = [0 0.4470 0.7410]; %cyan
+%plotProp.(el_3).color           = [034,000,204]/255; 
 plotProp.(el_3).LineStyle       = "-"; 
 plotProp.(el_3).LineWidth       = 1; 
 
@@ -73,7 +74,8 @@ if N > N_FIELDS; return; end
 
 % -- [H4] Background SDO
 el_4 = fieldNames{4};                %// Cyan
-plotProp.(el_4).color           = [0 0.4470 0.7410];
+%plotProp.(el_4).color           = [0 0.4470 0.7410];
+plotProp.(el_4).color           = [034,000,204]/255; %Dark blue
 plotProp.(el_4).LineStyle       = ":"; 
 plotProp.(el_4).LineWidth       = 1.5;
 

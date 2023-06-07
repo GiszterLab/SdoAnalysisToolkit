@@ -124,8 +124,8 @@ xtDataName  = 'emgCell';        %['emgCell'/'forceDataCell'/'moduleDataCell', et
 ppDataName  = 'spikeTimeCell';  %['spikeTimeCell'/ ... stimCell, etc] variable name for point-process data; 
 %__ DataCell Variables
 XT_DATA_FIELD   = 'envelope'; 
-XT_ID_FIELD     = 'electrode'; 
-PP_ID_FIELD     = 'electrode'; 
+XT_ID_FIELD     = 'sensor'; 
+PP_ID_FIELD     = 'sensor'; 
 %__ State Assignment Vars
 XT_MAX_MODE     = 'xTrialxSeg'; 
 XT_MAP_METHOD   = 'log';
