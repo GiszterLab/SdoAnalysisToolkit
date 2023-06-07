@@ -1,5 +1,6 @@
-%% plot_staPxt
+%% plot_staPxt (STIRPD)
 % Common Plotter for the spike-triggered averaged probability(x,t)
+% [Spike-triggered Inpulse Response Probability Distribution - STIRPD]
 %
 % Essentially a heatmap of discrete state by discrete time bin around
 % spike; useful for interpretting the SDO and predicting if there will be
