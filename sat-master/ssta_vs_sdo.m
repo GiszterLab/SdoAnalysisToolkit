@@ -25,8 +25,10 @@
 
 %% HEADER VARS
 USE_TRIALS  = 1:22; 
-XT_CH_NO    = 8; 
-PP_CH_NO    = 12; 
+%XT_CH_NO    = 8; 
+%PP_CH_NO    = 12; 
+XT_CH_NO = 6; 
+PP_CH_NO = 4; 
 % __ 
 N_T0_PTS    = 20; 
 N_STATES    = 20; 
@@ -39,10 +41,10 @@ COMPOSITE   = 1; %[0/1] %/whether to assemble figures into subplot
 
 %% _________
 
-%// Grab 'xtDataCell' and 'ppDataCell', or confirm loaded into memory
-if ~exist('xtDataCell', 'var') || ~exist('ppDataCell', 'var')
-    [fpath_xt, fdir1] = uigetfile('*.mat', 'Open example xtDataCell'); 
-    [fpath_pp, fdir2] = uigetfile('*.mat', 'Open example ppDataCell'); 
+%// Grab 'xtData' and 'ppData', or confirm loaded into memory
+if ~exist('xtData', 'var') || ~exist('ppData', 'var')
+    [fpath_xt, fdir1] = uigetfile('*.mat', 'Open example xtData'); 
+    [fpath_pp, fdir2] = uigetfile('*.mat', 'Open example ppData'); 
 
     ffile1 = fullfile(fdir1, fpath_xt); 
     ffile2 = fullfile(fdir2, fpath_pp); 
@@ -51,27 +53,27 @@ if ~exist('xtDataCell', 'var') || ~exist('ppDataCell', 'var')
     ppDataCell0 = load(ffile2); 
     xtfield = fields(xtDataCell0); 
     ppfield = fields(ppDataCell0); 
-    xtDataCell = xtDataCell0.(xtfield{1}); 
-    ppDataCell = ppDataCell0.(ppfield{1}); 
+    xtData = xtDataCell0.(xtfield{1}); 
+    ppData = ppDataCell0.(ppfield{1}); 
 end
 
-[~, xtDataCell] = pxTools.getXtStateMap(xtDataCell, N_STATES, ...
+[~, xtData] = pxTools.getXtStateMap(xtData, N_STATES, ...
     'maxMode', MAX_MODE, ...
     'mapMethod', MAP_METHOD); 
 
-sigLevels = xtDataCell{1,1}(XT_CH_NO).signalLevels; 
+sigLevels = xtData{1,1}(XT_CH_NO).signalLevels; 
 
 %// refresh necessary for re-manipulating figures
 close all
 
-%// Define State as rasterized amplitude; append definitions to xtDataCell
-[~, xtDataCell] = pxTools.getXtStateMap(xtDataCell, N_STATES, ...
+%// Define State as rasterized amplitude; append definitions to xtData
+[~, xtData] = pxTools.getXtStateMap(xtData, N_STATES, ...
     'maxMode', MAX_MODE, ...
     'mapMethod', MAP_METHOD); 
 
 %// Grab signal amplitudes around spike, using the pxTools library
 [px0Cell,px1Cell,~,~,at0Cell, at1Cell] = pxTools.getTrialwisePxt( ... 
-    xtDataCell, ppDataCell, ...
+    xtData, ppData, ...
     'trList', USE_TRIALS, ...
     'xtList', XT_CH_NO, ...
     'ppList', PP_CH_NO, ...
@@ -111,7 +113,7 @@ xs(at0(end,:)>cutoff) = 2;
 pxTools.plot.sta_v_x(at0, at1, xs, 'colors', {[xMap_lo; xMap_hi]}); 
 title("Simple Shuffled-Time Average Waveform (Mean-Split)");
 
-%% Fig 1.3 Spike-Triggered Inpulse Responsible Probability Distribution
+%% Fig 1.3 Spike-Triggered Inpulse Responsible Probability Distribution (STIRPD)
 x0 = discretize(at0, sigLevels); 
 x1 = discretize(at1, sigLevels); 
 pxTools.plot.staPxt(x0,x1, N_STATES, 'colorbar', 1); 
@@ -154,12 +156,12 @@ end
  
 %% Replicate for Background/Shuffles
 %// Draw an equivalent amount of observations to estimate background
-ppDataCellShuff = ppDataCell; 
+ppDataCellShuff = ppData; 
 for tr = 1:max(USE_TRIALS)
     if ~ismember(tr, USE_TRIALS) 
         continue 
     end 
-    spks = ppDataCell{1,tr}(PP_CH_NO).time; 
+    spks = ppData{1,tr}(PP_CH_NO).time; 
     maxTime = max(spks); 
     getCounts = length(spks);
     if ~isempty(spks)
@@ -167,7 +169,7 @@ for tr = 1:max(USE_TRIALS)
     end
 end
 [px0ShuffCell,px1ShuffCell,~,~,at0ShuffCell, at1ShuffCell] = pxTools.getTrialwisePxt( ... 
-    xtDataCell, ppDataCellShuff, ...
+    xtData, ppDataCellShuff, ...
     'trList', USE_TRIALS, ...
     'xtList', XT_CH_NO, ...
     'ppList', PP_CH_NO, ...
