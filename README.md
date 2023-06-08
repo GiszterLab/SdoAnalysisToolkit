@@ -21,7 +21,7 @@ __Toolboxes__:
 ## Citation Requirement
 If you use any version of this software, please cite : ... 
 
-If you modify or adapt the <em>Toolkit</em>, please contact the authors share your modifications under the 'Discussions' tab. 
+If you modify or adapt the <em>Toolkit</em>, please contact the authors or share your modifications under the 'Discussions' tab. 
 
 ## Installation
 
