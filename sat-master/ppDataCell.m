@@ -72,7 +72,9 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
 
             [~, obj.nTrials] = size(dataCell); 
             obj.nChannels   = length(dataCell{1,1}); 
-            obj.metadata    = dataCell(2,:); 
+            if size(dataCell, 1) > 1
+                obj.metadata    = dataCell(2,:); 
+            end
             % -->> TODO: We will need to pass a validation here; 
             obj.sensor      = {dataCell{1,1}.(nameField)}; 
             obj.fs          = dataCell{1,1}.fs;    
@@ -157,7 +159,13 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             if N_USE_TRIALS == 1
                 catTimes = tempCatCell; 
             else
-                catTimes = cellhcat(tempCatCell); 
+                try 
+                    % [1 x N] Vector
+                    catTimes = cellhcat(tempCatCell); 
+                catch
+                    % [N x 1] Vector
+                    catTimes = cellvcat(tempCatCell'); 
+                end
                 if N_USE_CHANNELS == 1
                     catTimes = {catTimes}; 
                 end
@@ -329,8 +337,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         function plotWaves(obj, useTrials, useRows, PLOT_ALL)
             arguments
                 obj
-                useTrials {mustBeNumeric} = 1:obj.nTrials; 
-                useRows  {mustBeNumeric} = 1:obj.nChannels; 
+                useTrials   {mustBeNumeric} = 1:obj.nTrials; 
+                useRows     {mustBeNumeric} = 1:obj.nChannels; 
                 PLOT_ALL  = 0; 
             end            
             %// Call External Function; 
@@ -340,6 +348,15 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 %// depreciated
                 plot_spikeWaveforms(obj.data, useTrials, useRows, PLOT_ALL, 'useField', 'waves');
             end
+        end
+        function plotISI(obj, useTrials, useRows, method)
+            arguments
+                obj
+                useTrials   {mustBeNumeric} = 1:obj.nTrials; 
+                useRows     {mustBeNumeric} = 1:obj.nChannels; 
+                method {mustBeMember(method, {'linear', 'log'})} = 'linear'; 
+            end
+            plot_spikeISI(obj.data, useTrials, useRows, 'useField', obj.dataField, 'type', method); 
         end
         %__ Plot all
         function plot(obj, useTrials, useRows, PLOT_ALL)
