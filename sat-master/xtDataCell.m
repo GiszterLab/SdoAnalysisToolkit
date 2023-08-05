@@ -85,7 +85,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             try
                 obj.sensor   = {dataCell{1,1}.sensor};
             catch
-                %// depreciated legacy field
+                %// (depreciated) legacy field
                 obj.sensor  = {dataCell{1,1}.electrode}; 
             end
             obj.fs          = dataCell{1,1}.fs; 
@@ -111,6 +111,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                     end
                 end
             end 
+            obj.weightMatrix = eye(obj.nChannels); 
             obj.sampledData = true; 
         end
         
@@ -243,6 +244,11 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 obj
                 METHOD char {mustBeMember(METHOD, {'ica', 'pca', 'max'})}= obj.decomposeMethod; 
             end
+            % The 'weight matrix' here is a left premultiplication matrix
+            % of form [Components] = [Weight]*[xtData], where xtData is a
+            % 'nChannels' by 'nObservations' array
+          
+            nm_cell = cell(1, obj.nChannels); 
             switch METHOD
                 % -- Temporary; ts-ICA has trialwise optimization -- 
                 case {'ica'}
@@ -255,9 +261,37 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                     xt = getTensor(obj); 
                     xtArr = reshape(xt, obj.nChannels, [], 1); %2D; 
                      [~, W] = iterativeVectorDecomposition(xtArr, METHOD); 
-                     obj.weightMatrix = W; 
+                     obj.weightMatrix = W;
             end
             obj.nActivationsUsed = obj.nChannels; 
+        end
+
+        function obj = applyWeightVectorTransform(obj, level)
+            arguments
+                obj
+                level {mustBeNumericOrLogical} = 1; 
+            end
+            % __ Uses the weighting matrix to iteratively transform the envelope
+            % __ 'level' used to reset baseline for a PC/IC to 0; TODO
+            
+            % -- Use for-loop rather than tensor here to avoid padding; 
+            
+            for tr = 1:obj.nTrials
+                %// 2D Array; 
+                xtData = obj.getTensor(1:obj.nChannels, tr); 
+                compData = obj.weightMatrix*xtData; 
+                obj.importTensor(compData, "useChannels", 1:obj.nChannels, "useTrials", tr); 
+                % // Rename
+                for ch = 1:obj.nChannels
+                    obj.data{1,tr}(ch).sensor = strcat("Comp_", num2str(ch)); 
+                end
+            end
+            nm_cell = cell(1, obj.nChannels); 
+            for ch = 1:obj.nChannels
+                nm_cell{ch} = strcat('CA_', num2str(ch)); 
+            end
+            obj.sensor = nm_cell; 
+        
         end
         
         %% Auxillary Operation
@@ -270,6 +304,14 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 vars.DATAFIELD      char = obj.dataField;
                 vars.CONFORM_METHOD char {mustBeMember(vars.CONFORM_METHOD, {'pad', 'nanpad', 'trim'})} = 'trim';                 
             end
+
+            if (obj.nChannels == 0) && (obj.nTrials == 0)
+                %// naive cell
+                [obj.nChannels, ~, obj.nTrials] = size(ten); 
+                vars.useTrials      = 1:obj.nTrials;
+                vars.useChannels    = 1:obj.nChannels; 
+            end
+
             N_USE_CH = length(vars.useChannels); 
             N_USE_TR = length(vars.useTrials); 
 
@@ -352,6 +394,21 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 'DATAFIELD', vars.DATAFIELD, 'CONFORM_METHOD', vars.CONFORM_METHOD); 
         end
 
+        function obj = subsample(obj, useTrials, useChannels)
+            %// public implementation of superclass method
+            arguments
+                obj
+                useTrials           double = 1:obj.nTrials; 
+                useChannels         double = 1:obj.nChannels; 
+            end
+            if ~obj.sampledData 
+                disp("No Data sampled in xtDataCell"); 
+                return
+            end   
+            obj = subsample@dataCellSuperClass(obj, useTrials, useChannels); 
+            obj.channelAmpMax = obj.channelAmpMax(useChannels, useTrials); 
+            obj.channelAmpMin = obj.channelAmpMin(useChannels, useTrials); 
+        end
         %% __ Write xtdata to a CSV file
         % __>> Allow for a tidy data format. 
         %{
@@ -409,6 +466,33 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 yticklabels(flip(obj.sensor(useChannels))); 
             end
         end
+
+        function biplot(obj, useComps) % overload
+            arguments
+                obj
+                useComps = 1:3; 
+            end
+            if length(useComps) > obj.nChannels 
+                useComps = intersect(useComps, 1:obj.nChannels); 
+            end
+            if length(useComps) > 3
+                disp("Warning, only the first three component dimensions are displayed."); 
+                useComps = useComps(1:3); 
+            end
+            N_COMPS = length(useComps); 
+            figure; 
+            biplot(obj.weightMatrix(useComps,:)'); %transpose due to our convention
+            title(strcat("Headings for components: ", num2str(useComps))); 
+            xlabel(strcat("Component ", num2str(useComps(1)))); 
+            if N_COMPS > 1
+                ylabel(strcat("Component ", num2str(useComps(2)))); 
+            end
+            if N_COMPS > 2
+                zlabel(strcat("Component " , num2str(useComps(3))));
+            end
+        end
+
+
     end
     methods (Static)
         % __ Generally used plotter between channels w/ a common offset; 
@@ -429,10 +513,17 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
 
             figure; 
             
+            xMin = inf; 
+            xMax = -inf; 
             for m = 1:N_PLOT_ROWS
-                plot(dataArr(m,:)-(m-1)*offset); 
+                xt = dataArr(m,:)-(m-1)*offset; 
+                xMax = max(xMax, min(max(xt), offset) ); %up to +1 offset; 
+                xMin = min(xMin, max(min(xt), -(m)*offset) );
+                plot(xt); 
                 hold on; 
             end
+            %// Rewindow axes to center on data 
+            axis([-inf, inf,xMin, xMax]); 
             ylabel(strcat("Channel Offset = ", num2str(offset))); 
             title("Co-Plotted X(t) Data")
         end
