@@ -1,7 +1,6 @@
-%% sta-plot scratch
-%// Generic Method to plot the spikeWaves from the 'SpikeTimeCell'
-%// Can be useful for convincing others about the validity of the spike
-%sorting; 
+%% plot SpikeWaveforms
+% Generic Method to plot the spikeWaves from the 'SpikeTimeCell'
+%
 % --> Also called as a method for ppDataCell
 % --> Future stability upgrades will be needed. 
 
@@ -24,8 +23,8 @@
 function plot_spikeWaveforms(spikeTimeCell, useTrials, useUnits, PLOT_ALL, vars)
 arguments
     spikeTimeCell
-    useTrials   = 1:length(spikeTimeCell{1,1}); 
-    useUnits    = size(spikeTimeCell,2); 
+    useTrials   = 1:size(spikeTimeCell,2);
+    useUnits    = 1:length(spikeTimeCell{1,1}); 
     PLOT_ALL    = 0; 
     vars.useField = 'envelope'; 
 end
