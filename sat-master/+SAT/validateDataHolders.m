@@ -221,8 +221,18 @@ for tr=1:N_TRIALS
     end
     % ============= PP DATA CELL ============
     % ___ Validate 'counts'
+
+    % TS Patch for legacy data; 
+    
+    if isfield(ppData{1,1}, 'nEvents')
+        PPCOUNTFIELD = 'nEvents'; 
+    else
+        PPCOUNTFIELD = 'counts';
+    end
+
     for u = 1:N_PP_CH
-        if isempty(ppData{1,tr}(m).counts)
+        if isempty(ppData{1,tr}(m).(PPCOUNTFIELD))
+        %if isempty(ppData{1,tr}(m).counts)
             nSpikes = length(ppData{1,tr}(m).time); 
             ppData{1,tr}(m).counts = nSpikes; 
         end

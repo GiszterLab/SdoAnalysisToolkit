@@ -1,8 +1,8 @@
-%% iterativeForceVectorDecomposition (IFVD)
+%% iterativeVectorDecomposition (IVD)
 %
-%// Takes a multimodal signal (usually Fx,Fy,Fz), determines 'vectors'
+%// Takes a multidimensional signal, determines 'heading vectors'
 %across these dimensions, extracting these vector pulses from the time
-%series data, to build 'pulses' of excursion within a vector heading; Meant
+%series data, to build 'pulses' of excursion within a vector heading. Meant
 %as a master script for swapping between different methods.
 %
 % Alternatively, can use ICA to determine independent vector components,
@@ -10,7 +10,13 @@
 % INPUTS: 
 %   - Xt        : timeseries data array; each row is an independent
 %       dimension
-%   - vExtract  : ['ica'/'max'/'supplied'] ; vector extraction method
+%   - vExtract  : ['ica'/'pca'/'max'/'supplied'] ; vector extraction method
+%           'ica' - independent components analysis (NOT supported yet)
+%           'pca' - principal components analysis with singular value
+%                 decomposition
+%           'max' - peak-biased PCA
+%           'supplied'; A weighting matrix is provided for vector
+%               extraction
 %   - W         : weighting matrix (optional) for each iterative component
 %
 % TODO: Incorporate the ICA component
@@ -73,10 +79,10 @@ function [pulseArr, pulseVect] = iterativeVectorDecomposition(Xt, vExtract, W)
 
             1; 
 
-
             [U_act, nXt, invWAS, W, A, S, A0, C] = ts_ica (Xt ); 
 
-
+            pulseVect = invWAS; 
+            pulseArr = U_act; 
 
             disp ("ICA not included yet!"); 
 
@@ -133,7 +139,7 @@ function [pulseArr, pulseVect] = iterativeVectorDecomposition(Xt, vExtract, W)
         VPM = cosTheta.*FM;                     %projected component within the Defined Vector; 
         VDt = rowMult(VPM, Vt0);                %Vector heading scaled by in-plane magnitude;  
     
-        D0 = Xt - VDt;                          %Remaining unaccounted-for-force            
+        D0 = Xt - VDt;                          %Remaining unaccounted-for-data         
     
         % __ Store; 
         pulseArr(dd,:)  = VPM; 

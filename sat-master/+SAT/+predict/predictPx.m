@@ -83,8 +83,8 @@ expectMkvType   = {'px0', 'px1'};
 p = inputParser; 
 addParameter(p, 'xtID', ""); 
 addParameter(p, 'ppID', ""); 
-addParameter(p, 'xtIDField', 'electrode');
-addParameter(p, 'ppIDField', 'electrode');
+addParameter(p, 'xtIDField', 'sensor');
+addParameter(p, 'ppIDField', 'sensor');
 addParameter(p, 'xtDataField', 'envelope'); 
 addParameter(p, 'nDtIntervals', 1); 
 addParameter(p, 'staType', normStaType, ...
