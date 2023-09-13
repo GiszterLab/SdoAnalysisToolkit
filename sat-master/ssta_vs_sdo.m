@@ -161,7 +161,12 @@ for tr = 1:max(USE_TRIALS)
     if ~ismember(tr, USE_TRIALS) 
         continue 
     end 
-    spks = ppData{1,tr}(PP_CH_NO).time; 
+    try
+        spks = ppData{1,tr}(PP_CH_NO).times; 
+    catch 
+        %// old-legacy
+        spks = ppData{1,tr}(PP_CH_NO).time; 
+    end
     maxTime = max(spks); 
     getCounts = length(spks);
     if ~isempty(spks)
