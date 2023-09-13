@@ -86,7 +86,7 @@ end
 expectTrList = 1:size(xtDataStruct,2); 
 expectXtList = 1:length(xtDataStruct{1,1}); 
 expectXtDataField = 'envelope'; 
-expectPpDataField = 'time'; 
+expectPpDataField = 'times'; 
 
 p = inputParser; 
 addOptional(p, 'trList', expectTrList); 
