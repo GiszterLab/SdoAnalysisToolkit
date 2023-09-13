@@ -30,7 +30,7 @@ A full walkthrough for installing and using the <em> SDO Analysis Toolkit </em> 
 1. Download the <em> SDO Analysis Toolkit </em> onto local device. 
 2. Add 'sat-master' to path ('add Folder with Subfolders') within MATLAB. 
 3. Run 'concatenate_xtData' within the '\sat-master\demoData\' folder, and select all 'xtDataTrial##.mat' files within the same folder. This will generate the common 'xtData.mat' file used in the demo analysis. 
-4. Run 'ssta_sdo.m' to produce plots which compare the STA vs. SDO methods within the trial dataset. 
+4. Run 'ssta_vs_sdo.m' to produce plots which compare the STA vs. SDO methods within the trial dataset. 
 5. Run 'sdoAnalysis_demo.m' (function-calls) or 'sdoAnalysis_demo_OOP.m' (class-methods) for performing the complete trial analysis. 
   1. When prompted, select 'xtData.mat' from within the '\sat-master\demoData\' folder. 
   2. When prompted, select 'ppData.mat' from within the '\sat-master\demoData\' folder. 
