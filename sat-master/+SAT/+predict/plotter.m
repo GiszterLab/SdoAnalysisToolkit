@@ -84,7 +84,8 @@ N_SHUFFLES = 1000; %for bootstrap
 
 STAT_TYPE = 'sum'; %['sum'/'mean'/'median'] %for statistics;
 
-XT_DC_FIELDNAME = 'electrode'; %change this if using custom name fields; 
+XT_DC_FIELDNAME = 'sensor'; 
+%XT_DC_FIELDNAME = 'electrode'; %change this if using custom name fields; 
 XT_DC_VARNAME = 'xtData'; %change this if using custom variable names; 
 
 

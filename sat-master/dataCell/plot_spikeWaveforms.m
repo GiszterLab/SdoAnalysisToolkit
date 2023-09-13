@@ -42,7 +42,11 @@ for tri=1:N_TRIALS
     end
 end
 
-spkCll = cellvcat(spkWvCll); 
+if N_TRIALS > 1
+    spkCll = cellvcat(spkWvCll); 
+else
+    spkCll = spkWvCll; 
+end
 
 nRows = ceil(sqrt(N_UNITS)); 
 nCols = ceil(N_UNITS/nRows); 
@@ -58,20 +62,23 @@ for ui = 1:N_UNITS
     else
         spkStd  = std(spkCll{ui},[],1); 
         spkMn   = mean(spkCll{ui},1); 
-        spkXX = [1:52 52:-1:1]; 
+        
+        spkLen = length(spkMn); 
+        spkXX = [1:spkLen spkLen:-1:1]; 
+        %spkXX = [1:52 52:-1:1]; %standard NEV 52-pt; 
         spkYY = [spkMn+spkStd fliplr(spkMn-spkStd)]; 
         %
         spkP = polyshape(spkXX, spkYY, 'Simplify', false); 
         plot(spkP, 'faceColor', [0.36,0.36,0.45, 0.1]);
     end 
     plot(mean(spkCll{ui}), 'color', [0.1,0.1,0.1, 1], 'lineWidth', 1.5); 
-    axis([1, 52, -inf, inf]); 
+    axis([1, spkLen, -inf, inf]); 
     try
          title(spikeTimeCell{1,1}(u).sensor);        
     catch
         title(spikeTimeCell{1,1}(u).electrode); 
     end
-    text(52, 0, strcat("N=", num2str(size(spkCll{ui},1)))); 
+    text(spkLen, 0, strcat("N=", num2str(size(spkCll{ui},1)))); 
 end
 
 end

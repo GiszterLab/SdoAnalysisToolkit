@@ -35,7 +35,7 @@
 
 function [DC_CH_NO, SDO_CH_NO] = match_DC_and_SDO_fields(dataCell, sdoNameList, DC_CH_NO, DC_FIELDNAME, DC_ID_NAME)
     if ~exist('DC_FIELDNAME', 'var')
-        DC_FIELDNAME = 'electrode'; 
+        DC_FIELDNAME = 'sensor'; 
     end
     if ~exist('DC_ID_NAME', 'var')
         DC_ID_NAME = ""; 
