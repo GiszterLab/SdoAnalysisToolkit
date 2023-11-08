@@ -36,8 +36,8 @@
 % LEVEL = 2; Nonlinear Offset (Optimize Differential)
 % LEVEL = 3; Nonlinear Offset + Filter ( Maintain stationarity); 
 
-% Copyright (C) 2023 Trevor S. Smith
-% Drexel University College of Medicine
+% Copyright (C) 2023 
+% [Redacted for Double-Blind Review]
 % 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -148,6 +148,10 @@ switch celltype
         for xx=1:sz0x
             ew2(xx) = max(mode(ew(LI(:,xx), xx))); 
         end
+
+        % __ patch 
+        ew2(isnan(ew2)) = 0; 
+
         %ew2 = max(mode(ew),1); 
         %ew2 = mode(ew); %this is columnwise; expectation
         %
@@ -172,9 +176,9 @@ end
 chkpt = all(round(sum(ew,1)./sum(ew>0,1)) == ew2); 
 if ~chkpt == 1
     val = round(sum(ew,1)./sum(ew>0,1)); 
-    if ~all(val(~isnan(val)) == ew2)
-        disp("Input Cell Array is not conformable to horzcat"); 
-        return
+    if ~all(val(~isnan(val)) == ew2(~isnan(val)))
+        %disp("WARNING: Input Cell Array is not conformable to vertcat"); 
+        %return
     end
 end
 
@@ -186,7 +190,13 @@ switch celltype
         arr = cell(1, sz0x); 
         % -- can use colwise normal vertcat
         for col=1:sz0x
-            arr{col} = vertcat(cl{:,col}); 
+            if any(ew(:,col) < 1)
+                LI = ew(:,col) > 0; 
+            else
+                LI = true(sz0y,1); 
+            end
+            %// patch for missing cell elements
+            arr{1, col} = vertcat(cl{LI,col}); 
         end
         offset = cell(1,sz0x); 
         switch LEVEL
@@ -246,7 +256,7 @@ switch celltype
         arr = cell(sum(el(:,1)),ew2*sz0x);  
     case 'NxK_cell'
         % -- will be flattening cells of cells
-        arr = cell(sum(el(:,1), sz0x)); 
+        arr = cell(sum(el(:,1)), sz0x); 
 end
 
 %% ++__ CELLWISE APPENDING ___ ++
@@ -263,7 +273,7 @@ for cll = 1:sz0y
     num_el = el(cll,1); 
     for col = 1:sz0x
 
-        % -- Probably not best to have the switch here, but w/ever
+        % -- Probably not best to have the switch here, but whatever
         switch celltype
             case {'Nx1_double', 'Nx1_cell'}
                 %arr(ew_itt,(col-1)*sum(ew(1:col))+1:col*sum(ew(1:col))) = cl{cll, col}; 

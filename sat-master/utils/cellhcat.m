@@ -37,8 +37,8 @@
 % LEVEL = 2; Nonlinear Offset (Optimize Differential)
 % LEVEL = 3; Nonlinear Offset + Filter ( Maintain stationarity); 
 
-% Copyright (C) 2023 Trevor S. Smith
-% Drexel University College of Medicine
+% Copyright (C) 2023
+% [Redacted for Double-Blind Review]
 % 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -126,7 +126,7 @@ el = reshape(el, sz0y, sz0x);
 ew = reshape(ew, sz0y, sz0x); 
 
 switch celltype
-    case {'Nx1_double', 'Nx1_cell'}
+    case {'Nx1_double', 'Nx1_cell', 'Nx1_logical'}
         el2 = max(mode(mode(el)),1); %double-dimension median; expected consistent       
         if ~all(el(el>0) == el(find(el>0,1)))
             %// mismatch in expectation; 
@@ -149,7 +149,7 @@ switch celltype
         for yy=1:sz0y
             el2(yy) = max(mode(el(yy, LI(yy,:)))); 
         end
-            
+        el2(isnan(el2)) = 0; 
         %el2 = max(mode(el),1); 
         %
         if ~all(all(el == el2,1))
@@ -173,9 +173,9 @@ end
 chkpt = all(round(sum(el,1)./sum(el>0,1)) == el2); 
 if ~chkpt == 1
     val = round(sum(el,1)./sum(el>0,1)); 
-    if ~all(val(~isnan(val)) == el2)
-        disp("Input Cell Array is not conformable to horzcat"); 
-        return
+    if ~all(val(~isnan(val)) == el2(~isnan(val)))
+        %disp("Warning: Input Cell Array is not conformable to horzcat"); 
+       % return
     end
 end
 
@@ -187,7 +187,13 @@ switch celltype
         arr = cell(sz0y,1); 
         % -- can use rowwise normal horzcat
         for row=1:sz0y
-            arr{row} = horzcat(cl{row,:});
+            % __ back-patch from cellvcat
+            if any(el(row,:) < 1)
+                LI = el(row,:) > 0; 
+            else
+                LI = true(1, sz0x); 
+            end
+            arr{row} = horzcat(cl{row,LI});
         end
         offset = cell(sz0y,1);        
         %_______

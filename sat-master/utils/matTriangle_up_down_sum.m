@@ -17,6 +17,9 @@
 %   netSum: Total absolute magnitude of off-diagonal elements for each
 %   page of M. 
 
+% 7.23.2023 - Switched the sign on the diagonal offset to the proper
+% config.
+
 
 % Copyright (C) 2023 Trevor S. Smith
 % Drexel University College of Medicine
@@ -55,8 +58,10 @@ end
 netSum = zeros([1,sz_dim(2:end)]); 
 
 for z = 1:Z_HEIGHT
-    upX = tril(M(:,:,z),+1); %lower diagonal = increasing states; 
-    dnX = triu(M(:,:,z),-1); %upper diagonal = decreasing states;
+    %upX = tril(M(:,:,z),+1); %lower diagonal = increasing states; 
+    upX = tril(M(:,:,z),-1); %lower diagonal = increasing states; 
+    %dnX = triu(M(:,:,z),-1); %upper diagonal = decreasing states;
+    dnX = triu(M(:,:,z),+1); %upper diagonal = decreasing states;
     netSum(:,:,z) = sum(abs(upX)+abs(dnX)); 
 end
 

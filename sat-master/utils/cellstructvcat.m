@@ -99,7 +99,20 @@ switch formatLs{lv}
                 colEl{r1,c} = cl{1,c}(r1).(formatFn{lv}); 
             end
         end
-        [arr, offset] = cellvcat(colEl, LEVEL); 
+        LI = ~cellfun(@isempty, colEl); 
+        LI_cols = ~(sum(LI, 1) == 0); 
+        if any(LI_cols)
+            %// cell v-cat doesn't work when we have missing cells
+            %miniCols = colEl(:,LI_cols); 
+            [arr0, offset0] = cellvcat(colEl(:,LI_cols), LEVEL); 
+            % // Unwrap; 
+            arr = cell(1, size(colEl, 2)); 
+            arr(LI_cols) = arr0; 
+
+
+        else
+            [arr, offset] = cellvcat(colEl, LEVEL); 
+        end
         if nargout == 1 
             offset = []; 
         end 
