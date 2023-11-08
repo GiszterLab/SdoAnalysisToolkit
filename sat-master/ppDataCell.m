@@ -35,6 +35,9 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         trTimeLen   = []; 
         dataField   char = [];  
         dataSource  char = []; 
+        % __ 
+        nTrialEvents = 0; %counter for spikes/trial
+
         % __ Shuffling Parameters; 
         nShuffles   {mustBeInteger} = 1000; 
         shuffMethod char    {mustBeMember(shuffMethod, {'isi', 'cif'})} = 'isi'; 
@@ -82,7 +85,10 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.dataSource  = inputname(2); 
             obj.trTimeLen   = zeros(1,obj.nTrials); 
             
-            obj.data = SAT.ppDataHolder_new(obj.nTrials, obj.nChannels); 
+            obj.nTrialEvents = zeros(obj.nChannels, obj.nTrials); 
+            
+            obj.data = SAT.ppDataHolder_new(obj.nTrials, obj.nChannels);
+          
             %// Grab elements from the existing 'spikeTimeCell'; 
             for tr = 1:obj.nTrials
                 for ch = 1:obj.nChannels
@@ -95,8 +101,13 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                         %// depreciated naming
                         obj.data{1,tr}(ch).(obj.dataField)  = dataCell{1,tr}(ch).time; 
                         obj.data{1,tr}(ch).nEvents          = dataCell{1,tr}(ch).counts; 
-                        obj.data{1,tr}(ch).envelope         = dataCell{1,tr}(ch).waves; 
+                        try
+                            obj.data{1,tr}(ch).envelope         = dataCell{1,tr}(ch).waves;
+                        catch
+                            obj.data{1,tr}(ch).envelope     = 1; 
+                        end
                     end
+                    obj.nTrialEvents(ch,tr) = obj.data{1,tr}(ch).nEvents; 
                 end
             end
             % __ >> Trialwise Max value = trMaxTime
@@ -109,14 +120,26 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 end
             end
         end
+
+        function obj = subsample(obj, useTrials, useChannels)
+            arguments
+                obj
+                useTrials   = 1:obj.nTrials
+                useChannels = 1:obj.nChannels
+            end
+            %// added concrete implementation for extra fields
+            ppdc = subsample@dataCellSuperClass(obj, useTrials, useChannels); 
+            ppdc.nTrialEvents = obj.nTrialEvents(useChannels, useTrials); 
+            obj = ppdc;
+        end
         
         %% EXTRACTION Methods
         function binXtCell = getBinaryImpulses(obj, SAMPLE_HZ, useTrials, useChannels)
             arguments 
                 obj
                 SAMPLE_HZ   {mustBeNumeric} = obj.fs; 
-                useTrials   {mustBeNumeric} = obj.nTrials; 
-                useChannels {mustBeNumeric} = obj.nChannels; 
+                useTrials   {mustBeNumeric} = 1:obj.nTrials; 
+                useChannels {mustBeNumeric} = 1:obj.nChannels; 
             end
             %// Use to discretize event times into index positions, at some
             %set sample Hz.           
@@ -125,8 +148,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
 
             binXtCell = cell(1,N_USE_TRIALS); 
             
-            for ti = 1:N_USE_TRIALS
-                tr = useTrials(ti); 
+            for tri = 1:N_USE_TRIALS
+                tr = useTrials(tri); 
                 trEventTimesAll = {obj.data{1,tr}.(obj.dataField)}; 
                 trEventTimes    = trEventTimesAll(useChannels); 
                 %// Call to external function; 
@@ -138,8 +161,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         function catTimes = getConcatEventTimes(obj, useTrials, useChannels) 
             arguments
                 obj
-                useTrials   {mustBeNumeric} = obj.nTrials; 
-                useChannels {mustBeNumeric} = obj.nChannels; 
+                useTrials   {mustBeNumeric} = 1:obj.nTrials; 
+                useChannels {mustBeNumeric} = 1:obj.nChannels; 
             end           
 
             N_USE_CHANNELS  = length(useChannels); 
@@ -177,7 +200,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             arguments
                 obj
                 SAMPLE_HZ   {mustBeNumeric} = obj.fs;  
-                useTrials   {mustBeNumeric} = obj.nTrials; 
+                useTrials   {mustBeNumeric} = 1:obj.nTrials; 
                 useChannels {mustBeNumeric} = 1:obj.nChannels; 
                 dataField   char {mustBeMember(dataField, {'times', 'shuffle'})}  = obj.dataField; 
             end                  
@@ -242,6 +265,46 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             %______ 
         end
         
+        %% Extraction Methods 
+
+        %// Extract subsets of the dataCell containing points within a given range.  
+        function timeStamps = getBinnedTimestamps(obj, tStart, tStop, useChannels, useTrials)
+            arguments
+                obj
+                tStart      = -inf
+                tStop       = inf; 
+                useChannels = 1:obj.nChannels; 
+                useTrials   = 1:obj.nTrials
+            end
+            % _____
+            trialTimeStamps = obj.data(1,useTrials);
+            %
+            N_USE_TR = length(useTrials); 
+            N_USE_CH = length(useChannels); 
+            %
+            timeStamps = cell(1, N_USE_TR); 
+
+            for tr = 1:N_USE_TR
+                %__ Subset
+                trial_times = trialTimeStamps{tr}(useChannels); 
+                
+                for ch = 1:N_USE_CH
+                    %// Now, bin
+                    LI = (trial_times(ch).times >= tStart) & (trial_times(ch).times <= tStop); 
+                    if nnz(LI) == 0 
+                        trial_times(ch).envelope    = []; 
+                        trial_times(ch).times       = []; 
+                        trial_times(ch).nEvents     = 0; 
+                    else
+                        trial_times(ch).envelope    = trial_times(ch).envelope(LI,:); 
+                        trial_times(ch).times       = trial_times(ch).times(LI); 
+                        trial_times(ch).nEvents     = sum(LI); 
+                    end
+                end
+                timeStamps{tr} = trial_times; 
+            end
+        end
+
         %% Conversion Methods; 
         function xtDC = getXtDataCell(obj, SAMPLE_HZ)
             % // Method to convert the observed point process data into some
@@ -295,6 +358,12 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 PLOT_ALL      {mustBeNumeric} = 0; 
             end
             %
+            % __ Add pre-check here to exclude completely-empty channels
+            try 
+                useChannels = intersect(useChannels, find(sum(obj.nTrialEvents, 2))); 
+            end
+
+            % __ 
             N_USE_CHANNELS  = length(useChannels); 
             N_TRIALS        = length(useTrials); 
             catTimes = getConcatEventTimes(obj, useTrials, useChannels);  
@@ -341,6 +410,10 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 useRows     {mustBeNumeric} = 1:obj.nChannels; 
                 PLOT_ALL  = 0; 
             end            
+            % __ Add pre-check here to exclude completely-empty channels
+            try 
+                useRows = intersect(useRows, find(sum(obj.nTrialEvents, 2))); 
+            end
             %// Call External Function; 
             try
                 plot_spikeWaveforms(obj.data, useTrials, useRows, PLOT_ALL, 'useField', 'envelope');
@@ -366,6 +439,11 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 useRows  {mustBeNumeric} = 1:obj.nChannels; 
                 PLOT_ALL  = 0; 
             end   
+
+            try 
+                useChannels = intersect(useChannels, find(sum(obj.nTrialEvents, 2))); 
+            end
+
             plotSpikes(obj, useTrials, useRows, PLOT_ALL); 
             plotWaves( obj, useTrials, useRows, PLOT_ALL); 
         end

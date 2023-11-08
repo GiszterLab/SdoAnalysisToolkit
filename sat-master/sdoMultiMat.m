@@ -136,7 +136,6 @@ classdef sdoMultiMat < handle
             end
             obj.sigMat = SAT.sdoUtils.findSigSdos(obj.sdoStruct, SIG_THRESH);
         end
-
         %// Extract an 'sdoMat' Class from multi-Mat; 
         function sdoM = extract(obj, XT_CH_NO, PP_CH_NO)
             arguments
@@ -150,6 +149,18 @@ classdef sdoMultiMat < handle
             end
             sdoM = sdoMat; 
             sdoM.importSdoStruct(obj.sdoStruct, XT_CH_NO, PP_CH_NO); 
+        end
+
+        % __ X-Class plotting Methods; 
+        function plot(obj, XT_CH_NO, PP_CH_NO)
+            arguments
+                obj
+                XT_CH_NO {mustBeInteger}
+                PP_CH_NO {mustBeInteger}
+            end
+
+            sdoM = obj.extract(XT_CH_NO, PP_CH_NO); 
+            plot(sdoM); 
         end
     end
 end

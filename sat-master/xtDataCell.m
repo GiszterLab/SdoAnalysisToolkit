@@ -98,7 +98,11 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             
             obj.trTimeLen = zeros(1,obj.nTrials); 
             for tr=1:obj.nTrials
-                obj.trTimeLen(tr) = dataCell{1,tr}(1).times(end); 
+                if ~isempty(dataCell{1,tr}(1).times)
+                    obj.trTimeLen(tr) = dataCell{1,tr}(1).times(end); 
+                else
+                    obj.trTimeLen(tr) = 0; 
+                end
                 % __ 
                 for ch = 1:obj.nChannels
                     xt = obj.data{1,tr}(ch).(obj.dataField); 
@@ -157,7 +161,8 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                        sigLv = pxTools.getXtSignalLevels(max(xtMaxArr), min(xtMinArr), obj.nBins, obj.mapMethod); 
                        sigArr = repmat(sigLv, obj.nTrials,1); 
                    case {'pTrial'}
-                       sigArr   = zeros(obj.nBins+1, obj.nTrials);
+                       sigArr    = zeros(obj.nTrials, obj.nBins+1); 
+                       %sigArr   = zeros(obj.nBins+1, obj.nTrials);
                        for tr = 1:obj.nTrials
                            sigLv = pxTools.getXtSignalLevels(xtMaxArr(tr), xtMinArr(tr), obj.nBins, obj.mapMethod); 
                            sigArr(tr,:) = sigLv; 
@@ -254,6 +259,9 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 case {'ica'}
                     xtS = obj.data;
                     xt = cellstructvcat(xtS, obj.dataField);
+                    %// Nan-pad here to fill size, as ts_ica ignores Nans
+                    %for calculation of WAS
+                    %xt = obj.getTensor(1:obj.nChannels, 1:obj.nTrials, 'CONFORM_METHOD','nanpad'); 
                     [~, ~, ~, W, A, S, ~, ~] = ts_ica(xt, ...
                         'decimate', 1, 'verbose', 1); 
                     obj.weightMatrix = W*A*S; 

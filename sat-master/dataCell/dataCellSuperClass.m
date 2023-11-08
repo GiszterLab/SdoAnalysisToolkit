@@ -33,7 +33,7 @@ classdef dataCellSuperClass < handle
             N_USE_CH = length(ROW_IDX); 
             % ___ Strip
             obj_out.data        = obj_out.data(1,TRIAL_IDX); 
-            obj_out.metadata    = obj_out.metadata(1,N_USE_TR); 
+            obj_out.metadata    = obj_out.metadata(1,TRIAL_IDX); 
             obj_out.sensor      = obj_out.sensor(ROW_IDX); 
             obj_out.trTimeLen   = obj_out.trTimeLen(TRIAL_IDX); 
             obj_out.nTrials     = N_USE_TR; 
@@ -110,6 +110,7 @@ classdef dataCellSuperClass < handle
                 obj
                 useChannels         double = 1:obj.nChannels; 
                 useTrials           double = 1:obj.nTrials; 
+                %vars.maxChannels    double = length(useChannels); %force override for tmpltDC
                 vars.DATAFIELD      char = obj.dataField;
                 vars.CONFORM_METHOD char {mustBeMember(vars.CONFORM_METHOD, {'pad', 'nanpad', 'trim'})} = 'pad'; 
             end
@@ -151,6 +152,12 @@ classdef dataCellSuperClass < handle
                 if isempty(xtData)
                     continue; 
                 end
+               [szY, szX] = size(xtData); 
+               if szY > N_USE_CH
+                   %// if we have multiple observations; merge down; 
+                   xtMat = reshape(xtData', szX, [], N_USE_CH); 
+                   xtData = squeeze(mean(xtMat, 2))'; 
+               end
                 if (TRIM == 1)
                     tLast = minLen; 
                     xtData = xtData(1:minLen); 

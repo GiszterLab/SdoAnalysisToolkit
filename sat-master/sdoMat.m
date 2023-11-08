@@ -96,7 +96,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.xtProperties    = sdoStruct(XT_CH_NO).params.xt; 
             obj.ppProperties    = sdoStruct(XT_CH_NO).params.pp; 
             obj.pxProperties    = sdoStruct(XT_CH_NO).params.px;
-            obj.stateMapping       = sdoStruct(XT_CH_NO).levels; 
+            obj.stateMapping    = sdoStruct(XT_CH_NO).levels; 
             obj.nStates         = length(sdoStruct(XT_CH_NO).levels) - 1; 
             obj.px0_duraMs      = sdoStruct(XT_CH_NO).params.px.px0DurationMs; 
             obj.px1_duraMs      = sdoStruct(XT_CH_NO).params.px.px1DurationMs; 
@@ -107,6 +107,8 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.sdoBkgrndJoint  = sdoStruct(XT_CH_NO).bkgrndJointSDO; 
             obj.shuffles        = sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}; 
             obj.stats           = sdoStruct(XT_CH_NO).stats{PP_CH_NO}; 
+            obj.markovMatrix    = eye(obj.nStates); %This is just a DUMMY! 
+
             %__
             obj.generatedExactBackground = true;  
         end
@@ -202,6 +204,9 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
             %
             obj.generatedExactBackground = true;  
         end
+        % ++ Method to replace the Markov Matrix; 
+      
+
         %// Class-Wrapped method for Stat testing/ analysis; 
         function obj = performStats(obj, SIG_PVAL, Z_SCORE)
             arguments 
@@ -353,14 +358,17 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
                 'ppProperties', 'nStates', 'markovMatrix', 'stateMapping'}); 
     
             %__ Be Cautious !!
-            %pxt_est.markovMatrix    = obj.markovMatrix; %// this isn't exactly the same. Px of prediction  
+            pxt_est.markovMatrix    = obj.markovMatrix; %// this isn't exactly the same. Px of prediction  
             % __ Unique/ Differing Calls
             pxt_est.duraMs          = obj.px1_duraMs; 
             %pxt_est.stateMapping    = obj.stateMapping; 
             pxt_est.zDelay          = obj.pxProperties.zDelay; 
             pxt_est.filterWid       = obj.pxProperties.smoothingFilterWidth; 
             pxt_est.filterStd       = obj.pxProperties.smoothingFilterStd; 
-            
+            %  __ DUMMY FILL ___ 
+            pxt_est.backgroundPx    = zeros(obj.nStates,1); 
+            pxt_est.backgroundMkv   = zeros(obj.nStates,1); 
+
            % // export to a pxt;  
             
         end

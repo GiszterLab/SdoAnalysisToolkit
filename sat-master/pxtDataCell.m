@@ -258,22 +258,25 @@ classdef pxtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             % // Unsure how to handle all shuffles ... 
             N_ELEM = length(obj.(DATA_FIELD)); 
             
-            for elm = 1:N_ELEM    
-                figure; 
-                if ISCELL 
-                    imagesc(obj.(DATA_FIELD){elm}); 
-                    title(strcat("P(x,t):", obj.pxtNames{elm})); 
-                else
-                    imagesc(obj.(DATA_FIELD)); 
-                    title(strcat("P(x,t:", obj.pxtNames));  
+            if ISCELL
+                for elm = 1:N_ELEM    
+                    figure; 
+                    if ISCELL 
+                        imagesc(obj.(DATA_FIELD){elm}); 
+                        title(strcat("P(x,t):", obj.pxtNames{elm})); 
+                        axis xy
+                        xlabel("Position")
+                        ylabel("Event State");     
+                    end
                 end
+            else
+                imagesc(obj.(DATA_FIELD)); 
+                title(strcat("P(x,t:", obj.pxtNames));  
                 axis xy
-                
                 xlabel("Position")
                 ylabel("Event State"); 
                 %caxis; 
             end
-            
         end
         
         % __ Error Plotter; 
