@@ -242,6 +242,12 @@ for m = 1:N_XT_CHANNELS
                 continue
             end
             flatTrShuffSpikes = reshape(shuffRasterCell{u,tr}, 1, nTrialSpikes*N_SHUFF); 
+            if any(flatTrShuffSpikes == 0)
+                %// 10.28.2023 -TS These are indices. Occassionally 0's are
+                % possible if spiketime are near start of trial.
+                flatTrShuffSpikes(flatTrShuffSpikes == 0) = 1; 
+            end
+
             %
             shuffUnitTrPx0 = pxt0Cell{1,tr}{m}(:,flatTrShuffSpikes); 
             shuffUnitTrPx1 = pxt1Cell{1,tr}{m}(:,flatTrShuffSpikes); 

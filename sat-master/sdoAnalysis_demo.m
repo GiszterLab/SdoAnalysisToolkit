@@ -5,7 +5,7 @@
 % script calls. 
 
 % The two provided examples below were used in the demonstration figures in
-% Smith, et al, 2023. 
+% [Redacted for double blind review], et al, 2023. 
 
 %_______________________________________
 % Copyright (C) 2023 Trevor S. Smith

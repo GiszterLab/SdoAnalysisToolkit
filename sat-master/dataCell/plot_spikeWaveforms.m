@@ -48,6 +48,11 @@ else
     spkCll = spkWvCll; 
 end
 
+if N_UNITS == 1
+    %/double --> cell
+    spkCll = {spkCll}; 
+end
+
 nRows = ceil(sqrt(N_UNITS)); 
 nCols = ceil(N_UNITS/nRows); 
 

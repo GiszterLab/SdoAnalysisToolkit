@@ -19,7 +19,7 @@
 %   signalLevels - [1 x N_STATES+1] Doubles Vector. Values correspond to the edges
 %       of the bins of the signal amplitude --> state. 
 %   OPTIONAL NAME-VALUE ARGS: 
-%       'navg' - [1 x 2] Integer Vector. Number of bins to use in the
+%       'navg' - [1 x 2] Integer Vector. Number of (time) bins to use in the
 %           prespike(1) and postspike(2) distributions. 
 %               Default = [20,20]; 
 %       'smoothwid' - Integer [N>=0]. Number of states to calculate smoothing
@@ -33,7 +33,7 @@
 %       'z_delay'   - Integer. Delay between end of px0 and start of px1; 
 %
 % OUTPUTS
-%   px_x0 - pre-spike state probabiilty distribution, columnwise
+%   px_x0 - pre-spike state probabiluty distribution, columnwise
 %   px_x1 - post-spike state probability distribution, columnwise
 %   ind_x0 - Positional Indicies of xt used in px_x0
 %   ind_x1 - Positional indicies of xt used in px_x1
@@ -161,10 +161,12 @@ if MULTICOMP
     px_t0 = reshape(px_t0, N_SIG_LEVELS-1, N_SPIKES, N_ROWS); 
     px_t1 = reshape(px_t1, N_SIG_LEVELS-1, N_SPIKES, N_ROWS); 
     if N_PX0_POINTS > 1
-        ind_x0 =reshape(ind_x0, N_SIG_LEVELS-1, N_SPIKES, N_ROWS);
+        ind_x0 = reshape(ind_x0, N_PX0_POINTS, N_SPIKES, N_ROWS); 
+        %ind_x0 =reshape(ind_x0, N_SIG_LEVELS-1, N_SPIKES, N_ROWS); %BUG
     end
     if N_PX1_POINTS > 1
-        ind_x1 =reshape(ind_x1, N_SIG_LEVELS-1, N_SPIKES, N_ROWS); 
+        ind_x1 =reshape(ind_x1, N_PX1_POINTS, N_SPIKES, N_ROWS); 
+        %ind_x1 =reshape(ind_x1, N_SIG_LEVELS-1, N_SPIKES, N_ROWS); %BUG
     end
 end
     
