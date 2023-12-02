@@ -5,7 +5,6 @@ SDO methods improves upon the classical spike-triggered average.
 ![SDO_Logo](https://github.com/GiszterLab/SdoAnalysisToolkit/blob/main/SAT_Logo.png)
 
 
-
 __Prerequisites__: 
 
 - Class-Based Implementation requires MATLAB 2019a or newer.
@@ -26,6 +25,8 @@ If you modify or adapt the <em>Toolkit</em>, please contact the authors or share
 ## Installation
 
 A full walkthrough for installing and using the <em> SDO Analysis Toolkit </em> can be found within '\sat-master\documentation'.
+
+A quick-run MATLAB live script is included in the folder, as 'sdoAnalysis_demo.mlx'. This can be used as an introduction to basic use of the toolkit. 
 
 1. Download the <em> SDO Analysis Toolkit </em> onto local device. 
 2. Add 'sat-master' to path ('add Folder with Subfolders') within MATLAB. 
