@@ -1,4 +1,4 @@
-# SDO Analysis Toolkit (SAT) [V 1.0]
+# SDO Analysis Toolkit (SAT) [V 1.1]
 MATLAB Package for implementing Stochastic Dynamic Operator (SDO) methods for stochastic control and prediction, using time series and point process data. 
 When applied to neurophysiological data recordings, SDO methods improves upon the classical spike-triggered average when generating predictions of state near spike. 
 
@@ -7,18 +7,17 @@ When applied to neurophysiological data recordings, SDO methods improves upon th
 
 __Prerequisites__: 
 
-- Class-Based Implementation requires MATLAB 2019a or newer (Recommended).
-- Programmatic Implementation requires MATLAB 2015 or newer. 
+- Class-Based Implementation requires MATLAB 2019a or newer (Recommended). 
 
 __Toolboxes__: 
 - <em> Statistics and Machine Learning Toolbox </em>
 - <em> Signal Processing Toolbox </em>
-- <em>Image Processing Toolbox </em> (Optional visualization)
+- <em> Image Processing Toolbox </em> (Optional visualization)
 - <em> DSP System Toolbox </em> (Optional Notch Filtering Method on <em>xtDataCell</em>)
 
 
 ## Citation Requirement
-If you use any version of this software, please cite : ... 
+If you use any version of this software, please cite this toolbox. 
 
 If you modify or adapt the <em>Toolkit</em>, please contact the authors or share your modifications under the 'Discussions' tab. 
 
@@ -34,9 +33,9 @@ A quick-run MATLAB live script is included in the folder, as 'sdoAnalysis_demo.m
 
 3. For generating the figures from the paper, Download/Clone the Full Demo Data (~400 MB) from https://github.com/GiszterLab/SdoAnalysisToolkit_DemoData
 
-4. Run 'ssta_vs_sdo.m' to produce plots which compare the STA vs. SDO methods within the trial dataset. 
+4. Run 'ssta_vs_sdo.m' as a standalone function to produce plots which compare the STA vs. SDO methods within the trial dataset. 
 
-5. Run 'sdoAnalysis_demo.m' (function-calls) or 'sdoAnalysis_demo_OOP.m' (class-methods) for performing the complete SDO trial analysis. 
+5. Run 'sdoAnalysis_demo.mlx' (function-calls) or 'sdoAnalysis_demo_OOP.m' (class-methods) for performing the complete SDO trial analysis. 
   1. When prompted, select 'xtData.mat' from within the '\sat-master\demoData\' folder. 
   2. When prompted, select 'ppData.mat' from within the '\sat-master\demoData\' folder. 
 
@@ -55,19 +54,44 @@ Data structures assume a homogeneous ordering to the data, with requirements:
 - The sample frequency is consistent across elements <em> within a data structure </em>. 
 
 An empty data holder for time series (x,t) data can be generated within MATLAB by the command: 
+~~~
 > $ xtData = SAT.xtDataHolder_new(N_TRIALS, N_CHANNELS)
-
+~~~
 An empty data holder for point-process (pp) data can be generated within MATLAB by the command: 
+~~~
 > $ ppData = SAT.ppDataHolder_new(N_TRIALS, N_CHANNELS)
-
+~~~
 Successful validation of user data formating and importing can be tested by the command: 
+~~~
 > $ SAT.validateDataHolders(xtData, ppData);  
-
+~~~
 xtData bungled into the xtData holder format may be imported into the 'xtDataCell' class for easier manipulation. Use: 
-> $ xtDataCell.import(); 
-
+~~~
+> $ xtDataCell.import(xtData); 
+~~~
 ppData bungled into the ppData holder format may be imported into the 'ppDataCell' class for easier manipulation. Use: 
-> $ ppDataCell.import();
+~~~
+> $ ppDataCell.import(ppData);
+~~~
+
+## Performing Basic Analysis
+
+An <em>sdoMultiMat</em> class can then be used to batch-compute all combinations of spike vs. signal data using default settings. 
+Initialize the <em>sdoMultiMat</em>
+~~~
+> $ smm = sdoMultiMat();
+> $ smm.compute(xtdc,ppdc); % // This generates ALL SDO combinations;
+> $ smm.findSigSdos(); %// Determine SDOs which significantly differ from baseline.  
+~~~
+ Note that changing various properties (e.g., filtering, assigning different durations, number of spikes, etc) will affect the final SDO. 
+
+
+ Determine the model of best-fit between different hypothesized fits between the <em>prespike</em> and <em>postspike</em> distribution. 
+ ~~~
+> $ pe = smm.getPredictionError(xtdc, ppdc, XT_CH_NO, PP_CH_NO); %// These numbers correspond to channel indices for the signals and spikes
+> $ pe.plot();
+~~~
+
 
 ## Objected-Oriented Data Processing:
 
@@ -84,6 +108,8 @@ Using the below classes, different data modalities may be handled more abstractl
 **sdoMat**  	  - Class for holding the SDO, along with other hypotheses
 
 **sdoMultiMat** - Class for computing multiple SDOs from ppDataCell and xtDataCell
+
+**predictionError** - A support class for computing and plotting the prediction errors between the observed and hypothesis-predicted values. 
 
 ## License
 This program is free software: you can redistribute it and/or modify
