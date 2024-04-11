@@ -37,6 +37,10 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+% 2.4.2024 - Added a capacity to deal with multiple spikes in the same
+% bin;swap round --> Ceil to better explain expected bin behavior
+% 
+
 function [yt] = filterSpiketimeContinuous (timestamps, SIG_HZ, T_MAX, filterType, TAU, varargin)
 p = inputParser(); 
 addParameter(p, 'N_STD', 4); 
@@ -51,8 +55,14 @@ SCALAR = pR.SCALAR; %basically unnecessary here
 xt_length = round(T_MAX * SIG_HZ); %number bins = num sec * num *bins/sec
 
 xt = zeros(1, xt_length); 
-st_conform = round(timestamps*SIG_HZ); %convert spiketimes into indexed impulse times
-xt(st_conform) = 1; 
+%st_conform = round(timestamps*SIG_HZ); %convert spiketimes into indexed impulse times
+st_conform = ceil(timestamps*SIG_HZ); 
+if length(unique(st_conform)) == length(st_conform)
+    xt(st_conform) = 1; 
+    %xt(st_conform(st_conform>0)) = 1; 
+else
+    xt = histcounts(st_conform, (1:xt_length+1)-0.5); 
+end
 
 %% Build FIR
 

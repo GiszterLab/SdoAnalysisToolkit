@@ -8,12 +8,14 @@
 %   - N_COLORS; 
 %       [integer] The number of colors to produce
 %   - method
-%       {'sin'/'default'}
+%       {'sin'/'default', 'linear', 'polar'}
 %       Method of breaking up colors; 
 %           - 'sin' = Manipulate R/G/B channels by rotating 3 sinusoids at
 %               a set phase to each other. 
 %           - 'default' = Use MATLAB default color scheme (useful for when
 %           the indexed order of the color may not match color on plot). 
+%           - 'linear' = Linear interpolation from R-->G-->B
+%           - 'polar', Red = Low values; Blue = High values
 %       xShift
 %           [1x3] Doubles array, each element indexed [-2pi, 2pi]. Sets the
 %           initial phase of the RGB sinusoids. 
@@ -45,11 +47,10 @@ if ~exist('xShift', 'var')
     switch method
         case 'sin'
             xShift = [0,0,0]; 
-        case {'default', 'linear'}
+        case {'default', 'linear', 'polar'}
             xShift = 0;
     end
 end
-
 
 switch method
     case 'sin'
@@ -81,7 +82,7 @@ switch method
         
     case 'default'
         %// Used for recreating/restarting matlab default color scheme
-        %prior to 2019b. 
+        %prior to 2019b, or otherwise forcing 'default-like' coloring
         
         %// 7 Default colors; 
         colArr = [...
@@ -98,14 +99,47 @@ switch method
         numIDX = mod(lkup,7); 
         numIDX(numIDX ==0) = 7; 
         cArray = colArr(numIDX,:); 
+
+    case 'polar'
+        %// Red --> Blue
+        xR = [1, 2/255, 61/225]; %/ half red;  
+        xB = [5/255, 120/225, 1]; %half-blue; 
+        x1 = [1,1,1]; 
         
+        isOdd = mod(N_COLORS,2) > 0;  
+        
+        N_ROWS = floor(N_COLORS/2); 
+        
+        dxR = (x1-xR)/(N_ROWS); 
+        dxB = (xB-x1)/(N_ROWS);
+        
+        rMat = repmat(dxR, N_ROWS-1,1); 
+        bMat = repmat(dxB, N_ROWS-1,1); 
+        cLo = cumsum([xR;rMat]); 
+        cHi = cumsum([x1;bMat]); 
+        if isOdd
+            cArray = [cLo; x1; cHi]; 
+        else
+            cArray = [cLo; cHi]; 
+        end
+
+        %{
+        %// This is TOO DARK
+        xR = [1,0,0]; 
+        xB = [0,0,1]; 
+        %N_COLORS
+        dX = (xB-xR)/(N_COLORS/2); 
+        dMat = repmat(dX, N_COLORS,1); 
+        mat = repmat([1,0,-1], N_COLORS,1);
+        cMat = cumsum(dMat); 
+        tMat = cMat+mat;
+        tMat(tMat <0) = 0; 
+        tMat(tMat>1) = 1; 
+        LI = (all(tMat==0, 2));  
+        tMat(LI,:) = 1; 
+        cArray = tMat; 
+        %}
+
 end
 
-%// DEMO (temp); 
-%{
-figure; 
-for b=1:N_BINS
-    line([1,2], [b,b], 'color', cArray(b,:)); 
-end
-%} 
 end

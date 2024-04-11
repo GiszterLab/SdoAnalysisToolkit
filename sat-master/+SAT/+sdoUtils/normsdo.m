@@ -97,4 +97,11 @@ dNSdo(isnan(dNSdo)) = 0;
 jNSdo = reshape(jNSdo, N_BINS, N_BINS, []); 
 dNSdo = reshape(dNSdo, N_BINS, N_BINS, []); 
 
+if nargout == 2
+    normMat = []; 
+elseif nargout == 1
+    normMat = []; 
+    jNSdo = []; 
+end
+
 end

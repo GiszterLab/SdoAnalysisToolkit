@@ -68,7 +68,8 @@ cl = cl(:,nonEmptyCols);
 
 [sz0y, sz0x] = size(cl); 
 
-if any(sz0x == [1,0]) && any(~nonEmptyCols)
+if any(sz0x == [0]) && any(~nonEmptyCols)
+%if any(sz0x == [1,0]) && any(~nonEmptyCols)
     arr = cl; 
     return
 end
@@ -126,7 +127,7 @@ el = reshape(el, sz0y, sz0x);
 ew = reshape(ew, sz0y, sz0x); 
 
 switch celltype
-    case {'Nx1_double', 'Nx1_cell', 'Nx1_logical'}
+    case {'Nx1_double', 'Nx1_cell', 'Nx1_logical', 'Nx1_char'}
         el2 = max(mode(mode(el)),1); %double-dimension median; expected consistent       
         if ~all(el(el>0) == el(find(el>0,1)))
             %// mismatch in expectation; 
@@ -142,7 +143,7 @@ switch celltype
             el = reshape(el, sz0y, sz0x); 
             ew = reshape(ew, sz0y, sz0x); 
         end
-    case {'NxK_double', 'NxK_cell'}
+    case {'NxK_double', 'NxK_logical', 'NxK_cell'}
         %// back-patch from cellvcat
         LI = (el>0) & ~isnan(el); 
         el2 = zeros(sz0y,1); 
@@ -183,7 +184,7 @@ end
 
 switch celltype
     %-- Original Use Case
-    case {'Nx1_double' 'NxK_double'}
+    case {'Nx1_double' 'NxK_double', 'NxK_logical', 'Nx1_char'}
         arr = cell(sz0y,1); 
         % -- can use rowwise normal horzcat
         for row=1:sz0y

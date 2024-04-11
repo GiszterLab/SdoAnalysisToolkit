@@ -32,16 +32,18 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function plot_px(pxData, varargin)
+function px(pxData, varargin)
 p = inputParser; 
 addParameter(p, 'saveFig', 0); 
 addParameter(p, 'saveFormat', 'png');
 addParameter(p, 'outputDirectory', []); 
+addParameter(p, 'newFig', 1); 
 %
 addParameter(p, 'colors', 0); 
 parse(p, varargin{:}); 
 pR = p.Results; 
 
+NEW_FIG     = pR.newFig; 
 SAVE_FIG    = pR.saveFig; 
 SAVE_FMT    = pR.saveFormat; 
 SAVE_DIR    = pR.outputDirectory; 
@@ -75,8 +77,9 @@ if (sz_y > 1) || (sz_x > 1)
 end
     
 %% PLOT
-
-figure; 
+if NEW_FIG  
+    figure; 
+end
 hold on; 
 
 xComp = [1:N_BINS N_BINS:-1:1]; 

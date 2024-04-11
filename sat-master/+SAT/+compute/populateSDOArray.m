@@ -101,40 +101,42 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 %__________________________________________
 
+% 12.4.2023 - Added in the STIRPD (spike-triggered impulse response
+% probability distribution) as a standard call. 
 
 %%
-function [sdo] = populateSDOArray(xtData, ppData, pxNPoints, varargin)
-p = inputParser; 
-addParameter(p, 'xtIDField', 'sensor'); 
-addParameter(p, 'ppIDField', 'sensor'); 
-addParameter(p, 'fieldName', 'envelope'); 
-addParameter(p, 'ppDataField', 'times'); 
-addParameter(p, 'pxFilter', [1,1]); 
-addParameter(p, 'pxShift',  1, @isscalar); 
-addParameter(p, 'pxDelay', 0, @isscalar);
-addParameter(p, 'nShuffles', 1000, @isscalar);
-addParameter(p, 'shuffMethod', 'ISI'); 
-addParameter(p, 'verbose', 0); 
-%__ CIF_Reshuffle-specific Parameters
-addParameter(p, 'CIF_FIR', '-hg'); 
-addParameter(p, 'CIF_TAU', 0.05, @isscalar); 
+function [sdo] = populateSDOArray(xtData, ppData, pxNPoints, vars)
+arguments
+    xtData 
+    ppData
+    pxNPoints
+    vars.xtIDField      = 'sensor'; 
+    vars.ppIDField      = 'sensor'; 
+    vars.fieldName      = 'envelope'; 
+    vars.ppDataField    = 'times'; 
+    vars.pxFilter       = [1,1]; 
+    vars.pxShift        {mustBeInteger} = 1; 
+    vars.pxDelay        {mustBeInteger} = 0;
+    vars.nShuffles      {mustBeInteger} = 1000; 
+    vars.shuffMethod    {mustBeMember(vars.shuffMethod, {'ISI', 'isi', 'CIF', 'cif'})} ='isi';  
+    vars.verbose        {mustBeNumericOrLogical} = 0; 
+    vars.CIF_FIR        {mustBeMember(vars.CIF_FIR, {'sg', '-hg', 'expd', 'tb'})} = '-hg'; 
+    vars.CIF_TAU        {mustBeNonnegative} = 0.05; 
+end
 
-parse(p, varargin{:}); 
-pR = p.Results; 
-%//Primary Params
-N_SHUFF         = pR.nShuffles; 
-SHUFF_METHOD    = pR.shuffMethod; 
-CIF_FIR         = pR.CIF_FIR; 
-CIF_TAU         = pR.CIF_TAU; 
-SFIELD          = pR.fieldName;
-PP_DATAFIELD    = pR.ppDataField; 
-XT_ID_FIELD     = pR.xtIDField; 
-PP_ID_FIELD     = pR.ppIDField;
-PX_FSM_WID      = pR.pxFilter(1);   
-PX_FSM_STD      = pR.pxFilter(2); 
-PX_NSHIFT       = pR.pxShift; 
-PX_ZDELAY       = pR.pxDelay; 
-VERBOSE         = pR.verbose; 
+N_SHUFF         = vars.nShuffles; 
+SHUFF_METHOD    = vars.shuffMethod; 
+CIF_FIR         = vars.CIF_FIR; 
+CIF_TAU         = vars.CIF_TAU; 
+SFIELD          = vars.fieldName;
+PP_DATAFIELD    = vars.ppDataField; 
+XT_ID_FIELD     = vars.xtIDField; 
+PP_ID_FIELD     = vars.ppIDField;
+PX_FSM_WID      = vars.pxFilter(1);   
+PX_FSM_STD      = vars.pxFilter(2); 
+PX_NSHIFT       = vars.pxShift; 
+PX_ZDELAY       = vars.pxDelay; 
+VERBOSE         = vars.verbose; 
 
 if ~isempty(pxNPoints)
     N_PX0_PTS = pxNPoints(1); 
@@ -156,7 +158,7 @@ XT_HZ           = xtData{1,1}(1).fs;
 
 %% PreCastArr
 
-[sdo] = SAT.compute.sdoStruct_new(N_XT_CHANNELS); 
+[sdo] = SAT.compute.sdoStruct_new(N_XT_CHANNELS, N_PP_CHANNELS); 
                 
 %%
 shuffSpikeCell = cell(N_PP_CHANNELS, N_TRIALS); 
@@ -180,6 +182,7 @@ for tr=1:N_TRIALS
             try 
                 shuffSpikeCell{u,tr} = repmat(ppData{1,tr}(u).times, N_SHUFF, 1); 
             catch 
+                %depreciated
                 shuffSpikeCell{u,tr} = repmat(ppData{1,tr}(u).time, N_SHUFF, 1); 
             end
 
@@ -189,6 +192,9 @@ for tr=1:N_TRIALS
 end
 
 %% Observed Spikes
+
+% 
+
 
 %// nUnits x nTrials cells
 [obsPxt0Cell, obsPxt1Cell] = pxTools.getTrialwisePxt( ...
@@ -285,6 +291,8 @@ for m = 1:N_XT_CHANNELS
         sdo(m).sdosJoint{1,u}           = unitJointSDO/nTotalSpikesUsed;     
         sdo(m).shuffles{u}.SDOShuff     = unitShuffDeltaSDO/nTotalSpikesUsed; 
         sdo(m).shuffles{u}.SDOJointShuff= unitShuffJointSDO/nTotalSpikesUsed;
+        %
+        sdo(m).stats{u}.nEvents = nTotalSpikesUsed; 
         % __ Release memory
         clear unitJointSDO unitDeltaSDO unitShuffDeltaSDO unitShuffJointSDO
         clear trShuffDeltaSDO trShuffJointSDO
@@ -303,12 +311,11 @@ for m = 1:N_XT_CHANNELS
         disp("No fieldnames recorded for point process data"); 
     end
     sdo(m).levels           = xtData{1,1}(m).signalLevels; 
-    sdo(m).unit             = '%'; 
+    sdo(m).unit             = '%'; %reserved for future use
     toc 
     if VERBOSE == 1
         disp(strcat("Finished Ch#",  num2str(m), "/", num2str(N_XT_CHANNELS))); 
     end
 end
-
 end
                 

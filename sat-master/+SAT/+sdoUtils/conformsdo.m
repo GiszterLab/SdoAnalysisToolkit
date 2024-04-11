@@ -35,6 +35,8 @@
 %   L - A linear operator from the SDO matrix, fully compliant with
 %   assumptions of linearity and superposition. 
 
+% 1.24.2024 - Added a catch for cases where diagonal magnitude > 1
+
 % Copyright (C) 2023  Trevor S. Smith
 %  Drexel University College of Medicine
 % 
@@ -75,21 +77,30 @@ function [L] = conformsdo(sdoMat)
     end
     %}
     
-    L = sdoMat; 
+    nPages = size(sdoMat,3); 
+
+    L_arr = zeros(size(sdoMat)); 
+
+
+    for z = 1:nPages
+
+    sMat = sdoMat(:,:,z); 
+    L = sdoMat(:,:,z); 
+
    
     if SAT.sdoUtils.islinearsdo(L) 
         return
     end
 
-    sdoColMag = sum(abs(sdoMat),1); 
+    sdoColMag = sum(abs(sMat),1); 
 
     %% Offset negatives on off-diagonal
     % --> Scale positive components by negative magnitudes
     %// Logical index, Off-diagnal = negative
-    LI_ODNeg = (sdoMat < 0); 
+    LI_ODNeg = (sMat < 0); 
     LI_ODNeg(LIE) = 0; 
 
-    mag_ODNeg = sum(abs(sdoMat).*LI_ODNeg,1); 
+    mag_ODNeg = sum(abs(sMat).*LI_ODNeg,1); 
 
     scRow = sdoColMag./(sdoColMag-mag_ODNeg); 
     scRow(isnan(scRow)) = 1; 
@@ -102,7 +113,7 @@ function [L] = conformsdo(sdoMat)
     %// if pos elements on main diag, scale positive off-diagonal elements
     %by offset of main diag; set diag to 0; 
     
-    mainDiag        = diag(sdoMat)'; 
+    mainDiag        = diag(sMat)'; 
     LI_ODPos        = ~LI_ODNeg; 
     LI_ODPos(LIE)   = 0; 
     
@@ -112,8 +123,8 @@ function [L] = conformsdo(sdoMat)
     scRow2      = sdoColMag./(sdoColMag-(mainDiag.*LI_MD)); 
     scMat2      = ones(N_STATES,1)*scRow2; 
     scMat2(isnan(scMat2)) = 1; 
-
-    scMat2(isnan(scMat2)) = 1; 
+ 
+    scMat2(isinf(scMat2)) = 1; 
 
     newDiag = min(0, mainDiag); 
 
@@ -131,7 +142,10 @@ function [L] = conformsdo(sdoMat)
 
     L(LIE) = L2Diag - LColSumPos'; 
 
-    %% Finally, scale sdo magnitude to original 
+    % Posthoc (temp patch)
+    L = normpdfcol2zero(L); 
+
+    %% Scale sdo magnitude to original 
 
     LColMag = sum(abs(L),1); 
 
@@ -139,8 +153,21 @@ function [L] = conformsdo(sdoMat)
     dMag(isnan(dMag)) = 1; 
     dMag(isinf(dMag)) = 0; 
 
-    dMagArr = ones(N_STATES,1)*dMag; 
+    L = L*diag(dMag); 
+    %dMagArr = ones(N_STATES,1)*dMag; 
 
-    L = L.*dMagArr; 
+    %L = L.*dMagArr; 
+
+    %% Ensure no element in column has greater than 1 mag
+
+    % take the larger of 1 or magnitude; find reciprocal; multiply; 
+    invColMag = 1./max(max(abs(L),1), [], 1);  
+    L = L*diag(invColMag); 
+    %
+    L_arr(:,:,z) = L; 
+    end
+
+    L = L_arr; 
+
 
 end

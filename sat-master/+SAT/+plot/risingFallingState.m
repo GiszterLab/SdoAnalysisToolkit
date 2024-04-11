@@ -32,7 +32,7 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function risingFallingState(sdo, XT_CH_NO, PP_CH_NO, varargin) 
+function risingFallingState(sdoStruct, XT_CH_NO, PP_CH_NO, varargin) 
 p = inputParser; 
 addParameter(p, 'saveFig', 0); 
 addParameter(p, 'saveFormat', 'png');
@@ -47,23 +47,35 @@ SAVE_DIR    = pR.outputDirectory;
 
 % __ Extract common vals; 
 
-SIG_PVAL    = sdo(XT_CH_NO).stats{PP_CH_NO}.pVal; 
-N_BINS       = length(sdo(XT_CH_NO).bkgrndSDO); 
+SIG_PVAL    = sdoStruct(XT_CH_NO).stats{PP_CH_NO}.pVal; 
+N_BINS       = length(sdoStruct(XT_CH_NO).bkgrndSDO); 
 
 %//Plots the rising State vs. Shuffle AND the associated significance values
 
-ppName0     = sdo(XT_CH_NO).neuronNames{PP_CH_NO}; 
+ppName0     = sdoStruct(XT_CH_NO).neuronNames{PP_CH_NO}; 
 ppName      = underscores2spaces(ppName0); 
-xtName      = sdo(XT_CH_NO).signalType; 
+xtName      = sdoStruct(XT_CH_NO).signalType; 
 
-sigLevels   = 1:length(sdo(XT_CH_NO).levels)-1; 
+sigLevels   = 1:length(sdoStruct(XT_CH_NO).levels)-1; 
 
 stRng = 1:N_BINS; 
 
 mainTitle   = strcat(ppName, '\rightarrow', xtName); 
 
-unitVal     = sdo(XT_CH_NO).stats{PP_CH_NO}.changeMeasureContSDO;
-shufVal     = sdo(XT_CH_NO).stats{PP_CH_NO}.changeMeasureShuffContSDO;
+% __>> We can stream this from the new stats struct; 
+
+unitVal = matTriangle_up_down_difference(sdoStruct(XT_CH_NO).sdos{PP_CH_NO}); 
+%shuff_px0 = unit_px0+
+
+[~,~,rdSdo,~] = SAT.sdoUtils.get_UnitBkgdShuff_Matrices(sdoStruct, XT_CH_NO, PP_CH_NO);
+shufVal = matTriangle_up_down_difference(rdSdo.Shuff); 
+
+%matTriangle_up_down_difference(dSdo.(x1) );
+
+% ___ TODO: Add these in here from new stats struct; 
+
+%unitVal     = sdo(XT_CH_NO).stats{PP_CH_NO}.changeMeasureContSDO;
+%shufVal     = sdo(XT_CH_NO).stats{PP_CH_NO}.changeMeasureShuffContSDO;
 
 meanShuff    = mean(shufVal,3); 
 stdShuff     = std( shufVal, 0,3); 

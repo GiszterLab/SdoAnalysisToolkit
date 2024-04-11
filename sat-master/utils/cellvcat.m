@@ -62,16 +62,19 @@ if isempty(cl)
     return; 
 end
 
+cl0 = cl; 
+
 %% Remove Completely Empty Rows
 nonemptyIDX = ~cellfun(@isempty, cl); 
-nonEmptyRows = any(nonemptyIDX,2); 
+nonEmptyCols = any(nonemptyIDX,2); 
 
-cl = cl(nonEmptyRows, :); %reset array
+cl = cl(nonEmptyCols, :); %reset array
 
 %% Get size
 
 [sz0y, sz0x] = size(cl); 
 
+%{
 if (sz0y == 0) || (sz0x == 0)
     %// if any empties, return blank
     arr = cl; 
@@ -82,6 +85,11 @@ if sz0y == 1 && any(~nonEmptyRows)
     %// if we removed rows (i.e. passed in a cell), and only 1 element
     %remains, output reduced cell
     arr = cl;
+    return
+end
+%}
+if any(sz0y == [0]) && any(~nonEmptyCols)
+    arr = cl; 
     return
 end
 
@@ -122,7 +130,7 @@ el = reshape(el, sz0y, sz0x);
 ew = reshape(ew, sz0y, sz0x); 
 
 switch celltype
-    case {'Nx1_double' 'Nx1_cell'}
+    case {'Nx1_double' 'Nx1_cell', 'Nx1_logical'}
         ew2 = max(mode(mode(ew)),1);
         %
          if ~all(ew(ew>0) == ew(find(ew>0,1)))
@@ -186,7 +194,7 @@ end
 
 switch celltype
     % -- Original Use Case
-     case {'Nx1_double' 'NxK_double'}   
+     case {'Nx1_double' 'NxK_double', 'Nx1_logical'}   
         arr = cell(1, sz0x); 
         % -- can use colwise normal vertcat
         for col=1:sz0x
@@ -241,7 +249,7 @@ switch celltype
                 end
         end
         %__ Process Output; 
-        if strcmp(celltype, 'Nx1_double')
+        if any(strcmp(celltype, {'Nx1_double','Nx1_logical'}))
             %// unwrap cells
             arr = arr{1}; 
             offset = offset{1}; 
@@ -275,7 +283,7 @@ for cll = 1:sz0y
 
         % -- Probably not best to have the switch here, but whatever
         switch celltype
-            case {'Nx1_double', 'Nx1_cell'}
+            case {'Nx1_double', 'Nx1_logical', 'Nx1_cell'}
                 %arr(ew_itt,(col-1)*sum(ew(1:col))+1:col*sum(ew(1:col))) = cl{cll, col}; 
                 arr(ew_itt:ew_itt+num_el-1,col_itt0:col_itt1) =  cl{cll, col};
 

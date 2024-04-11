@@ -19,8 +19,8 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 classdef dataCellSuperClass < handle
-    % _____ General Utils
     methods
+        %% _____ General Utils
         % ++ subsample Smaller variant
         function obj_out = subsample(obj, TRIAL_IDX, ROW_IDX)
             arguments
@@ -34,7 +34,9 @@ classdef dataCellSuperClass < handle
             % ___ Strip
             obj_out.data        = obj_out.data(1,TRIAL_IDX); 
             obj_out.metadata    = obj_out.metadata(1,TRIAL_IDX); 
-            obj_out.sensor      = obj_out.sensor(ROW_IDX); 
+            try
+                obj_out.sensor      = obj_out.sensor(ROW_IDX);
+            end
             obj_out.trTimeLen   = obj_out.trTimeLen(TRIAL_IDX); 
             obj_out.nTrials     = N_USE_TR; 
             try

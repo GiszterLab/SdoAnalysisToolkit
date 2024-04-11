@@ -20,7 +20,6 @@
 %       'outputDirectory': string/char. If not passed here, query user for
 %           save position
 
-% Copyright (C) 2018 Maryam Abolfath-Beygi
 % Copyright (C) 2022 Trevor S. Smith
 % 
 % This program is free software: you can redistribute it and/or modify
@@ -36,12 +35,18 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function arraySig(sdo, XT_CH_NO, PP_CH_NO, varargin)
+function arraySig(sdoStruct, XT_CH_NO, PP_CH_NO, varargin)
+
+normNormType = {'px0'}; 
+expectNormType  = {'none','px0', 'unity'}; 
+
 p = inputParser; 
 addOptional(p, 'zTransform', 0); 
 addParameter(p, 'saveFig', 0); 
 addParameter(p, 'saveFormat', 'png');
 addParameter(p, 'outputDirectory', []); 
+addParameter(p, 'normalization', normNormType, ... 
+    @(x) any(validatestring(x, expectNormType)) ); 
 parse(p, varargin{:}); 
 pR = p.Results; 
 
@@ -52,37 +57,86 @@ Z_TRANSFORM = pR.zTransform;
 
 %________
 
-SIG_PVAL    = sdo(XT_CH_NO).stats{PP_CH_NO}.pVal; 
-N_BINS      = length(sdo(XT_CH_NO).bkgrndSDO); 
+SIG_PVAL    = sdoStruct(XT_CH_NO).stats{PP_CH_NO}.pVal; 
+N_BINS      = length(sdoStruct(XT_CH_NO).bkgrndSDO); 
 
-ppName0     = sdo(XT_CH_NO).neuronNames{PP_CH_NO}; 
+ppName0     = sdoStruct(XT_CH_NO).neuronNames{PP_CH_NO}; 
 ppName      = underscores2spaces(ppName0); 
-xtName      = sdo(XT_CH_NO).signalType; 
+xtName      = sdoStruct(XT_CH_NO).signalType; 
 
 stRng = 1:N_BINS; 
 
 %_____
-unitSDO         = sdo(XT_CH_NO).sdos{PP_CH_NO}; 
-SDOShuff        = sdo(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff; 
-meanShuffSDO    = mean(SDOShuff,3); 
+dSDO    = sdoStruct(XT_CH_NO).sdos{PP_CH_NO}; 
+jSDO    = sdoStruct(XT_CH_NO).sdosJoint{PP_CH_NO}; 
+
+%__ compatability patching
+%if isfield(sdoStruct(XT_CH_NO).shuffles{PP_CH_
+if isfield(sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}, 'SDOShuff_mean')
+    %if ~isempty(sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff_mean) 
+    if isempty(sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff) 
+        %PARAMETRIC = 0; 
+        PARAMETRIC = 1; 
+    else
+        %PARAMETRIC = 1; % Preferable
+        PARAMETRIC = 0; 
+    end
+else
+    PARAMETRIC = 0; 
+end
+
+%|| Warp Shuffled null distributions by expected priors
+if PARAMETRIC
+    meanShuffSDO    = sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff_mean; 
+    meanShuffJoint  = sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}.SDOJointShuff_mean; 
+    shuff_std       = sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff_std; 
+    switch pR.normalization
+        case 'px0'
+            %//if REPARAMETERIZE
+            meanShuffSDO = SAT.sdoUtils.reparameterizeSdo(meanShuffSDO, meanShuffJoint, jSDO); 
+            meanShuffSTD = SAT.sdoUtils.reparameterizeSdo(shuff_std,    meanShuffJoint, jSDO); 
+        case 'unity'
+            meanShuffSDO = SAT.sdoUtils.normsdo(meanShuffSDO, meanShuffJoint); 
+            meanShuffSTD = SAT.sdoUtils.normsdo(shuff_std, meanShuffJoint); 
+        case 'none'
+            meanShuffSTD = mean(shuff_std,3); 
+    end
+else
+    SDOShuff        = sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff; 
+    SDOShuffJoint   = sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}.SDOJointShuff; 
+    switch pR.normalization
+        case 'px0'
+            rShuff        = SAT.sdoUtils.reparameterizeSdo(SDOShuff, SDOShuffJoint, jSDO);
+            meanShuffSDO  = mean(rShuff, 3); 
+            meanShuffSTD  = std(rShuff, 0, 3); 
+        case 'unity'
+            meanShuffSDO = SAT.sdoUtils.normsdo(SDOShuff, SDOShuffJoint); 
+            meanShuffSTD = std(meanShuffSDO,0,3); 
+        case 'none'
+            meanShuffSDO  = mean(SDOShuff,3); 
+            meanShuffSTD  = std(SDOShuff, 0, 3); 
+    end
+end
+
+%_________
 
 bonFerrpVal = SIG_PVAL/N_BINS; %we decided to use this only in 1D
 %bonFerrpVal = SIG_PVAL/(N_BINS^2);
-zScore = norminv(1-bonFerrpVal/2);
+zScore = norminv(1-bonFerrpVal/2); % number of STD away for 1/way test for sig; 
 
-sdo_std = std(SDOShuff, 0, 3); 
+Z_STD = zScore* meanShuffSTD; % Number of STD to be significant; 
 
-Z_STD = zScore* sdo_std; 
+dxMat = (dSDO-meanShuffSDO); % Difference in t-Test; 
 
-greater = (sdo(XT_CH_NO).sdos{PP_CH_NO} > (meanShuffSDO + Z_STD) ); 
-lesser =  (sdo(XT_CH_NO).sdos{PP_CH_NO} < (meanShuffSDO - Z_STD) ); 
-sdoMat = greater-lesser; 
+greater = (dxMat   > Z_STD ); 
+lesser =  (dxMat < -Z_STD ); 
+sdoMatrix = greater-lesser; 
 %________
 figure; 
 % 
 subplot(1,2,1)
 
-imagesc(stRng, stRng, sdoMat, [-1, 1] ); 
+imagesc(stRng, stRng, sdoMatrix, [-1, 1] ); 
 c = ([  102,179,255;    %// red
         255,255,255;    %// white
         255,102,102]);  %// blue
@@ -117,21 +171,47 @@ pbaspect([1 1 1]);
 subplot(1,2,2)
 
 %// 
+%{
 if isempty(SDOShuff)
     SDOShuff = zeros(N_BINS, N_BINS, 1); 
 end
+%}
 
-[~,T, testStat]=sigSSquaredCalculator(SDOShuff, unitSDO, SIG_PVAL, Z_TRANSFORM); 
+if PARAMETRIC
+    % Reshuffle Dynamics?
+    % __>> This isn't the best... 
+    S = repmat(meanShuffSTD, 1, 1, 1000);
+    G = repmat(meanShuffSDO, 1, 1, 1000); 
+    R = randn(N_BINS, N_BINS, 1000); 
+    Sh = G+S.*R; 
+    %
+    [~,T, testStat]=sigSSquaredCalculator(Sh, dSDO, SIG_PVAL); 
+else
+    [~,T, testStat]=sigSSquaredCalculator(SDOShuff, dSDO, SIG_PVAL, Z_TRANSFORM); 
+end
 
-SAT.plot.getCommonCdfPlot(T, testStat, SIG_PVAL)
-
+SAT.plot.getCommonCdfPlot(T, testStat, SIG_PVAL); 
 pbaspect([1,1,1]);         
 
-if Z_TRANSFORM == 1
-    suptitle2({strcat(ppName, " on ", xtName); ' (Z-Scored)'});  
-else
-    suptitle2(strcat(ppName, " on ", xtName)); 
+
+tString = strcat(ppName, " on ", xtName); 
+switch pR.normalization
+    case 'px0'
+        tString = strcat('P(x0)-Normed ', tString); 
+    case 'unity'
+        tString = strcat('Column-Normed ', tString); 
 end
+if PARAMETRIC
+    tString = strcat(tString, " (Parametric)"); 
+else
+    tString = strcat(tString, " (From Shuffled)"); 
+end
+if Z_TRANSFORM
+    tString = {tString; ' (Z-Scored)'}; 
+end
+
+suptitle2(tString); 
+
     
 if SAVE_FIG
     f = gcf; 

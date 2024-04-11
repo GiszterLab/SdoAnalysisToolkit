@@ -58,6 +58,9 @@ WHOLE_INTERVALS = ismembertol(N_INTERVALS, round(N_INTERVALS));
 
 colSum = sum(mat,1); 
 
+matType = SAT.sdoUtils.sdotype(mat); 
+%{
+
 if all(all(mat > 0))
     matType = 'M';
 elseif sum(colSum) > sqrt(N_BINS) %// arbitrary determination
@@ -65,12 +68,12 @@ elseif sum(colSum) > sqrt(N_BINS) %// arbitrary determination
 else 
     matType = 'L'; 
 end
+%}
 
 %% Conform M, if necessary
 
 if ~WHOLE_INTERVALS && matType == 'M'
     disp("Warning: Estimating L from M"); 
-    %mat = pxTools_getSdoFromJointArr(mat); 
     mat = mat-eye(N_BINS); 
     matType = 'L'; 
 end 
@@ -80,8 +83,10 @@ switch matType
         % transition/markov matrix;         
         scMat = mat^(N_INTERVALS); 
         nMat = normpdfcol2unity(scMat); 
-        
+        pxt = nMat*px0; 
     case 'L'
+        %{
+
         % linear operator; L+1 = M; 
         %// All effects of dpx can be summed, then projected
         N_STEPS = floor(N_INTERVALS); 
@@ -97,9 +102,11 @@ switch matType
         %
         %arr = expm(L*N_INTERVALS); 
         %nMat = normpdfcol2unity(arr); 
+        %}
+        % __ Call to set function; 
+        pxt = SAT.sdoUtils.sdo_pxt(mat, px0, N_INTERVALS, 1); 
         
 end
 
-pxt = nMat*px0; 
 
 end

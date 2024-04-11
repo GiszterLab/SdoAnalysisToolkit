@@ -34,7 +34,7 @@ PX_FSM_STD  = 1;
 PX_NSHIFT   = 1; 
 PX_ZDELAY   = 1; 
 
-XT_CH_NO    = 8; 
+XT_DC_CH_NO    = 8; 
 
 testMat = pxTools.getTransitionMatrixFromDC(xtDataCell, XT_DC_CH_NO, ...
     'N_BINS',       N_BINS, ...

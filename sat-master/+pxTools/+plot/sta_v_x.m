@@ -34,12 +34,13 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function plot_sta_v_x(at0, at1, xs, varargin)
+function sta_v_x(at0, at1, xs, varargin)
 %
 p = inputParser; 
 addParameter(p, 'saveFig', 0); 
 addParameter(p, 'saveFormat', 'png');
 addParameter(p, 'outputDirectory', []); 
+addParameter(p, 'newFig', 1); 
 % -- 
 addParameter(p, 'binMs', 0); 
 addParameter(p, 'colors', 0); 
@@ -61,6 +62,7 @@ else
     DEFINED_UNITS   = 0; 
 end
 
+NEW_FIG     = pR.newFig; 
 SAVE_FIG    = pR.saveFig; 
 SAVE_FMT    = pR.saveFormat; 
 SAVE_DIR    = pR.outputDirectory; 
@@ -89,7 +91,9 @@ else
 end
     
 atArray = [at0; at1]; 
-figure; 
+if NEW_FIG
+    figure; 
+end
 hold on; 
 
 maxY = 0; 
@@ -120,9 +124,14 @@ end
 
 
 maxY2 = maxY*1.1; 
-try
-    axis([1, N_TBINS, 1, maxY2]); 
-catch
+
+if ~any([at0;at1]<0)
+    try
+        axis([1, N_TBINS, 1, maxY2]); 
+    catch
+        axis([1, N_TBINS, -inf, inf]); 
+    end
+else
     axis([1, N_TBINS, -inf, inf]); 
 end
 % Time elements at t=1;
@@ -144,7 +153,8 @@ else
     xlabel("Time Bins relative to Spike")        
 end
 
-line( [N_A0_TBINS+0.5, N_A0_TBINS+0.5], [0, maxY2], 'color', 'r');
+xline(N_A0_TBINS+0.5, 'color', 'r'); 
+%line( [N_A0_TBINS+0.5, N_A0_TBINS+0.5], [0, maxY2], 'color', 'r');
 text(N_TBINS-2, 2, strcat("N=",num2str(N_SPIKES)), 'color', 'r'); 
 if N_STATES > 1
     title("Signal STA, by State at Spike"); 

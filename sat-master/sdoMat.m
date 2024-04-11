@@ -6,7 +6,12 @@
 % 2) sdoMat may be generated fom the 'sdo' common data structure
 % 3) sdoMat may be extracted from an 'sdoMultiMat' Class
 
-% TODO: Further optimization, parameter reduction
+% TODO: Further optimization, parameter reduction. 
+%
+% NOTE: This class is becoming somewhat obsolete due to the extra refinements
+% and optimization of the 'sdoMultiMat' class. Recommended to use the
+% 'sdoMultiMat' class
+
 
 %_______________________________________
 % Copyright (C) 2023 Trevor S. Smith
@@ -26,7 +31,10 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 %__________________________________________
 
-classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
+classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell.dependencies.primaryData
+    
+    %inherited properties; 
+        % fs; 
     properties (Access = public)
         xtName          char = []; 
         ppName          char = [];
@@ -37,15 +45,16 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
         nPxtTypes       {mustBeInteger} = 0; 
         nStates         {mustBeInteger} = 20; 
         nEvents         {mustBeInteger} = 0; 
-        fs              {mustBeNumeric} = 0; 
+        %fs              {mustBeNumeric} = 0; 
         % __ Meta data
         xtProperties    = []; 
         ppProperties    = []; 
         pxProperties    = []; 
+        params          = []; %dummy; 
         % __ Derived params
         stateMapping    = zeros(1,21)
-        px0_duraMs      {mustBeNumeric} = 0; 
-        px1_duraMs      {mustBeNumeric} = 0; 
+        px0DuraMs      {mustBeNumeric} = 0; 
+        px1DuraMs      {mustBeNumeric} = 0; 
         %__
         nShuffles       {mustBeInteger} = 1000; 
         sigPVal         double = 0.05; 
@@ -58,9 +67,11 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
         shuffles        = {}; 
         stats           = {}; 
         markovMatrix    = zeros(20); 
+        %
+        stirpd          = zeros(20, 40); %N_STATES x [N_T0 + N_T1 points]
         % __ Transition matrices
         transitionMat       = {}; 
-        transitionMatType   (1,:) char {mustBeMember(transitionMatType,{'M','L'})} = 'M';
+        transitionMatType   (1,:) char {mustBeMember(transitionMatType,{'M','L'})} = 'L';
         markovType          (1,3) char {mustBeMember(markovType,{'px0','px1'})} = 'px0'; 
     end
     properties (Access = protected)
@@ -78,7 +89,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
                obj = obj.computeSdo(elem, VAR_1); 
            end
         end
-        
+
         % __ Import from mass/multicompare struct 
         function obj = importSdoStruct(obj, sdoStruct, XT_CH_NO, PP_CH_NO)
             arguments
@@ -98,8 +109,8 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.pxProperties    = sdoStruct(XT_CH_NO).params.px;
             obj.stateMapping    = sdoStruct(XT_CH_NO).levels; 
             obj.nStates         = length(sdoStruct(XT_CH_NO).levels) - 1; 
-            obj.px0_duraMs      = sdoStruct(XT_CH_NO).params.px.px0DurationMs; 
-            obj.px1_duraMs      = sdoStruct(XT_CH_NO).params.px.px1DurationMs; 
+            obj.px0DuraMs      = sdoStruct(XT_CH_NO).params.px.px0DurationMs; 
+            obj.px1DuraMs      = sdoStruct(XT_CH_NO).params.px.px1DurationMs; 
             obj.nShuffles       = size(sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff, 3); 
             obj.sdo             = sdoStruct(XT_CH_NO).sdos{PP_CH_NO}; 
             obj.sdoJoint        = sdoStruct(XT_CH_NO).sdosJoint{PP_CH_NO}; 
@@ -107,79 +118,92 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.sdoBkgrndJoint  = sdoStruct(XT_CH_NO).bkgrndJointSDO; 
             obj.shuffles        = sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}; 
             obj.stats           = sdoStruct(XT_CH_NO).stats{PP_CH_NO}; 
-            obj.markovMatrix    = eye(obj.nStates); %This is just a DUMMY! 
+            obj.markovMatrix    = eye(obj.nStates); %This is just a DUMMY!
+            try
+                %// For depreciated
+                obj.params      = sdoStruct(XT_CH_NO).params; 
+            end
+            try
+                obj.stirpd      = sdoStruct(XT_CH_NO).stirpd{PP_CH_NO}; 
+                obj.nEvents     = sdoStruct(XT_CH_NO).stats{PP_CH_NO}.nEvents; 
+            end
 
             %__
             obj.generatedExactBackground = true;  
         end
         
-        function obj = computeSdo(obj, pxt_0, pxt_1)
+        function obj = computeSdo(obj, pxt_0, pxt_1, vars)
+            % Direct computation of the SDO; 
             arguments
                 obj
                 pxt_0 pxtDataCell
                 pxt_1 pxtDataCell
+                vars.method {mustBeMember(vars.method, {'original', 'asymmetric'})} = 'asymmetric'; 
             end
             %// one-off generation from pxtDataCell classes (All necessary
             %params are upstream)
-            if isa(pxt_0.data, 'cell')
-                ISCELL = 1; 
+            if pxt_0.nPxtTypes > 1
+                MULTICOMP = 1; 
+                px1_data    = pxt_1.data{1}; 
+                px0_data    = pxt_0.data{1};
             else
-                ISCELL = 0; 
+                MULTICOMP = 0; 
+                px1_data = pxt_1.data; 
+                px0_data = pxt_0.data; 
             end
             N_SHUFF  = pxt_0.nShuffles; 
             N_STATES = pxt_0.nStates;  
             
-            if ISCELL
-                px1_data    = pxt_1.data{1}; 
-                px0_data    = pxt_0.data{1}; 
-            else
-                px1_data = pxt_1.data; 
-                px0_data = pxt_0.data; 
+            %% ___ P(x,t0 - P(x,t1) SDO Calculations
+
+            switch vars.method
+                case 'original'
+                    [dArr, jArr]        = SAT.compute.sdo3(px0_data, px1_data); 
+                    [sdoSS, sdoJointSS] = SAT.compute.sdo3(pxt_0.shuffData, pxt_1.shuffData); 
+                case 'asymmetric'
+                    [dArr, jArr]        = SAT.compute.sdo5(px0_data, px1_data); 
+                    [sdoSS, sdoJointSS] = SAT.compute.sdo5(pxt_0.shuffData, pxt_1.shuffData); 
             end
-            jArr    = (px1_data*px0_data'); 
-            dArr    = jArr - diag(sum(px0_data,2));
-            
-            px1_shuff   = pxt_1.shuffData; 
-            px0_shuff   = pxt_0.shuffData; 
-            sdoSS       = zeros(N_STATES,N_STATES,N_SHUFF); 
-            sdoJointSS  = zeros(N_STATES,N_STATES,N_SHUFF); 
-            for ss = 1:N_SHUFF
-               ssPx = px1_shuff(:,:,ss)*px0_shuff(:,:,ss)';
-               sdoJointSS(:,:,ss)   =  ssPx; 
-               sdoSS(:,:,ss)        =  ssPx - diag(sum(px0_shuff(:,:,ss),2)); 
-            end 
-            %
+
+
             %___ %// Quadruple-Mean Transition => ~ Average Background
             bckMkv      = (pxt_0.backgroundMkv + pxt_1.backgroundMkv).^1/2;
             bckJoint    = diag(pxt_0.backgroundPx)*bckMkv; 
             bckSDO      = bckJoint - diag(pxt_0.backgroundPx); 
+            
             % __ WRITEOUT
             obj = copyProperties(obj, pxt_0, {'fs', 'xtName', 'ppName', ...
                 'xtChName', 'ppChName','nEvents', 'xtProperties', ...
                 'ppProperties', 'stateMapping'}); 
-            
+            %% Write out; 
             obj.pxtNames        = {pxt_0.pxtNames, pxt_1.pxtNames}; 
-            obj.px1_duraMs      = abs(pxt_1.duraMs); 
-            obj.px0_duraMs      = abs(pxt_0.duraMs);
-            obj.sdo             = dArr/obj.nEvents; 
-            obj.sdoJoint        = jArr/obj.nEvents; 
+            obj.px1DuraMs       = abs(pxt_1.duraMs); 
+            obj.px0DuraMs       = abs(pxt_0.duraMs);
+            obj.nStates         = N_STATES; 
+            obj.sdo             = dArr; 
+            obj.sdoJoint        = jArr; 
             obj.sdoBkgrnd       = bckSDO; 
             obj.sdoBkgrndJoint  = bckJoint; 
             %___
-            obj.shuffles.SDOShuff       = sdoSS/obj.nEvents; 
-            obj.shuffles.SDOJointShuff  = sdoJointSS/obj.nEvents; 
-            % ___ Append Params as expected; 
+            obj.shuffles.SDOShuff       = sdoSS; 
+            obj.shuffles.SDOJointShuff  = sdoJointSS; 
+            % ___ (TEMPORARY) Append Params as expected (Somewhat redundant) 
             obj.pxProperties.smoothingFilterWidth   = pxt_0.filterWid; 
             obj.pxProperties.smoothingFilterStd     = pxt_0.filterStd; 
             netDelay = (pxt_1.zDelay-pxt_0.zDelay)+1; %temp
             obj.pxProperties.zDelay = netDelay; 
+            obj.pxProperties.nShift = 0; %TODO: Correct this
+            obj.pxProperties.px0DurationMs = obj.px0DuraMs; 
+            obj.pxProperties.px1DurationMs = obj.px1DuraMs; 
+
             switch obj.markovType
                 case 'px0'
                     obj.markovMatrix = pxt_0.markovMatrix; 
                 case 'px1'
                     obj.markovMatrix = pxt_1.markovMatrix; 
             end
-            
+            obj.stirpd = [pxt_0.stirpd, pxt_1.stirpd]; 
+
         end
         % ++ Method to replace the estimated background SDO ++ 
         function obj = computeBackgroundSdo(obj, xtdc)
@@ -194,19 +218,21 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
             SAM_PER_MS = obj.fs/1000; 
 
             [px0, px1] = pxTools.getPxtFromXt(flatMat, 'all', 1:obj.nStates+1, ...
-                'navg', round([obj.px0_duraMs, obj.px1_duraMs] * SAM_PER_MS), ...
+                'navg', round([obj.px0DuraMs, obj.px1DuraMs] * SAM_PER_MS), ...
                 'smoothwid', obj.pxProperties.smoothingFilterWidth, ...
                 'smoothstd', obj.pxProperties.smoothingFilterStd, ... 
                 'z_delay',   obj.pxProperties.zDelay); 
+            
+            [obj.sdoBkgrnd, obj.sdoBkgrndJoint] = SAT.compute.sdo5(px0, px1); 
+            %{
             N_PTS = size(px0,2); 
             obj.sdoBkgrndJoint  = (px1*px0')/N_PTS; 
             obj.sdoBkgrnd       = ((px1*px0') - diag(sum(px0,2)))/N_PTS; 
-            %
+            %}
             obj.generatedExactBackground = true;  
         end
         % ++ Method to replace the Markov Matrix; 
-      
-
+    
         %// Class-Wrapped method for Stat testing/ analysis; 
         function obj = performStats(obj, SIG_PVAL, Z_SCORE)
             arguments 
@@ -218,60 +244,39 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
             sMat = SAT.compute.performStats(sMat); 
             % __ Test
             sMat = SAT.compute.testStatSig(sMat, SIG_PVAL, Z_SCORE);
-            obj.stats = sMat.stats{1};
+            obj.stats   = sMat.stats{1};
             obj.sigPVal = SIG_PVAL; 
-            obj.zScore = Z_SCORE; 
+            obj.zScore  = Z_SCORE; 
         end
         %}
         %% Operate
-        
         % ___ Generate normalized Hypothesized Matrices from observed dat; 
-        function obj = makeTransitionMatrices(obj, ALL_MAT)
+        function obj = makeTransitionMatrices(obj, xtdc, ppdc, ALL_MAT)
             arguments
                 obj 
+                xtdc xtDataCell
+                ppdc ppDataCell
                 ALL_MAT {mustBeNumericOrLogical} = 1; 
             end
-
+     
             %// This one requires the definition of the STA as mean of px
             MATTYPE = obj.transitionMatType; 
             
-            nmCell = {'t0t1', 'gauss', 'STA', 'bck', 'mkv', 'staBck', 'SDO'};
-            PX_FSM_WID = obj.pxProperties.smoothingFilterWidth; 
-            PX_FSM_STD = obj.pxProperties.smoothingFilterStd; 
+            HStruct = SAT.predict.getPredictionMatrices(obj, xtdc, ppdc, 1,1,...
+                'type', MATTYPE); 
             
-            if ~obj.generatedExactBackground 
-                disp("Using Estimated (non-exact) Background"); 
+            nmCell = fieldnames(HStruct); 
+            nFields = length(nmCell); 
+            matCell = cell(1, nFields); 
+            for f = 1:nFields
+                matCell{f} = HStruct.(nmCell{f}); 
             end
-            % __ 7 hypotheses
-            N_MAT = length(nmCell); 
-            matCell = cell(1, N_MAT); 
-            staPx   = sum(obj.sdoJoint,2);
-            
-            % _________ Ripped from gen script; 
-            % [H1] __ t0t1 
-            matCell{1} = pxTools.getH0Array(obj.nStates, 0,0, MATTYPE);
-            % [H2] __ gauss 
-            matCell{2} = pxTools.getH0Array(obj.nStates, max(1, PX_FSM_WID), max(1, PX_FSM_STD), MATTYPE); 
-            % [H3] __ STA (simple)
-            matCell{3} = staPx* ones(1,obj.nStates); 
-            % [H4] __ bck
-            [~, bk_NjSDO]    = SAT.sdoUtils.normsdo(obj.sdoBkgrnd, obj.sdoBkgrndJoint, 'px0'); 
-            matCell{4} = bk_NjSDO; 
-            % [H5] __ Mkv
-            try
-                matCell{5} = obj.markovMatrix^round(obj.fs*obj.px1_duraMs/1000); 
-            catch
-                matCell{5} = zeros(obj.nStates); 
-            end
-            % [H6] __ sta+Bckgrnd
-            matCell{6} = bk_NjSDO*SAT.sdoUtils.stashiftmat(obj.sdoJoint, staPx); 
-            % [H7] __ SDO
-            matCell{7} = SAT.sdoUtils.normsdo(obj.sdo, obj.sdoJoint); 
+
             if ALL_MAT
                 obj.transitionMat = matCell; 
                % _____
                obj.pxtNames     = nmCell; 
-               obj.nPxtTypes    = N_MAT;
+               obj.nPxtTypes    = nFields;
             else
                 obj.transitionMat   = matCell{end}; 
                 obj.pxtNames        = nmCell{end}; 
@@ -282,18 +287,30 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
         
         %% Bungle
         function sMat = bungleSdoStruct(obj)
-           %// temporary method to 'reconstruct' a miniSDO array for the
-           %common plotter method; 
-           sMat = struct( ...
-               'signalType',        obj.xtChName, ...
-               'neuronNames',       {{obj.ppChName}}, ... 
-               'levels',            obj.stateMapping, ...  
-               'sdosJoint',         {{obj.sdoJoint}}, ... 
-               'sdos',              {{obj.sdo}}, ... 
-               'bkgrndJointSDO',    obj.sdoBkgrndJoint, ... 
-               'bkgrndSDO',         obj.sdoBkgrnd , ... 
-               'shuffles',          {{obj.shuffles}}, ... 
-               'stats',             {{obj.stats}}); 
+           %// Method to 'reconstruct' a miniSDO array for the
+           % common plotter method; 
+           % __ >> Double-wrap a cell to make it look like a stacked 
+            sMat = SAT.compute.sdoStruct_new(1,1); 
+            sMat.signalType     = obj.xtChName; 
+            sMat.neuronNames    = {obj.ppChName}; 
+            sMat.levels         = obj.stateMapping; 
+            sMat.sdosJoint      = {obj.sdoJoint}; 
+            sMat.sdos           = {obj.sdo}; 
+            sMat.bkgrndJointSDO = obj.sdoBkgrndJoint; 
+            sMat.bkgrndSDO      = obj.sdoBkgrnd; 
+            sMat.shuffles       = {obj.shuffles}; 
+            sMat.stats          = {obj.stats};
+            if ~isempty(obj.params)
+                sMat.params         = obj.params; 
+            else
+                % __ for posterity__ (Redundant)
+                sMat.params      = struct( ...
+                    'xt', obj.xtProperties, ...
+                    'pp', obj.ppProperties, ...
+                    'px', obj.pxProperties); 
+            end
+            sMat.stirpd         = {obj.stirpd}; 
+
         end
         
         %% Plot (Overload)
@@ -311,11 +328,18 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
             end
             sMat = bungleSdoStruct(obj); 
             SAT.plotSDO(sMat, 1,1, ...
+                'filter', 0, ...
                 'saveFig', options.saveFig, ...
                 'saveFormat', options.saveFormat, ...
                 'outputDirectory', options.outputDirectory); 
+           
+            N_PX0_PTS = round(abs(obj.px0DuraMs*obj.fs/1000));  
+
+            pxTools.plot.stirpd(obj.stirpd, N_PX0_PTS, 'binDuraMs', 1000/obj.fs, 'nSpikes', obj.nEvents); 
+
         end
         
+
         %% Export to pxtDataCell
         %// use transition matrices of SDO to predict pxt1 from an
         %input pxtDataCell
@@ -360,7 +384,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
             %__ Be Cautious !!
             pxt_est.markovMatrix    = obj.markovMatrix; %// this isn't exactly the same. Px of prediction  
             % __ Unique/ Differing Calls
-            pxt_est.duraMs          = obj.px1_duraMs; 
+            pxt_est.duraMs          = obj.px1DuraMs; 
             %pxt_est.stateMapping    = obj.stateMapping; 
             pxt_est.zDelay          = obj.pxProperties.zDelay; 
             pxt_est.filterWid       = obj.pxProperties.smoothingFilterWidth; 
@@ -369,9 +393,19 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass
             pxt_est.backgroundPx    = zeros(obj.nStates,1); 
             pxt_est.backgroundMkv   = zeros(obj.nStates,1); 
 
+            %
+            pxt_est.dataMatrices = obj.transitionMat; 
+
            % // export to a pxt;  
             
         end
-        
     end
+    %{
+    methods (Static)
+        function plotMatrix(mat)
+
+        end
+    end
+    %}  
+
 end

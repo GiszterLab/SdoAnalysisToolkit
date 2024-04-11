@@ -6,8 +6,8 @@
 % common plotters to be less strictly defined in -how- they generate plots
 % intrinsically, but requires stronger typing here. 
 %
-% The line properties used here are under the assumption of the 6
-% hypotheses in the order: {'t0t1', 'gaussH0', 'mkv', 'bck', 'STA', 'SDO'};
+% The line properties used here are under the assumption of the 7
+% hypotheses in the order: {'t0t1', 'gaussH0', 'STA', 'mkv', 'bck', 'STA', 'SDO'};
 % 
 % If a different number of hypotheses are used, or these are reordered by
 % the user, then the user should also change the number of elements defined
@@ -91,7 +91,7 @@ plotProp.(el_5).LineWidth       = 1;
 N = N+1; 
 if N > N_FIELDS; return; end
 
-% -- dSTAPx + Background SDO
+% -- dSTA-P(x) + Background SDO
 el_6 = fieldNames{6};                %// Green
 plotProp.(el_6).color           = [021,128,000]/255;
 plotProp.(el_6).LineStyle       = "-"; 

@@ -1,5 +1,5 @@
 %% getpxTimeEvolution "getPxTE"
-% Utility to generate a prediction of Px over N_STEPS using an initial
+% Utility to generate a feedforward prediction of Px over N_STEPS using an initial
 %probability distribution and a linear (L) update operator (SDO) under the
 % framework px1 = x0 + dx(0), where dx0 is calculated by an update matrix. 
 %
@@ -15,6 +15,7 @@
 %           2) {Mx1} cell array containing M [NxN] SDO matrices 
 %   N_STEPS
 %       - Int. Number of steps to make (predict), including point px0. 
+%           --> Floating point values can be passed, but may be inprecise; 
 %   scaleArr 
 %       -A [MxN_STEPS] doubles array containing real-valued scaling
 %       amplitudes for sdo at each time step. 
@@ -60,6 +61,9 @@ pR = p.Results;
 CTRL_ON = pR.ctrlOn; 
 %// Need to ensure the length of CTRLSig matches obs. 
 
+
+N_STEPS = floor(N_STEPS); %whole integer numbers only 
+
 %// Treat user input errors
 [nDim, nPoints] = size(CTRL_ON); 
 if nPoints < N_STEPS
@@ -83,7 +87,7 @@ pxTE = zeros(N_BINS, N_STEPS);
 
 t = 1;
 pxt = px0; 
-while t < N_STEPS
+while t <= N_STEPS
     pxTE(:,t) = pxt; 
     dxt = zeros(N_BINS,1); 
     for a = 1:N_L_ARR
@@ -94,5 +98,6 @@ while t < N_STEPS
     pxt = pxt+dxt; 
     t = t+1; 
 end
+
 
 end

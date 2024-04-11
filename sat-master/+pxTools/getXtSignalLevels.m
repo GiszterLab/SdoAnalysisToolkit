@@ -1,7 +1,12 @@
 % Derive a vector of edges describing the relationship between signal
 % amplitude and bins. 
 %// Modular method of assigment
+%
+%
 
+% To avoid porducing 'NaN' for ranging values, signal values greater than
+% the defined discretization range willl be assigned to the closest defined
+% value (i.e. clipping). 
 % Copyright (C) 2023  Trevor S. Smith
 %  Drexel University College of Medicine
 % 

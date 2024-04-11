@@ -48,10 +48,14 @@ else
     spkCll = spkWvCll; 
 end
 
+if ~iscell(spkCll)
+%{
 if N_UNITS == 1
+%}
     %/double --> cell
     spkCll = {spkCll}; 
 end
+%}
 
 nRows = ceil(sqrt(N_UNITS)); 
 nCols = ceil(N_UNITS/nRows); 
@@ -62,13 +66,21 @@ for ui = 1:N_UNITS
     subplot(nRows, nCols, ui); 
     u = useUnits(ui); 
     hold on; 
-    if PLOT_ALL == 1
-        plot(spkCll{ui}', 'color', [0.36,0.36,0.45, 0.1]); %gray/teal
-    else
+
         spkStd  = std(spkCll{ui},[],1); 
         spkMn   = mean(spkCll{ui},1); 
+
+        if isempty(spkMn)
+            continue
+        end
         
         spkLen = length(spkMn); 
+
+    if PLOT_ALL == 1
+        plot(spkCll{ui}', 'color', [0.36,0.36,0.45, 0.1]); %gray/teal
+
+
+    else
         spkXX = [1:spkLen spkLen:-1:1]; 
         %spkXX = [1:52 52:-1:1]; %standard NEV 52-pt; 
         spkYY = [spkMn+spkStd fliplr(spkMn-spkStd)]; 

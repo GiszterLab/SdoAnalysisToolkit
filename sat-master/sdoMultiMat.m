@@ -23,31 +23,35 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 %__________________________________________
 
+% 2.2.2024 - Upgrade to the V5 (assymetric) estimation script, parallel compute
 
-classdef sdoMultiMat < handle
+%// caution should be taken w/ inherited methods from the superclass; 
+classdef sdoMultiMat < handle %& dataCellSuperClass
     properties
+        fs              = 0; 
         % __ SuperSet ___
-        nXtChannels {mustBeInteger}= 0; 
-        nPpChannels {mustBeInteger}= 0; 
+        nXtChannels     {mustBeInteger}= 0; 
+        nPpChannels     {mustBeInteger}= 0; 
         % __ PXT PARAMS
-        px0DuraMs   = -10; 
-        px1DuraMs   = 10; 
-        zDelay      {mustBeInteger}= 0; 
-        nShift      {mustBeInteger}= 1; 
-        filterWid     = 0; 
-        filterStd     = 0; 
-        %px_nStates  = 20;
+        px0DuraMs       = -10; 
+        px1DuraMs       = 10; 
+        zDelay          {mustBeInteger}= 0; 
+        nShift          {mustBeInteger}= 1; 
+        filterWid       = 0; 
+        filterStd       = 0; 
+        nEventsUsed     = 0; 
         % __ Significance Testing
-        sigPVal     = 0.05; 
-        nSigValues  {mustBeInteger}= 1; 
-        zScore      = false; 
-        sigMat      = []; 
+        sigPVal         = 0.05; 
+        nSigValues      {mustBeInteger}= 1; 
+        zScore          = false; 
+        sigMat          = []; 
         %_____
-        sdoMatCell  = {}; %// Reserved; 
-        sdoStruct   = {}; 
+        sdoMatCell      = {}; %// Reserved; 
+        sdoStruct       = {}; 
         %__ MetaData
-        xtProperties = []; 
-        ppProperties = []; 
+        xtProperties    = []; 
+        ppProperties    = []; 
+        pxProperties    = [];           
     end
     properties (Access = protected)
         populatedStructure = false; 
@@ -55,47 +59,52 @@ classdef sdoMultiMat < handle
 
     methods
         % __ Wrap the actual programmatic method; 
-        function obj = compute(obj, xtdc, ppdc, useXtChannels, usePpChannels)
+        function obj = compute(obj, xtdc, ppdc, useXtChannels, usePpChannels, useTrials, vars)
             arguments
                 obj 
                 xtdc xtDataCell
                 ppdc ppDataCell
-                useXtChannels {mustBeInteger} = []; 
-                usePpChannels {mustBeInteger} = []; 
+                useXtChannels {mustBeInteger} = 1:xtdc.nChannels;
+                usePpChannels {mustBeInteger} = 1:ppdc.nChannels; 
+                useTrials     {mustBeInteger} = 1:xtdc.nTrials; 
+                vars.condenseShuffles = 1; 
+                vars.method {mustBeMember(vars.method, {'original', 'asymmetric'})} = 'asymmetric'; 
+                vars.parallelCompute = 0; 
+                %useTrials = []; 
             end
             %___ Just run the SDO Pipeline for all combinations using common params
             %//  use the programmatic method
             %(efficient) for calculating the core code; 
+            xtdc = subsample(xtdc, useTrials, useXtChannels); 
+            ppdc = subsample(ppdc, useTrials, usePpChannels); 
 
-            if ~isempty(useXtChannels)
-                xtdc = subsample(xtdc, 1:xtdc.nTrials, useXtChannels); 
-            end
-            if ~isempty(usePpChannels)
-                ppdc = subsample(ppdc, 1:ppdc.nTrials, usePpChannels); 
-            end
-
-            if isempty(xtdc.data{1,1}(1).signalLevels)
-                %// discretize here, if not already done
+            if ~xtdc.discretizedData
                 xtdc.discretize; 
             end
 
+            obj.fs = xtdc.fs; 
+
             SIG_FACTOR = xtdc.fs/1000; 
-
-            obj.sdoStruct = SAT.compute.populateSDOArray(xtdc.data(1,:), ppdc.data(1,:), ... 
-                round([abs(obj.px0DuraMs), obj.px1DuraMs]*SIG_FACTOR), ... 
-                'xtIDField',    'sensor', ...
-                'ppIDField',    'sensor', ...           
-                'fieldName',    xtdc.dataField, ...
-                'ppDataField',  ppdc.dataField, ... 
-                'pxFilter',     [obj.filterWid, obj.filterStd], ... 
-                'pxShift',      obj.nShift, ...
-                'pxDelay',      obj.zDelay, ... 
-                'nShuffles',    ppdc.nShuffles, ...
-                'shuffMethod',  ppdc.shuffMethod, ...
-                'verbose',     1, ... 
-                'CIF_FIR',      ppdc.shuffCIF,...
-                'CIF_TAU',      ppdc.shuffTau);  
-
+            
+            %Maybe we eventually use fractions of neurons or trials, but
+            %for now, we'll just use ALL elements
+            obj.nEventsUsed = sum(ppdc.nTrialEvents, 2); 
+    
+            % // 12.8.2023 Update
+            try 
+            obj.sdoStruct = SAT.compute.populateSDOArray3(xtdc, ppdc, ... 
+                'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
+                'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
+                'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
+          %
+            catch
+                %in case I forget to update the public release
+            obj.sdoStruct = SAT.compute.populateSDOArray2(xtdc, ppdc, ... 
+                'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
+                'pxShift', obj.nShift, 'pxDelay', obj.zDelay); %, 'useTrials', useTrials); 
+            end
+          %}
+            %}
             obj.nXtChannels = length(obj.sdoStruct); 
             obj.nPpChannels = length(obj.sdoStruct(1).sdos); 
             obj.populatedStructure = true; 
@@ -124,7 +133,10 @@ classdef sdoMultiMat < handle
                 obj.sdoStruct(m).params = params; 
             end
             %___ 
-            obj.sdoStruct = SAT.compute.performStats(obj.sdoStruct); 
+            if ~vars.condenseShuffles
+                % otherwise, we perform stats during the direct computation
+                obj.sdoStruct = SAT.compute.performStats(obj.sdoStruct);
+            end
             obj.sdoStruct = SAT.compute.testStatSig(obj.sdoStruct, obj.sigPVal, obj.zScore); 
             %___ 
         end
@@ -138,6 +150,7 @@ classdef sdoMultiMat < handle
         end
         %// Extract an 'sdoMat' Class from multi-Mat; 
         function sdoM = extract(obj, XT_CH_NO, PP_CH_NO)
+            % Return an 'sdoMat' structure from the 'sdoMultiMat'
             arguments
                 obj
                 XT_CH_NO {mustBeInteger}
@@ -147,20 +160,225 @@ classdef sdoMultiMat < handle
                 disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
                 return
             end
-            sdoM = sdoMat; 
+            sdoM = sdoMat();
             sdoM.importSdoStruct(obj.sdoStruct, XT_CH_NO, PP_CH_NO); 
+            % __>> Need to copy properties here; 
+            propList = {'sigPVal', 'px0DuraMs', 'px1DuraMs', 'fs'};  
+            sdoM.copyProperties(obj, propList);
+            %
+            % Temp fix, not ideal; 
+            
+            %
+        end
+        % ___ 
+        function sdos = getSdos(obj, useXtChannels, usePpChannels)
+            arguments
+                obj
+                useXtChannels = 1; 
+                usePpChannels = 1; 
+            end
+            N_USE_XT = length(useXtChannels); 
+            N_USE_PP = length(usePpChannels); 
+            nBins = length(obj.sdoStruct(1).bkgrndSDO); %non-optimal call; 
+            sdos = cell(1,N_USE_XT); 
+            for m_i = 1:N_USE_XT
+                m = useXtChannels(m_i); 
+                sdos{m_i} =  zeros(nBins, nBins, N_USE_PP); 
+                for u_i = 1:N_USE_PP
+                    u = usePpChannels(u_i);
+                    sdos{m_i}(:,:,u_i) = obj.sdoStruct(m).sdos{u}; 
+                end
+            end
+            if N_USE_XT == 1
+                % unwrap
+                sdos = sdos{1};
+            end
         end
 
+        %___ Prediction
+        function errorStruct = getPredictionError(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO, vars)
+            arguments
+                obj
+                xtdc xtDataCell
+                ppdc ppDataCell
+                XT_CH_NO = 1; 
+                PP_CH_NO = 1; 
+                vars.plot = 0; 
+            end
+
+            % __ This is the efficient 'internal' based prediction using
+            % classes; 
+           
+            px0 = pxtDataCell(); 
+            px0.duraMs = obj.px0DuraMs; 
+            
+            % TODO: Streamline stirpd extraction; 
+           
+            px0.import(xtdc,ppdc,XT_CH_NO,PP_CH_NO, ...
+                'includeShuffles', 0, ...
+                'calculateStirpd', 0); 
+
+            px1 = pxtDataCell(); 
+            px1.duraMs = obj.px1DuraMs; 
+            px1.import(xtdc,ppdc,XT_CH_NO,PP_CH_NO, ...
+                'includeShuffles', 0, ...
+                'calculateStirpd', 0); 
+
+            sdo = obj.extract(XT_CH_NO, PP_CH_NO); 
+
+            sdo.makeTransitionMatrices(xtdc,ppdc); 
+
+            pd_px1 = sdo.getPredictionPxt(px0);
+
+            errorStruct = SAT.predict.predictionError(); 
+            errorStruct.computeError(pd_px1, px1); 
+ 
+            if vars.plot
+                errorStruct.plot(); 
+            end
+
+        end
+%
+
+        %// Because we often care about the properly normalized SDOs; 
+        % Returning these as a STACK 
+        function nSdos = getNormSdos(obj, useXtChannels, usePpChannels, background)
+            arguments
+                obj
+                useXtChannels = 1; 
+                usePpChannels = 1; 
+                background = 0; 
+            end
+            N_USE_XT = length(useXtChannels); 
+            N_USE_PP = length(usePpChannels); 
+
+            nBins = length(obj.sdoStruct(1).bkgrndSDO); %non-optimal call; 
+            nSdos = cell(1, N_USE_XT); 
+            for m_i = 1:N_USE_XT
+                m = useXtChannels(m_i); 
+                if background == 1
+                    nSdos{m_i} = SAT.sdoUtils.normsdo( ...
+                        obj.sdoStruct(m_i).bkgrndSDO, ... 
+                        obj.sdoStruct(m_i).bkgrndJointSDO); 
+                else
+                    nSdos{m_i} = zeros(nBins, nBins, N_USE_PP); 
+                    for u_i = 1:N_USE_PP
+                        u = usePpChannels(u_i); 
+                        %
+                        nSdos{m_i}(:,:,u_i) = SAT.sdoUtils.normsdo(obj.sdoStruct(m).sdos{u}, ... 
+                            obj.sdoStruct(m).sdosJoint{u}); 
+                    end
+                end
+            end
+            if N_USE_XT == 1
+                % unwrap cell; 
+                nSdos = nSdos{1}; 
+            end
+        end
+
+
+        function plotMatrix(obj, useXtChannels, usePpChannels, vars)
+            arguments
+                obj
+                useXtChannels = 1; 
+                usePpChannels = 1; 
+                vars.matField  {mustBeMember(vars.matField, {'sdos', 'sdosJoint', 'drift'})} = 'sdos'; 
+                vars.norm      {mustBeNumericOrLogical} = 0;  
+            end
+            N_USE_XT = length(useXtChannels); 
+            N_USE_PP = length(usePpChannels); 
+
+            nTotal = N_USE_XT*N_USE_PP; 
+            N_COLS = ceil(sqrt(nTotal)); 
+            N_ROWS = ceil(nTotal/N_COLS);             
+            %
+            figure;
+            %
+            ii = 1; 
+            for mi = 1:N_USE_XT
+                m = useXtChannels(mi); 
+                xtName = obj.sdoStruct(m).signalType; 
+                for uii = 1:N_USE_PP
+                    u = usePpChannels(uii); 
+                    ppName = obj.sdoStruct(m).neuronNames{u}; 
+                    switch vars.matField
+                        case {'sdos', 'sdosJoint'}
+                            mat = obj.sdoStruct(m).(vars.matField){u}; 
+                        case 'drift'
+                            m1 = obj.sdoStruct(m).sdos{u}; 
+                            [mat, ~] = SAT.sdoUtils.splitSymmetry(m1);
+                    end
+                    %
+                    subplot(N_ROWS, N_COLS, ii)
+                    imagesc(mat); 
+                    axis xy
+                    line([1, length(mat)], [1, length(mat)], 'lineStyle', '--', 'color', 'white'); 
+                    title(strcat(ppName, '\rightarrow', xtName)); 
+                    ii = ii+1; 
+                end
+            end
+            
+        end
         % __ X-Class plotting Methods; 
         function plot(obj, XT_CH_NO, PP_CH_NO)
             arguments
                 obj
-                XT_CH_NO {mustBeInteger}
-                PP_CH_NO {mustBeInteger}
+                XT_CH_NO {mustBeInteger} = 1; 
+                PP_CH_NO {mustBeInteger} = 1; 
             end
-
-            sdoM = obj.extract(XT_CH_NO, PP_CH_NO); 
-            plot(sdoM); 
+            n_xt = length(XT_CH_NO); 
+            n_pp = length(PP_CH_NO); 
+            for m = 1:n_xt 
+                for u = 1:n_pp
+                    sdoM = obj.extract(XT_CH_NO(m), PP_CH_NO(u));
+                    plot(sdoM); 
+                end
+            end
         end
+        % __ Quick -plots; 
+        function plotStirpd(obj, useXtChannels, usePpChannels)
+            % General, "PLOT ALL" method for evaluating 
+            % useXtChannels = []
+            % usePpChannels = []; 
+            arguments
+                obj
+                useXtChannels = 1; 
+                usePpChannels = 1; 
+            end
+            N_USE_XT = length(useXtChannels); 
+            N_USE_PP = length(usePpChannels); 
+
+            nTotal = N_USE_XT*N_USE_PP; 
+            N_COLS = ceil(sqrt(nTotal)); 
+            N_ROWS = ceil(nTotal/N_COLS); 
+
+            N_PX0_PTS = round(abs(obj.px0DuraMs*obj.fs/1000));  
+
+            f = figure;
+            ii  = 1; 
+            n = get(gcf,'Number'); 
+            for mi = 1:N_USE_XT
+                m = useXtChannels(mi); 
+                for ui = 1:N_USE_PP
+                    u = usePpChannels(ui); 
+                    %
+                    titleStr = strcat(obj.sdoStruct(m).neuronNames{u}, '\rightarrow', obj.sdoStruct(m).signalType); 
+
+                    pxTools.plot.stirpd(obj.sdoStruct(m).stirpd{u}, ...
+                        N_PX0_PTS, 'binDuraMs', 1000/obj.fs, ...
+                        'nSpikes', obj.sdoStruct(m).stats{u}.nEvents, ... 
+                        'titleStr', titleStr); 
+                    ax = gca; 
+                    ax_copy = copyobj(ax,f); 
+                    subplot(N_ROWS, N_COLS, ii, ax_copy);
+                    f.Colormap = bone; 
+                    colorbar; 
+                    close(n+1);
+                    ii = ii+1; 
+                end
+                sgtitle("STA-P(x)"); 
+            end
+        end
+        %______ 
     end
 end

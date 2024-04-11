@@ -1,8 +1,8 @@
 %% xtDataCell Class (OOP)
-% Class for manipulating X(t) data. Designed for use within the SDO
-% Analysis Toolkit
+% Class for manipulating X(t) and interconverting. 
+% Designed for use within the SDO Analysis Toolkit
 
-% xtDataCell class used here to contain time series type data; 
+% xtDataCell class used here to contain/operate on time series type data; 
 
 %_______________________________________
 % Copyright (C) 2023 Trevor S. Smith
@@ -23,16 +23,17 @@
 %__________________________________________
 
 
-classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
+classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell.dependencies.primaryData
+    %% 'Inherited Properties'
+        %data                = []; 
+        %metadata            = []; 
+        %nTrials             {mustBeInteger} = 0; 
+        %nChannels           {mustBeInteger} = 0; 
+        %sensor              = []; 
+        %fs                  double {mustBeNonnegative} = 0
+        %dataField           = []; 
     properties
-        data                = []; 
-        metadata            = []; 
-        nTrials             {mustBeInteger} = 0; 
-        nChannels           {mustBeInteger} = 0; 
-        sensor              = []; 
-        fs                  double {mustBeNonnegative} = 0
         trTimeLen           = []; 
-        dataField           = []; 
         dataSource          = []; 
         % __ Ranging / Discretization Vars; 
         channelAmpMax       = []; %holder for [ch x tr] dynamic max amplitude
@@ -45,78 +46,75 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
         nActivationsUsed    {mustBeInteger, mustBeNonnegative} = 0; 
         decomposeMethod     char {mustBeMember(decomposeMethod, {'pca', 'ica'})} = 'pca';
     end
-    properties (Access = protected) 
-        %// for stability
-        sampledData = false; 
+    properties (Hidden, Dependent)
+        % // Internal Flags for Stability
+        discretizedData
     end
+
     methods
+        %% Dependent/Dynamic Properties; 
+        function LI = get.discretizedData(obj)
+            LI = false; 
+            if ~isempty(obj.data{1,1}(1).stateSignal)
+                LI = true; 
+            end
+        end
+
         %% __ CONSTRUCTOR
         function obj = xtDataCell(N_TRIALS, N_CHANNELS)
             arguments
                 N_TRIALS    {mustBeInteger} = 0; 
                 N_CHANNELS  {mustBeInteger} = 0; 
             end
-            S = SAT.xtDataHolder_new(N_TRIALS, N_CHANNELS); 
+            S = dataCell.constructors.getXtDataHolder(N_TRIALS, N_CHANNELS); 
+            obj.weightMatrix = eye(N_CHANNELS); 
             obj.data        = S(1,:); 
             obj.metadata    = S(2,:); 
             obj.nTrials     = N_TRIALS; 
             obj.nChannels   = N_CHANNELS; 
+            obj.channelAmpMax = zeros(N_CHANNELS, N_TRIALS); 
+            obj.channelAmpMin = zeros(N_CHANNELS, N_TRIALS); 
         end
         %% __ Populate/Import
-        function obj = import(obj,dataCell, FIELDNAME)
+        function obj = import(obj,dataHolder, FIELDNAME)
             arguments
                 obj
-                dataCell
+                dataHolder
                 FIELDNAME = 'envelope'; 
             end
 
             %// Grab from the standard 'xtDataCell' cell-struct struct;
-            [~, obj.nTrials] = size(dataCell); 
+            [~, obj.nTrials] = size(dataHolder); 
             
-            obj.nChannels   = length(dataCell{1,1}); 
-            obj.data        = dataCell(1,:); 
+            obj.nChannels   = length(dataHolder{1,1}); 
+            obj.data        = dataHolder(1,:); 
             try
-                obj.metadata    = dataCell(2,:);
+                obj.metadata    = dataHolder(2,:);
             catch
                 disp("WARNING! Metadata not imported"); 
                 obj.metadata    = cell(size(obj.data)); 
             end
             % -->> TODO: We will need to pass a validation here; 
             try
-                obj.sensor   = {dataCell{1,1}.sensor};
+                obj.sensor   = {dataHolder{1,1}.sensor};
             catch
                 %// (depreciated) legacy field
-                obj.sensor  = {dataCell{1,1}.electrode}; 
+                obj.sensor  = {dataHolder{1,1}.electrode}; 
             end
-            obj.fs          = dataCell{1,1}.fs; 
+            obj.fs          = dataHolder{1,1}.fs; 
             obj.dataField   = FIELDNAME; 
             obj.dataSource  = inputname(2); 
-            
-            % __ collect dynamic amplitude 
-            obj.channelAmpMax = zeros(obj.nChannels, obj.nTrials); 
-            obj.channelAmpMax = zeros(obj.nChannels, obj.nTrials); 
-            
             obj.trTimeLen = zeros(1,obj.nTrials); 
             for tr=1:obj.nTrials
-                if ~isempty(dataCell{1,tr}(1).times)
-                    obj.trTimeLen(tr) = dataCell{1,tr}(1).times(end); 
+                if ~isempty(dataHolder{1,tr}(1).times)
+                    obj.trTimeLen(tr) = dataHolder{1,tr}(1).times(end); 
                 else
                     obj.trTimeLen(tr) = 0; 
                 end
                 % __ 
-                for ch = 1:obj.nChannels
-                    xt = obj.data{1,tr}(ch).(obj.dataField); 
-                    try
-                        obj.channelAmpMax(ch,tr) = max(xt); 
-                        obj.channelAmpMin(ch,tr) = min(xt);
-                    catch
-                        obj.channelAmpMax(ch,tr) = 0; 
-                        obj.channelAmpMin(ch,tr) = 0; 
-                    end
-                end
             end 
+            obj.setChannelRange; %reset ranges; 
             obj.weightMatrix = eye(obj.nChannels); 
-            obj.sampledData = true; 
         end
         
         %% OPERATION METHODS
@@ -144,7 +142,13 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.fs = DESIRED_HZ; 
         end
         % __ DISCRETIZE (Prerequsite for Pxt-mapping)
-        function obj = discretize(obj)
+        function obj = discretize(obj, vars)
+            arguments
+                obj
+                vars.dataField = obj.dataField; 
+                vars.allowClipping = 1; 
+            end
+
            % __ >> Using the observed channel max/min apply a statemapping method;  
            %// generate 'sigLevels', and apply this discretization schema
            %to xtData
@@ -168,9 +172,15 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                            sigArr(tr,:) = sigLv; 
                        end
                end
+               if vars.allowClipping
+                   %// assign all points, no nans allowed. 
+                    sigArr(:,1)     = -inf; 
+                    sigArr(:,end)   = inf; 
+               end
+
                % ____ Write-In
                for tr = 1:obj.nTrials
-                    obj.data{1,tr}(ch).stateSignal  = discretize(obj.data{1,tr}(ch).(obj.dataField), sigArr(tr,:)); 
+                    obj.data{1,tr}(ch).stateSignal  = discretize(obj.data{1,tr}(ch).(vars.dataField), sigArr(tr,:)); 
                     obj.data{1,tr}(ch).signalLevels    = sigArr(tr,:);  
                end
            end
@@ -204,16 +214,32 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             end
             obj.importTensor(xtData2); 
         end
-       
-        % __ BIT-WISE FUNCTION OPERATION
-        function obj = bsxop(obj, xtdc, functionHandle) 
+        
+        function obj = resetEnvelope(obj)
+           %// Quick way to reset the 'envelope' field in the xtdc by
+           %re-populating with the 'raw' field; 
+           xt_raw = obj.getTensor(1:obj.nChannels,1:obj.nTrials, "DATAFIELD",'raw'); 
+           obj.importTensor(xt_raw); 
+        end
+
+        % __ BIT-WISE FUNCTION OPERATION (Between or within class)
+        function obj = bsxop(obj, functionHandle,xtdc) 
             arguments
                 obj
-                xtdc xtDataCell
                 functionHandle function_handle 
+                xtdc xtDataCell = []; 
             end
             % --> take one dc operation by the other dc
             
+            if ~xtdc.sampledData %(generated by argument parse...}
+                %// This is a SINGLE function applied to to the elements; 
+                xtTen = obj.getTensor; 
+                xtTenOut = functionHandle(xtTen); 
+                obj.importTensor(xtTenOut); 
+                return
+            end
+            %// ELSE: Apply BETWEEN two tensors; 
+
             xtTen1 = obj.getTensor; 
             xtTen2 = xtdc.getTensor; 
             
@@ -242,8 +268,26 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             % __ Array Operation
             xtTenNet = bsxfun(functionHandle, xtTen1, xtTen2); 
             obj.importTensor(xtTenNet); 
+            obj.setChannelRange; 
         end
         
+        % __ explicit method for setting min/max channel amplitude.
+        % Possibly temporary, as we don't know if it would make more sense
+        % to make this dynamic or not
+        function obj = setChannelRange(obj)
+            maxV = zeros(obj.nChannels,obj.nTrials); 
+            minV = zeros(obj.nChannels,obj.nTrials); 
+            dataField = obj.dataField; 
+            for tr = 1:obj.nTrials
+                for ch = 1:obj.nChannels
+                    maxV(ch,tr) = max(obj.data{1,tr}(ch).(dataField)); 
+                    minV(ch,tr) = min(obj.data{1,tr}(ch).(dataField)); 
+                end
+            end
+            obj.channelAmpMax = maxV; 
+            obj.channelAmpMin = minV; 
+        end
+
         function obj = setWeightMatrix(obj, METHOD)
             arguments
                 obj
@@ -274,11 +318,15 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.nActivationsUsed = obj.nChannels; 
         end
 
-        function obj = applyWeightVectorTransform(obj, level)
+        function obj = applyLinearTranform(obj, W, level)
             arguments
-                obj
+                obj 
+                W = obj.WeightMatrix; 
                 level {mustBeNumericOrLogical} = 1; 
             end
+            % // uses the linear transformation matrix to apply a method
+
+
             % __ Uses the weighting matrix to iteratively transform the envelope
             % __ 'level' used to reset baseline for a PC/IC to 0; TODO
             
@@ -287,7 +335,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             for tr = 1:obj.nTrials
                 %// 2D Array; 
                 xtData = obj.getTensor(1:obj.nChannels, tr); 
-                compData = obj.weightMatrix*xtData; 
+                compData = W*xtData; 
                 obj.importTensor(compData, "useChannels", 1:obj.nChannels, "useTrials", tr); 
                 % // Rename
                 for ch = 1:obj.nChannels
@@ -299,11 +347,26 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 nm_cell{ch} = strcat('CA_', num2str(ch)); 
             end
             obj.sensor = nm_cell; 
-        
+
+
+        end
+
+        function obj = applyWeightVectorTransform(obj, W, level)
+            % // DEPRECIATED NOMECLATURE
+            arguments
+                obj
+                W = obj.weightMatrix; 
+                level {mustBeNumericOrLogical} = 1; 
+            end
+            
+            disp("Depreciated Nomeclature. Use 'applyLinearTransform' Instead"); 
+            obj = applyLinearTranform(obj, W, level); 
+
         end
         
         %% Auxillary Operation
         function obj = importTensor(obj, ten, vars)
+            % Repopulate data using supplied 2-3D Tensor; 
             arguments
                 obj 
                 ten double
@@ -376,13 +439,13 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                         xt = [xt, zeros(1, trLenPt-xtLen)]; 
                     end
                     obj.data{1,tr}(ch).(obj.dataField) = xt(1:xtLen); 
+                    % -->> Regenerate min/max; 
                 end
             end
-            obj.sampledData = true; 
+            obj.setChannelRange; 
         end
         
         %% DATA Extraction Methods
-        
         function ten = getTensor(obj, useChannels, useTrials, vars)
             %// public implementation of superclass method
             arguments
@@ -417,6 +480,58 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
             obj.channelAmpMax = obj.channelAmpMax(useChannels, useTrials); 
             obj.channelAmpMin = obj.channelAmpMin(useChannels, useTrials); 
         end
+
+        % __ Extract data from 'data' using indexed positions. 
+        function values = getValuesAtIndices(obj, indices, vars)
+            arguments
+                obj
+                indices = []; 
+                vars.useChannels = 1:obj.nChannels;%[]; 
+                vars.useTrials  = 1:obj.nTrials; %[]; 
+                vars.dataField {mustBeMember(vars.dataField, {'envelope', 'raw', 'offset', 'stateSignal', 'times'})} = obj.dataField; 
+            end
+            % __ Pre-parse
+            if ~iscell(indices)
+                % Evaluate time points across ALL trials?? 
+                indices = repelem({indices}, 1, length(vars.useTrials));  
+            end
+            if isempty(vars.useChannels)
+                vars.useChannels = 1:obj.nChannels; 
+            end
+            if isempty(indices)
+                %// pass to 'getTensor' instead
+                values = obj.getTensor(vars.useChannels, vars.useTrials); 
+                return
+            end
+            %____________
+            % {1 x N} indices can refer to either TRIAL indices, or CHANNEL indices...
+            % we will need to refer between the two.
+            
+            N_USE_TRIALS    = length(vars.useTrials); 
+            N_USE_XT_CH     = length(vars.useChannels);
+            
+            % Ideally, we want to get the output as a {N_CHANNELS x N_TRIALS} cell of
+            % lookup values 
+            
+            values = cell(N_USE_XT_CH, N_USE_TRIALS);
+            for tri = 1:N_USE_TRIALS
+                tr = vars.useTrials(tri); 
+                if isempty(indices{tr})
+                    continue
+                end
+                for chi = 1:N_USE_XT_CH
+                    ch = vars.useChannels(chi); 
+                    % __ Iterative Lookup
+                    values{chi,tri} = obj.data{1,tr}(ch).(vars.dataField)(indices{tr}); 
+                    if (size(indices{tri},1) >1) && (size(values{chi,tri},1) == 1)
+                        % deal with transposed columns
+                        values{chi,tri} = values{chi,tri}'; 
+                    end
+                end
+            end
+           
+        end
+
         %% __ Write xtdata to a CSV file
         % __>> Allow for a tidy data format. 
         %{
@@ -529,6 +644,11 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass
                 xMin = min(xMin, max(min(xt), -(m)*offset) );
                 plot(xt); 
                 hold on; 
+            end
+            if m == 1
+                %__ single channels get full bandwidth
+                xMax = max(xt); 
+                xMin = min(xt); 
             end
             %// Rewindow axes to center on data 
             axis([-inf, inf,xMin, xMax]); 

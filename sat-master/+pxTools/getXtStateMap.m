@@ -26,6 +26,8 @@
 %   sigLevelCell = nXt * ntr cell of sigMapping
 %   xtData      = original structure, with vars appended; 
 
+%Depreciated 
+
 % Copyright (C) 2023  Trevor S. Smith
 %  Drexel University College of Medicine
 % 
