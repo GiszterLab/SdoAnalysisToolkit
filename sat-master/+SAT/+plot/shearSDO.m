@@ -20,7 +20,7 @@
 
 % Trevor S. Smith, 2022
 
-function plotSDO_shearSDO(sdoMatrix, varargin)
+function shearSDO(sdoMatrix, varargin)
 p = inputParser; 
 addOptional(p, 'N_BANDS', []); 
 addParameter(p, 'filter', 1); 
@@ -58,6 +58,15 @@ end
 figure;
 hold on
 imagesc(shearMat)
+try
+    cMap = SAT.sdoUtils.getSdoColormap(shearMat); 
+    colormap(cMap); 
+    lineColor = [0,0,0]; 
+catch
+    colormap(parula); 
+    lineColor = [1,1,1]; 
+end
+
 %// fill shear undefined regions w/ black
 sp_lower = polyshape([0.5,0.5,N_BINS+0.5], [0.5,N_BINS+0.5,0.5]); 
 sp_upper = polyshape([0.5, N_BINS+0.5, N_BINS+0.5], [2*N_BINS-0.5, 2*N_BINS-0.5, N_BINS-0.5]); 
@@ -65,9 +74,9 @@ plot(sp_lower, 'FaceColor', 'black', 'FaceAlpha', 1);
 plot(sp_upper, 'FaceColor', 'black', 'FaceAlpha', 1); 
 
 %//Upperbound of shear
-line(1:N_BINS, N_BINS:-1:1 , 'Color', 'white', 'LineStyle', '--')
+line(1:N_BINS, N_BINS:-1:1 , 'Color', lineColor, 'LineStyle', '--')
 %//Lowerbound of shear
-line(1:N_BINS, N_BINS*2-1:-1:N_BINS, 'Color', 'white', 'LineStyle', '--')
+line(1:N_BINS, N_BINS*2-1:-1:N_BINS, 'Color', lineColor, 'LineStyle', '--')
 %// 'Diagonal' of old matrix now horizonal here
 line(1:N_BINS, N_BINS*ones(1, N_BINS), 'Color', 'red', 'lineWidth', 2); 
 

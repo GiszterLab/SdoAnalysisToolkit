@@ -60,6 +60,8 @@
 %   at0Cell  = N_XT x N_PP cell of raw prespike signal values
 %   at1Cell  = N_XT x N_PP cell of raw postspike signal values
 
+% 2.26.2024 - Patch for handling of single-spike trials. 
+
 % Copyright (C) 2023  Trevor S. Smith
 %  Drexel University College of Medicine
 % 
@@ -105,6 +107,9 @@ pR = p.Results;
 %_____________
 TR_LIST     = pR.trList; 
 XT_LIST     = pR.xtList; 
+MAX_XT = max(XT_LIST); 
+
+
 if pR.ppList == inf
     if ~isempty(ppDataStruct)
         PP_LIST = 1:length(ppDataStruct{1,1});
@@ -118,6 +123,8 @@ else
         PP_LIST  = pR.ppList; %(or empty, if not passed)
     end
 end
+MAX_PP      = max(PP_LIST); 
+
 XT_FIELD    = pR.xtDataField; 
 PP_FIELD    = pR.ppDataField;  
 %
@@ -129,12 +136,12 @@ PX_NSHIFT   = pR.pxShift;
 PX_ZDELAY   = pR.pxDelay; 
     
 %__ Initialize    
-pxt0Cell = cell(1,max(TR_LIST)); 
-pxt1Cell = cell(1,max(TR_LIST)); 
-iXt0Cell = cell(1,max(TR_LIST)); 
-iXt1Cell = cell(1,max(TR_LIST)); 
-at0Cell  = cell(1,max(TR_LIST)); 
-at1Cell  = cell(1,max(TR_LIST)); 
+pxt0Cell = cell(1,MAX_XT); 
+pxt1Cell = cell(1,MAX_XT); 
+iXt0Cell = cell(1,MAX_XT); 
+iXt1Cell = cell(1,MAX_XT); 
+at0Cell  = cell(1,MAX_XT); 
+at1Cell  = cell(1,MAX_XT); 
 
 if nargout == 6
     PASS_SIGAMP  = 1; 
@@ -150,8 +157,8 @@ end
 %// evaluate timeseries data at PP times
 
 for tr=TR_LIST   
-    pxt0Cell{1,tr} = cell(max(XT_LIST), max(PP_LIST)); 
-    pxt1Cell{1,tr} = cell(max(XT_LIST), max(PP_LIST)); 
+    pxt0Cell{1,tr} = cell(MAX_XT, MAX_PP); 
+    pxt1Cell{1,tr} = cell(MAX_XT, MAX_PP); 
     for m=XT_LIST
         if PP_LIST == 0
             %// PP Data not passed; eval XT for all Points
@@ -170,6 +177,13 @@ for tr=TR_LIST
             if PASS_SIGAMP
                 at0Cell{1,tr}{m,1} = xtDataStruct{1,tr}(m).(XT_FIELD)(iX_t0); 
                 at1Cell{1,tr}{m,1} = xtDataStruct{1,tr}(m).(XT_FIELD)(iX_t1); 
+                %
+                if (length(st) == 1) && (size(at0Cell{1,tr}{m,u},1) < PX_PX0_PTS)
+                    at0Cell{1,tr}{m,u} = at0Cell{1,tr}{m,u}'; 
+                end
+                if (length(st) == 1) && (size(at1Cell{1,tr}{m,u},1) < PX_PX1_PTS)
+                    at1Cell{1,tr}{m,u} = at1Cell{1,tr}{m,u}'; 
+                end
             end
         else
             for u=PP_LIST
@@ -191,6 +205,12 @@ for tr=TR_LIST
                 if PASS_SIGAMP
                     at0Cell{1,tr}{m,u} = xtDataStruct{1,tr}(m).(XT_FIELD)(iX_t0); 
                     at1Cell{1,tr}{m,u} = xtDataStruct{1,tr}(m).(XT_FIELD)(iX_t1); 
+                    if (length(st) == 1) && (size(at0Cell{1,tr}{m,u},1) < PX_PX0_PTS)
+                        at0Cell{1,tr}{m,u} = at0Cell{1,tr}{m,u}'; 
+                    end
+                    if (length(st) == 1) && (size(at1Cell{1,tr}{m,u},1) < PX_PX1_PTS)
+                        at1Cell{1,tr}{m,u} = at1Cell{1,tr}{m,u}'; 
+                    end
                 end
             end
         end

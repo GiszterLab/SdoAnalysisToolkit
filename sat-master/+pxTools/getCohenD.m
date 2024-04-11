@@ -56,7 +56,9 @@ hVar  = var(observedData);
 
 for h1 = 1:N_HH
     for h2 = 1:N_HH 
-        h12Std = sqrt( (hVar(h1)+hVar(h2))/2);  
+        x_vals = observedData(:,[h1,h2]);
+        h12Std = std(x_vals(:)); 
+        %h12Std = sqrt( (hVar(h1)+hVar(h2))/2);  
         compArr(h1,h2) = (hMean(h1)-hMean(h2))/h12Std; 
     end
 end

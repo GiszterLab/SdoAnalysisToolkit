@@ -1,4 +1,4 @@
-%% pxTools_getPxtFromXt()
+%% pxTools.getPxtFromXt()
 % Core method for converting an time series data signal (xt) and a
 % set of spike times (st) into perispike state distributions (pxt);
 % pre-spike (px_x0) and post-spike (px_x1). 
@@ -117,7 +117,7 @@ end
 
 %% Generate positional indices for pre/post ref-point
 
-st_row = reshape( (st+PX_NSHIFT)', 1, N_SPIKES*N_ROWS); %apply universal shift to vals BEFORE: 
+st_row = reshape( (st+PX_NSHIFT)', 1, N_SPIKES*N_ROWS); %apply universal shift to vals BEFORE, if any. 
 
 if length(pR.navg) > 1 
     %// permit different sized pre-post casts (or n one at all)
@@ -162,11 +162,9 @@ if MULTICOMP
     px_t1 = reshape(px_t1, N_SIG_LEVELS-1, N_SPIKES, N_ROWS); 
     if N_PX0_POINTS > 1
         ind_x0 = reshape(ind_x0, N_PX0_POINTS, N_SPIKES, N_ROWS); 
-        %ind_x0 =reshape(ind_x0, N_SIG_LEVELS-1, N_SPIKES, N_ROWS); %BUG
     end
     if N_PX1_POINTS > 1
         ind_x1 =reshape(ind_x1, N_PX1_POINTS, N_SPIKES, N_ROWS); 
-        %ind_x1 =reshape(ind_x1, N_SIG_LEVELS-1, N_SPIKES, N_ROWS); %BUG
     end
 end
     

@@ -49,12 +49,13 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function plot_staPxt(x0, x1, N_STATES, varargin)
+function staPxt(x0, x1, N_STATES, varargin)
 p = inputParser;
 addOptional(p, 'BY_STATE', 0); 
 addParameter(p, 'saveFig', 0); 
 addParameter(p, 'saveFormat', 'png'); 
 addParameter(p, 'outputDirectory', []); 
+addParameter(p, 'newFig', 1); 
 %--
 addParameter(p, 'binMs', 0); 
 addParameter(p, 'colorbar', 1);
@@ -72,6 +73,7 @@ else
     DEFINED_UNITS = 0; 
 end
 
+NEW_FIG  = pR.newFig; 
 SAVE_FIG = pR.saveFig; 
 SAVE_FMT = pR.saveFormat; 
 SAVE_DIR = pR.outputDirectory; 
@@ -124,14 +126,20 @@ end
 %%
 Z_HEIGHT = size(stapxt,3); 
 
-figure;
+if NEW_FIG
+    figure;
+end
+hold on
 
 nCols = ceil(sqrt(Z_HEIGHT)); 
 nRows = ceil(Z_HEIGHT/nCols); 
 
 for zz = 1:Z_HEIGHT
-    subName = strcat('f', num2str(zz));
-    f.(subName) = subplot(nCols, nRows, zz); 
+
+    if Z_HEIGHT > 1
+        subName = strcat('f', num2str(zz));
+        f.(subName) = subplot(nCols, nRows, zz);
+    end
     %______
     imagesc(stapxt(:,:,zz)); 
     %// conform plot

@@ -32,9 +32,8 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-% TODO: Add in functionality for multiple SDOs? 
 
-function [lookupStruct]= findSigSdos(sdo, SIG_THRESH)
+function [lookupStruct]= findSigSdos(sdoStruct, SIG_THRESH)
 %// Keep in mind, may need to eventually scan across MULTIPLE 'sdo'
 %structures, to back-compile
 
@@ -42,49 +41,64 @@ if ~exist('SIG_THRESH', 'var')
    SIG_THRESH = 0; 
 end
 
-N_PP_CHANNELS   = length(sdo(1).sdos); %numberNeurons
-N_XT_CHANNELS   = length(sdo); %number EMG
+N_PP_CHANNELS   = length(sdoStruct(1).sdos); %numberNeurons
+N_XT_CHANNELS   = length(sdoStruct); %number EMG
 
 %// Buffer cell to hold the data/analysis
-lookupCell = cell(N_PP_CHANNELS*N_XT_CHANNELS,5); 
+
+MAX_ELEMS = N_PP_CHANNELS * N_XT_CHANNELS; 
+lookupStruct = struct(... 
+        'xtChannelNo', cell(1,MAX_ELEMS), ... 
+        'ppChannelNo', cell(1,MAX_ELEMS), ... 
+        'xtChannelID', cell(1,MAX_ELEMS), ... 
+        'ppChannelID', cell(1,MAX_ELEMS), ... 
+        'nSpikes',     cell(1,MAX_ELEMS), ...
+        'sigPx0',      cell(1,MAX_ELEMS), ... 
+        'nSigValues',  cell(1,MAX_ELEMS), ...
+        'nBackgroundSigtVals', cell(1,MAX_ELEMS)); 
+
 %iterate across all units, across all muscles (m1u1, m1u2, m1u3... m2u1..)
 
-sfields     = fields(sdo(1).stats{1}); 
-sig_sfields = sfields(contains(sfields, 'isSig')); 
+%sfields     = fields(sdo(1).stats{1}); 
+
+% 3.20.2024 - Update to enhanced statfields
+
+%
+sig_sfields = fields(sdoStruct(1).stats{1}.isSig_Unit); 
+%sig_sfields = sfields(contains(sfields, 'isSig')); 
+%}
 
 for m = 1:N_XT_CHANNELS 
     for u =1:N_PP_CHANNELS
-        ypos = (m-1)*N_PP_CHANNELS+u; 
-        lookupCell{ypos,1} = m; 
-        lookupCell{ypos,2} = u; 
-        %// Rip names
-        lookupCell{ypos,3} = sdo(m).signalType; 
-        lookupCell{ypos,4} = sdo(m).neuronNames{u}; 
-        %// Sum Significance (score column 3)
+        ypos = (m-1)*N_PP_CHANNELS+u;
+        lookupStruct(ypos).xtChannelNo = m; 
+        lookupStruct(ypos).ppChannelNo = u; 
+        lookupStruct(ypos).xtChannelID = sdoStruct(m).signalType; 
+        lookupStruct(ypos).ppChannelID = sdoStruct(m).neuronNames{u}; 
         score = 0; 
+        bkgd_score = 0; %for when shuffles deviate from background; 
+        %
         for ii = 1:length(sig_sfields)
-            score = score + sdo(m).stats{u}.(sig_sfields{ii}); 
+            score = score + any(sdoStruct(m).stats{u}.isSig_Unit.(sig_sfields{ii}), 'all'); 
+            %score = score + any(sdo(m).stats{u}.(sig_sfields{ii}), 'all'); 
         end
-        lookupCell{ypos,5} = score; 
+        lookupStruct(ypos).sigPx0 = sdoStruct(m).stats{u}.isSig_Unit.kld_px0_raw; 
+
+        for ii = 1:length(sig_sfields)
+            bkgd_score = bkgd_score + any(sdoStruct(m).stats{u}.isSig_Bkgd.(sig_sfields{ii}), 'all'); 
+        end
+        lookupStruct(ypos).nSigValues = score; 
+        lookupStruct(ypos).nBackgroundSigtVals = bkgd_score; 
+        try
+            lookupStruct(ypos).nSpikes  =  sdoStruct(m).stats{u}.nEvents; 
+        catch
+            %older method
+            lookupStruct(ypos).nSpikes = 0; 
+        end
     end
 end    
 
-lkupScore = cell2mat(lookupCell(:,5)); 
-
-LI = find(lkupScore >= SIG_THRESH); 
-
-if ~ isempty(LI) 
-    lookupCell = lookupCell(LI, :); 
-    lookupStruct = cell2struct(...
-        lookupCell, {..., 
-        'xtChannelNo', ...
-        'ppChannelNo', ...
-        'xtChannelID', ...
-        'ppChannelID', ...
-        'nSigValues' ...
-        }, 2);     
-else
-    lookupStruct = []; 
-end
+LI = [lookupStruct(:).nSigValues] >=SIG_THRESH; 
+lookupStruct = lookupStruct(LI); 
 
 end

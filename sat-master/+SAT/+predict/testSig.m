@@ -134,7 +134,7 @@ for ff = 1:N_FIELDS
     N_HH = length(hhNames); 
     
     edfArr = zeros(eMax-eMin, N_HH); 
-    for xi = 1:(eMax-eMin); 
+    for xi = 1:(eMax-eMin) 
         edfArr(xi,:) = sum(errorDist < eMin+xi)/N_SHUFFLES; 
     end
     xBar = mean(errorDist); 

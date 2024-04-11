@@ -13,9 +13,11 @@
 %       1 - Columns do not sum to 0
 %       2 - Positive Elements on the Diagonal
 %       3 - Negative Elements on the Off-Diagonal
+%       4 - Element Magnitude > 1
 
 % 11.06.2022 - Fixed a bug in logic of upper/lower triangle test
 % 12.12.2022 - Added a 'Reason' output for determining failure; 
+% 01.22.2024 - Added Element magnitude flag; 
 
 % Copyright (C) 2023  Trevor S. Smith
 %  Drexel University College of Medicine
@@ -35,43 +37,94 @@
 
 function [flag, REASON] = islinearsdo(L)
 
-flag = 1; 
-REASON = 0; 
-tol = 1e-12; %default tol
 
-% // Overall Mag excessive
+[~, ~, sz_3] = size(L); 
+
+    % Stack
+    flag = ones(sz_3, 1); 
+    REASON = zeros(sz_3,1); 
+    tol = 1e-12;
+
+for z = 1:sz_3
+        mat = L(:,:,z);
+        %// Nonzero cols
+        if any(abs(sum(mat,1))>tol)
+            flag(z) = 0; 
+            REASON(z) = 1; 
+            continue
+        end
+        % // Main Diagonal Positive
+        if any(diag(mat)>0)
+            flag(z) = 0; 
+            REASON(z) = 2; 
+            continue
+        end
+        % // Off-Diagonal Negative
+        if (nnz(triu(mat,1) < 0) > 0) %upper triangle
+            flag(z) = 0; 
+            REASON(z) = 3; 
+            continue
+        end
+        if (nnz(tril(mat,-1) < 0) > 0) %lower triangle
+            flag(z) = 0; 
+            REASON(z) = 3; 
+            continue
+        end
+        %// Element Magnitude; 
+        % ||Dpx|| > 1
+        if any(abs(mat)>1, 'all')
+            flag(z) = 0; 
+            REASON(z)=4; 
+        end
+end
 %{
-if sum(sum(abs(L))) > 2
-    flag = 0; 
-    return
+else
+    flag = 1; 
+    REASON = 0; 
+    tol = 1e-12; %default tol
+    
+    % // Overall Mag excessive
+    %{
+    if sum(sum(abs(L))) > 2
+        flag = 0; 
+        return
+    end
+    %}
+    
+    %// Nonzero cols
+    if any(abs(sum(L,1))>tol)
+        flag = 0; 
+        REASON = 1; 
+        return
+    end
+        
+    % // Main Diagonal Positive
+    if any(diag(L)>0)
+        flag = 0; 
+        REASON = 2; 
+        return
+    end
+    
+    % // Off-Diagonal Negative
+    if (nnz(triu(L,1) < 0) > 0) %upper triangle
+        flag = 0; 
+        REASON = 3; 
+        return
+    end
+    if (nnz(tril(L,-1) < 0) > 0) %lower triangle
+        flag = 0; 
+        REASON = 3; 
+        return
+    end
+    
+    %// Element Magnitude; 
+    % ||Dpx|| > 1
+    if any(abs(L)>1, 'all')
+        flag = 0; 
+        REASON=4; 
+    end
 end
 %}
-
-%// Nonzero cols
-if any(abs(sum(L,1))>tol)
-    flag = 0; 
-    REASON = 1; 
-    return
-end
-    
-% // Main Diagonal Positive
-if any(diag(L)>0)
-    flag = 0; 
-    REASON = 2; 
-    return
-end
-
-% // Off-Diagonal Negative
-if (nnz(triu(L,1) < 0) > 0) %upper triangle
-    flag = 0; 
-    REASON = 3; 
-    return
-end
-if (nnz(tril(L,-1) < 0) > 0) %lower triangle
-    flag = 0; 
-    REASON = 3; 
-    return
-end
 
 if nargout == 1
     REASON = []; 

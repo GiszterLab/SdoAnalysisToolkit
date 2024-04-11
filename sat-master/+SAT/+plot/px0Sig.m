@@ -33,7 +33,7 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function px0Sig(sdo, XT_CH_NO, PP_CH_NO, varargin)
+function px0Sig(sdoStruct, XT_CH_NO, PP_CH_NO, varargin)
 p = inputParser; 
 addParameter(p, 'saveFig', 0); 
 addParameter(p, 'saveFormat', 'png');
@@ -46,14 +46,15 @@ SAVE_FMT    = pR.saveFormat;
 SAVE_DIR    = pR.outputDirectory; 
 %________
 
-    SIG_PVAL    = sdo(XT_CH_NO).stats{PP_CH_NO}.pVal; 
-    N_BINS      = length(sdo(XT_CH_NO).bkgrndSDO); 
+    SIG_PVAL    = sdoStruct(XT_CH_NO).stats{PP_CH_NO}.pVal; 
+    N_BINS      = length(sdoStruct(XT_CH_NO).bkgrndSDO); 
    
-    ppName0     = sdo(XT_CH_NO).neuronNames{PP_CH_NO}; 
+    ppName0     = sdoStruct(XT_CH_NO).neuronNames{PP_CH_NO}; 
     ppName      = underscores2spaces(ppName0); 
-    xtName      = sdo(XT_CH_NO).signalType; 
+    xtName      = sdoStruct(XT_CH_NO).signalType; 
     
-    sdoJointShuff = sdo(XT_CH_NO).shuffles{PP_CH_NO}.SDOJointShuff;
+    %// Will need to throw the resampler in here, if necessary; 
+    sdoJointShuff = sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}.SDOJointShuff;
     
     if isempty(sdoJointShuff)
         sdoJointShuff = zeros(N_BINS, N_BINS, 1); 
@@ -69,7 +70,7 @@ SAVE_DIR    = pR.outputDirectory;
     px0_shuffleMean = mean(px0_shuffle,2)';
     px0_shuffleStd  = std(px0_shuffle,0,2)'; 
     
-    sdoJoint = sdo(XT_CH_NO).sdosJoint{PP_CH_NO};
+    sdoJoint = sdoStruct(XT_CH_NO).sdosJoint{PP_CH_NO};
     
     px0_unit = sum(sdoJoint,1); % current state probability associated with neuron spikes
 
@@ -103,8 +104,10 @@ SAVE_DIR    = pR.outputDirectory;
 
     subplot(1,2,2)
     %__
-    KLcurr = squeeze(sdo(XT_CH_NO).stats{PP_CH_NO}.KLcurr_shuff_meanshuff);
-    KLcurr_neuron = sdo(XT_CH_NO).stats{PP_CH_NO}.KLcurr_neuron_meanshuff;
+    KLcurr = squeeze(sdoStruct(XT_CH_NO).stats{PP_CH_NO}.comparisons.Shuff_v_MeanShuff.kld_px0_raw); 
+    KLcurr_neuron = sdoStruct(XT_CH_NO).stats{PP_CH_NO}.comparisons.Unit_v_MeanShuff.kld_px0_raw; 
+    %KLcurr = squeeze(sdo(XT_CH_NO).stats{PP_CH_NO}.KLcurr_shuff_meanshuff);
+    %KLcurr_neuron = sdo(XT_CH_NO).stats{PP_CH_NO}.KLcurr_neuron_meanshuff;
     if any(KLcurr < 0)
         negI = (KLcurr<0); 
         KLcurr(negI)=abs(KLcurr(negI)); 

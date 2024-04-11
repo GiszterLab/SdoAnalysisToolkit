@@ -68,6 +68,7 @@ end
 
 %//compute the distance of actual increase-decrease-rate-diffs from its
 %means in the null hypothesis (shuffled spikes); This is our statistic
+%(Sum of Squared Errors; SSE)
 stat=sum((unit-meanShuff).^2);
 
 %% compute the distribution of our statistic stat Here

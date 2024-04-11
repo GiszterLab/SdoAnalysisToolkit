@@ -14,6 +14,8 @@
 % fDIM      = (Optional) size of image to save, specifed as a [X1,X2,Y1,Y2]
 %   vect; if empty or excluded [0,0,1920,1200]; 
 
+% 2.26.2024 - Added capability for no-resize, by setting fDim = 0; 
+
 % Copyright (C) 2023 Trevor S. Smith
 % Drexel University College of Medicine
 % 
@@ -48,19 +50,27 @@ if isempty(fDIM)
     fDIM = [0, 0, 1920, 1200]; 
 end
 
+if all(fDIM == 0)
+    RESIZE = 0; 
+else
+    RESIZE = 1; 
+end
+
 if isempty(SAVE_DIR)
     SAVE_DIR = uigetdir([],"Select a Folder to save images to");
 end
 
 name = fullfile(SAVE_DIR, strcat(fName, ".", SAVE_FMT)); 
-try
-    set(f, 'Position', fDIM); 
-catch
-    %// appears when we pass as struct of figure handles (subplots) instead
-    %of figure handles; Not ideal, as it will miss any other figures
-    %generated in the script calling this function
-    f = gcf; 
-    set(f, 'Position', fDIM); 
+if RESIZE
+    try
+        set(f, 'Position', fDIM); 
+    catch
+        %// appears when we pass as struct of figure handles (subplots) instead
+        %of figure handles; Not ideal, as it will miss any other figures
+        %generated in the script calling this function
+        f = gcf; 
+        set(f, 'Position', fDIM); 
+    end
 end
     
 switch SAVE_FMT

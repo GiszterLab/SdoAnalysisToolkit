@@ -71,7 +71,7 @@ errorArr = cell(N_XT_CH, N_PP_CH);
 
 for m = 1:N_XT_CH
     for u = 1:N_PP_CH
-        errorS      = errorStruct_new(N_FIELDS);
+        errorS      = SAT.predict.errorStruct_new(N_FIELDS);
         x0States    = x0StateArr{m,u};
         x1States    = x1StateArr{m,u}; 
         x1Px        = x1PxArr{m,u};
@@ -83,8 +83,10 @@ for m = 1:N_XT_CH
             errorS(f).fieldname     = fName; 
             errorS(f).reference     = REFNAME; 
             errorS(f).dof_px_correct = 0; 
-            %================= STATE PREDICTIONS ===================
+            %+++_____________ Original Data ___________ ++++
             errorS(f).x0States      = x0States; 
+            errorS(f).predicted_px  = pdPx; 
+            %================= STATE PREDICTIONS ===================
             %|| L0 Error: (Mismatch, 1/0, Error)
             errorS(f).L0_running    = ~ismembertol(x1States-pdStates,0);
             %|| L1 Error: Distance
@@ -106,6 +108,7 @@ for m = 1:N_XT_CH
                 if nnz(xObsIdx) < 1 
                     continue; 
                 end
+                % __ Run Comps; 
                 errorS(f).L0_running_x_state{xx}        = ~ismembertol(x1States(xObsIdx)-pdStates(xObsIdx), 0); 
                 errorS(f).L0_x_state(xx)                = sum(errorS(f).L0_running_x_state{xx});
                 errorS(f).L1_running_x_state{xx}        = abs(x1States(xObsIdx)-pdStates(xObsIdx)); 
@@ -131,24 +134,3 @@ end
 
 end
 
-function errorStruct = errorStruct_new(N_FIELDS)
-    %// Precast empty
-errorStruct= struct( ...
-    'fieldname',                cell(1,N_FIELDS), ...
-    'reference',                cell(1,N_FIELDS), ...
-    'x0States',                 cell(1,N_FIELDS), ...
-    'dof_px_correct',           cell(1,N_FIELDS), ... 
-    'L0_running',               cell(1,N_FIELDS), ...
-    'L1_running',               cell(1,N_FIELDS), ...
-    'L2_running',               cell(1,N_FIELDS), ...
-    'L_inf',                    cell(1,N_FIELDS), ...
-    'L0_running_x_state',       cell(1,N_FIELDS), ...
-    'L0_x_state',               cell(1,N_FIELDS), ...
-    'L1_running_x_state',       cell(1,N_FIELDS), ...
-    'L1_x_state',               cell(1,N_FIELDS), ... 
-    'L2_running_x_state',       cell(1,N_FIELDS), ...
-    'L2_x_state',               cell(1,N_FIELDS), ...
-    'KLD',                      cell(1,N_FIELDS), ...
-    'logLikelihood',            cell(1,N_FIELDS) ); 
-
-end

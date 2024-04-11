@@ -26,7 +26,7 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-function KL=KLDiv(p1,p2,DIM)
+function KL=KLDiv(px1,px2,DIM)
 if ~exist('DIM', 'var')
     s = 0; 
 else
@@ -34,32 +34,32 @@ else
 end
 
 %s=length(varargin);
-eps=1e-5;
-p1=p1+eps;
-p2=p2+eps;
+eps=1e-5; % avoid divide by 0
+px1=px1+eps;
+px2=px2+eps;
 
 if (s)==0
-    p1=p1(:);
-    p2=p2(:);
-    p1=p1/sum(p1);
-    p2=p2/sum(p2);
-    KL=sum(p1.*log2(p1./p2));
+    px1=px1(:);
+    px2=px2(:);
+    px1=px1/sum(px1);
+    px2=px2/sum(px2);
+    KL=sum(px1.*log2(px1./px2));
     % KL2=sum(p2.*log2(p2./p1));
     % KL=(KL1+KL2)/2;
 else
     ss = s; 
     %ss=varargin{1};
-    s1=sum(p1,ss(1));
-    s2=sum(p2,ss(1));
+    s1=sum(px1,ss(1));
+    s2=sum(px2,ss(1));
     for L =2:length(ss)
         i=ss(L);
         s1=sum(s1,i);
         s2=sum(s2,i);
     end
-    p1=bsxfun(@times,p1,1./s1);
-    p2=bsxfun(@times,p2,1./s2);
+    px1=bsxfun(@times,px1,1./s1);
+    px2=bsxfun(@times,px2,1./s2);
 
-    KL=p1.*log2(p1./p2);
+    KL=px1.*log2(px1./px2);
     for L =1:length(ss)
         i=ss(L);
         KL=sum(KL,i);

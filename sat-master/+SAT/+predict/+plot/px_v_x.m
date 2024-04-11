@@ -32,7 +32,7 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function predictSDO_plot_px_v_x(pdPx1, x1, varargin)
+function px_v_x(pdPx1, x1, varargin)
 %
 p = inputParser; 
 addParameter(p, 'subIndex', []); 
