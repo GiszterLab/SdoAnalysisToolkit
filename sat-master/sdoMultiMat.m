@@ -311,6 +311,12 @@ classdef sdoMultiMat < handle %& dataCellSuperClass
                     %
                     subplot(N_ROWS, N_COLS, ii)
                     imagesc(mat); 
+                    switch vars.matField
+                        case {'sdos', 'drift'}
+                            cMap = SAT.sdoUtils.getSdoColormap(mat); 
+                            colormap(cMap);
+                    end
+
                     axis xy
                     line([1, length(mat)], [1, length(mat)], 'lineStyle', '--', 'color', 'white'); 
                     title(strcat(ppName, '\rightarrow', xtName)); 
