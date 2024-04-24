@@ -225,6 +225,9 @@ for m = 1:N_XT_CHANNELS
         if bkgndLen > vars.maxBackgroundDraws 
             rand_idx = randi(bkgndLen, [1, vars.maxBackgroundDraws]);  
             bkgndLen = vars.maxBackgroundDraws; 
+        else
+            %// only a few number of samples for background; 
+            rand_idx = 1:bkgndLen; 
         end
 
         switch vars.method
