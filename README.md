@@ -111,6 +111,9 @@ Using the below classes, different data modalities may be handled more abstractl
 
 **predictionError** - A support class for computing and plotting the prediction errors between the observed and hypothesis-predicted values. 
 
+## Externally-Sourced Code
+Violin plots used to visualize the distribution of prediction likelihoods were produced with code written by Holger Hoffmann available on the [MATLAB File Exchange](https://www.mathworks.com/matlabcentral/fileexchange/45134-violin-plot) 
+
 ## License
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
