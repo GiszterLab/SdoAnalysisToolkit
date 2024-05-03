@@ -89,7 +89,12 @@ for ui = 1:N_UNITS
         plot(spkP, 'faceColor', [0.36,0.36,0.45, 0.1]);
     end 
     plot(mean(spkCll{ui}), 'color', [0.1,0.1,0.1, 1], 'lineWidth', 1.5); 
-    axis([1, spkLen, -inf, inf]); 
+    if spkLen > 1
+        axis([1, spkLen, -inf, inf]);
+    else
+        axis([1, inf, -inf, inf]); 
+    end
+
     try
          title(spikeTimeCell{1,1}(u).sensor);        
     catch
