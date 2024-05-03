@@ -114,7 +114,7 @@ arguments
     vars.pxShift        {mustBeInteger} = 1; 
     vars.pxDelay        {mustBeInteger} = 0; 
     vars.useTrials      = 1:ppdc.nTrials; 
-    vars.condenseShuffles {mustBeNumericOrLogical} = 1; 
+    vars.condenseShuffles {mustBeNumericOrLogical} = 0; % Only recommended with large datasets
     vars.method         {mustBeMember(vars.method, {'original', 'asymmetric'})} = 'asymmetric'; 
     vars.maxBackgroundDraws = 10000; 
     vars.parallelCompute = 0; 
@@ -156,7 +156,9 @@ asymmetry_type = 'step';
 retainShuffles = 1; 
 
 % ___ 
-
+if vars.condenseShuffles
+    disp("NOTE: Condensing Shuffles may greatly increase compute time."); 
+end
 %% PreCastArr
 
 [sdo] = SAT.compute.sdoStruct_new(N_XT_CHANNELS, N_PP_CHANNELS); 
@@ -320,8 +322,13 @@ for m = 1:N_XT_CHANNELS
         sdo(m).shuffles{u}.SDOJointShuff= unitShuffJointSDO/nTotalSpikesUsed;
         %
         if vars.condenseShuffles
+            disp("... Iteratively bootstrapping to condense shuffles..."); 
+
             %// Necessary for large numbers of shuffles/State; 
             % take original calculation of statistics (for compatibility)
+            % Try to reduce statistics to something which can be estimated
+            % using parametric stats; 
+
             % __ Need to feed in data; here
             sdo(m).bkgrndJointSDO   = bkgdJointSDO; 
             sdo(m).bkgrndSDO        = bkgdDeltaSDO; 
@@ -349,6 +356,13 @@ for m = 1:N_XT_CHANNELS
                 sdo(m).shuffles{u}.SDOShuff = []; 
                 sdo(m).shuffles{u}.SDOJointShuff = [];
             end
+
+        else
+            %// Take the elements from the distributions directly; 
+            sdo(m).shuffles{u}.SDOShuff_mean        = mean(sdo(m).shuffles{u}.SDOShuff,3); 
+            sdo(m).shuffles{u}.SDOShuff_std         = std( sdo(m).shuffles{u}.SDOShuff, 1, 3); 
+            sdo(m).shuffles{u}.SDOJointShuff_mean   = mean(sdo(m).shuffles{u}.SDOJointShuff,3); 
+            sdo(m).shuffles{u}.SDOJointShuff_std    = std( sdo(m).shuffles{u}.SDOJointShuff,1,3); 
         end
         %
         sdo(m).stats{u}.nEvents = nTotalSpikesUsed; 

@@ -97,7 +97,7 @@ for m = 1:N_XT_CHANNELS
         %__________________________________________________________________
 
         % __ Assignment; 
-        % // these generate structures of normed/non-normed; 
+        % // these generate structures of normed ('rescaled')/non-normed; 
         [dSdo, jSdo, rdSdo, rjSdo] = SAT.sdoUtils.get_UnitBkgdShuff_Matrices(sdoStruct, m_i, u_i); 
 
         % __ Measure the internal distance for ALL combinations

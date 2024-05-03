@@ -67,7 +67,7 @@ classdef sdoMultiMat < handle %& dataCellSuperClass
                 useXtChannels {mustBeInteger} = 1:xtdc.nChannels;
                 usePpChannels {mustBeInteger} = 1:ppdc.nChannels; 
                 useTrials     {mustBeInteger} = 1:xtdc.nTrials; 
-                vars.condenseShuffles = 1; 
+                vars.condenseShuffles = 0; 
                 vars.method {mustBeMember(vars.method, {'original', 'asymmetric'})} = 'asymmetric'; 
                 vars.parallelCompute = 0; 
                 %useTrials = []; 
@@ -315,10 +315,14 @@ classdef sdoMultiMat < handle %& dataCellSuperClass
                         case {'sdos', 'drift'}
                             cMap = SAT.sdoUtils.getSdoColormap(mat); 
                             colormap(cMap);
+                            line([1, length(mat)], [1, length(mat)], 'lineStyle', '--', 'color', 'black'); 
+                        case {'sdosJoint'}
+                            line([1, length(mat)], [1, length(mat)], 'lineStyle', '--', 'color', 'white'); 
                     end
 
                     axis xy
-                    line([1, length(mat)], [1, length(mat)], 'lineStyle', '--', 'color', 'white'); 
+                    axis square
+                    
                     title(strcat(ppName, '\rightarrow', xtName)); 
                     ii = ii+1; 
                 end
