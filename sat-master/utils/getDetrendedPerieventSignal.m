@@ -70,7 +70,7 @@ end
 % This is a function of the size of the test durations; 
 n_isa_points = max(nt0+nt1, nt1+nt2); 
 
-nSampLen = vars.t0_nPoints+n_isa_points+vars.t1_nPoints+n_isa_points; 
+%nSampLen = vars.t0_nPoints+n_isa_points+vars.t1_nPoints+n_isa_points; 
 
 % Extraction; 
 %___________________________________________________
@@ -101,10 +101,13 @@ end
 [X,Y] = meshgrid([0:2*n_isa_points-1], [1:nt0+nt1+nt2]);
 idxGrid = X+Y; 
 
+nSampLen = size(X,1)+size(X,2); 
+
 x_len = 2*n_isa_points; 
 y_len = nt012; 
 
 idxV = idxGrid(:); 
+%nComps = size(idxGrid,2); 
 nComps = length(idxV); 
 scV = nSampLen*ones(nComps,1); %scalar weighting; for future considerations; 
 
@@ -113,9 +116,7 @@ x1 = y_len*(n_isa_points+1); %2460;
 
 at02    = cell(N_USE_XT, N_USE_PP); 
 isaCell = cell(N_USE_XT,N_USE_PP); 
-%xCell   = cell(N_USE_XT, N_USE_PP); 
-%sta_wv  = cell(N_USE_XT,1); %regular
-%ista_wv = cell(N_USE_XT,1); % 'ISA' STA (detrended); 
+
 Xs      = cell(N_USE_XT,N_USE_PP); 
 dxtCell = cell(N_USE_XT,N_USE_PP); 
 %
@@ -128,7 +129,7 @@ for m_i = 1:N_USE_XT
         % --> Spike-wise correction; 
         nSpikes             = size(at01{m_i, p_i},2); 
         at02{m_i,p_i}       = zeros(nt012, nSpikes); 
-        %xCell{m_i,p_i}      = zeros(1, nSpikes); 
+
         isaCell{m_i,p_i}    = zeros(nt012, nSpikes); 
         mn_pk_wv{m_i,p_i}   = zeros(nSpikes,1); 
         %
@@ -155,6 +156,7 @@ for m_i = 1:N_USE_XT
         sta_wv{m_i}(:,p_i) = mean(at01{m_i,p_i},2); 
         ista_wv{m_i}(:,p_i)= mean(at02{m_i,p_i}-isaCell{m_i,p_i},2); %ISA-subtracted spike- effects; 
         %}
+        1; 
     end
 end
 
