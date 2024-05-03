@@ -385,4 +385,3 @@ for m = 1:N_XT_CHANNELS
     end
 end
 end
-                
