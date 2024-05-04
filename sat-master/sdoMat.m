@@ -262,7 +262,24 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell
             %// This one requires the definition of the STA as mean of px
             MATTYPE = obj.transitionMatType; 
             
-            HStruct = SAT.predict.getPredictionMatrices(obj, xtdc, ppdc, 1,1,...
+            %
+            %// for some reason the 'sensor' field doesn't work 
+            useXtChNo = find(strcmp(obj.xtChName, [xtdc.data{1,1}(:).sensor]), 1); 
+            usePpChNo = find(strcmp(obj.ppChName, [ppdc.data{1,1}(:).sensor]), 1); 
+            if isempty(useXtChNo)
+                disp("Warning: No matching for XtChNo"); 
+                useXtChNo = 1;
+            end
+            if isempty(usePpChNo)
+                disp("Warning: No matching for XtChNo"); 
+                usePpChNo = 1;
+
+            end
+            %}
+            %useXtChNo = 1; 
+            %usePpChNo = 1; 
+
+            HStruct = SAT.predict.getPredictionMatrices(obj, xtdc, ppdc, useXtChNo,usePpChNo,...
                 'type', MATTYPE); 
             
             nmCell = fieldnames(HStruct); 

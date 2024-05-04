@@ -12,6 +12,7 @@ arguments
     XT_CH_NO = 1; 
     PP_CH_NO = 1; 
     vars.type {mustBeMember(vars.type, {'M', 'L'})} = 'L'; 
+    vars.staMethod {mustBeMember(vars.staMethod, {'dpx', 'px'})} = 'px'; 
 end
 
 sField = {'t0t1', 'gauss', 'STA', 'bck', 'mkv', 'staBck', 'SDO'};
@@ -57,8 +58,10 @@ PX_ZDELAY = sdoStruct(XT_CH_NO).params.px.zDelay;
 
 sigLevels = sdoStruct(XT_CH_NO).levels; 
 
-at0 = xtdc.getValuesAtIndices(obs_idx0); 
-at1 = xtdc.getValuesAtIndices(obs_idx1); 
+at0 = xtdc.getValuesAtIndices(obs_idx0,...
+    'useChannels', XT_CH_NO); 
+at1 = xtdc.getValuesAtIndices(obs_idx1,...
+    'useChannels', XT_CH_NO); 
 %
 at0 = at0{1}; 
 at1 = at1{1}; 
@@ -79,12 +82,14 @@ H_Struct.(sField{2}) = SAT.predict.matrices.getH2(nStates, ...
     'type', vars.type); 
 
 % __ H3 Spike-Triggered Average (STA)
-sta_method = 'effect'; 
+%sta_method = 'effect'; 
+%sta_method = 'px'; 
+
 
 H_Struct.(sField{3}) = SAT.predict.matrices.getH3(nStates, ...
     at0, at1, sigLevels, ...
     'type', vars.type, ...
-    'method', sta_method); 
+    'method', vars.staMethod); 
 
 % __ H4 Background
 H_Struct.(sField{4}) = SAT.predict.matrices.getH4(sdoStruct, XT_CH_NO, ...
@@ -96,7 +101,7 @@ H_Struct.(sField{5}) = SAT.predict.matrices.getH5(nStates, xt0,  N_PX1_PTS, ...
 
 % __ H6 STA + Background
 H_Struct.(sField{6}) = SAT.predict.matrices.getH6(at0, at1, sdoStruct, XT_CH_NO, ...
-    'type', vars.type, 'method',sta_method); 
+    'type', vars.type, 'method',vars.staMethod); 
 
 % __ H7
 H_Struct.(sField{7}) = SAT.predict.matrices.getH7(sdoStruct,XT_CH_NO, PP_CH_NO, ...
