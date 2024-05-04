@@ -98,6 +98,7 @@ classdef sdoMultiMat < handle %& dataCellSuperClass
                 'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
           %
             catch
+                1; 
                 %in case I forget to update the public release
             obj.sdoStruct = SAT.compute.populateSDOArray2(xtdc, ppdc, ... 
                 'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
@@ -226,7 +227,12 @@ classdef sdoMultiMat < handle %& dataCellSuperClass
 
             sdo = obj.extract(XT_CH_NO, PP_CH_NO); 
 
-            sdo.makeTransitionMatrices(xtdc,ppdc); 
+            % __ Necessary to point to the correct data; 
+            xtdc_mini = xtdc.subsample(1:xtdc.nTrials, XT_CH_NO); 
+            ppdc_mini = ppdc.subsample(1:ppdc.nTrials, PP_CH_NO); 
+
+            % SDO only uses a single comp; we demo this here; 
+            sdo.makeTransitionMatrices(xtdc_mini,ppdc_mini); 
 
             pd_px1 = sdo.getPredictionPxt(px0);
 
@@ -308,6 +314,11 @@ classdef sdoMultiMat < handle %& dataCellSuperClass
                             m1 = obj.sdoStruct(m).sdos{u}; 
                             [mat, ~] = SAT.sdoUtils.splitSymmetry(m1);
                     end
+                    if vars.norm == 1
+                           M = obj.sdoStruct(m).sdosJoint{u}; 
+                           [mat] = SAT.sdoUtils.normsdo(mat, M); 
+                    end
+
                     %
                     subplot(N_ROWS, N_COLS, ii)
                     imagesc(mat); 

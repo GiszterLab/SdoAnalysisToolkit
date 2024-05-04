@@ -24,10 +24,11 @@ arguments
     sdoStruct
     XT_CH_NO
     vars.type {mustBeMember(vars.type, {'L', 'M'})} = 'L'; 
-    vars.method = 'effect'; %idk (Currently STA Method (as in H3)
+    vars.method {mustBeMember(vars.method, {'dpx', 'px'})} = 'px';
+    %vars.method = 'effect'; %idk (Currently STA Method (as in H3)
 end
 
-sta_method = vars.method; 
+%sta_method = vars.method; 
 
 sigLevels = sdoStruct(XT_CH_NO).levels; 
 nStates = length(sigLevels)-1; 
@@ -39,8 +40,8 @@ nStates = length(sigLevels)-1;
     'reparameterize', 1, 'nShuffles', 1); 
 
 
-px0  = sum(jSdo.Unit); 
-dpx1x0 = sum(dSdo.Unit'); 
+%px0  = sum(jSdo.Unit); 
+%dpx1x0 = sum(dSdo.Unit'); 
 
 %{
 %__ shift-mat
@@ -48,14 +49,35 @@ ssmat = SAT.sdoUtils.stashiftmat(jSdo.Unit, px0);
 dssmat = SAT.sdoUtils.stashiftmat(dSdo.Unit, dpx1x0); 
 %}
 % __ sta mat; 
-staMat = SAT.predict.matrices.getH3(nStates, ...
+[normStaMat, staMat, sta_mMat] = SAT.predict.matrices.getH3(nStates, ...
     at0, at1, sigLevels, ...
     'type', vars.type, ...
-    'method', sta_method); 
+    'method', 'dpx'); 
+
+
+nBkdM = SAT.sdoUtils.normsdo(jSdo.Bkgd, jSdo.Bkgd); 
+nStaM = SAT.sdoUtils.normsdo(sta_mMat, sta_mMat); 
+
+HConv = nBkdM*nStaM; %convolution of M ~~ Sum of effects (L); 
+
+%sta_px0 = sum(sta_mMat); 
+sta_px0 = sum(jSdo.Unit); 
+
+%H5_M = HConv*diag(sta_px0); 
+%H5_L = H5_M - diag(sum(H5_M)); 
+
+switch vars.type
+    case 'L'
+        %mat = H5_L;
+        mat = HConv - diag(sum(HConv)); 
+    case 'M'
+        %mat = H5_M; 
+        mat = HConv; 
+end
 
 
 %// note that both of these are conditional (i.e. 'deparameterized')
-mat = SAT.sdoUtils.sdosum(dSdo.Bkgd,staMat); 
+%mat = SAT.sdoUtils.sdosum(dSdo.Bkgd,staMat); 
 
 
 %bk_NjSDO*SAT.sdoUtils.stashiftmat(obj.sdoJoint, staPx); 
