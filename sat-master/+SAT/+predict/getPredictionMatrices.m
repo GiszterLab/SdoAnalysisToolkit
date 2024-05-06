@@ -63,8 +63,22 @@ at0 = xtdc.getValuesAtIndices(obs_idx0,...
 at1 = xtdc.getValuesAtIndices(obs_idx1,...
     'useChannels', XT_CH_NO); 
 %
-at0 = at0{1}; 
-at1 = at1{1}; 
+if size(at0,2) > 1
+    % cat across trials
+    at0 = cellhcat(at0); 
+end
+if size(at1,2) > 1
+    %cat across trials
+    at1 = cellhcat(at1); 
+end
+if iscell(at0)
+    % more than 1 pp channel extracted; 
+    at0 = at0{1}; 
+end
+if iscell(at1)
+    % more than 1 pp channel extracted 
+    at1 = at1{1}; 
+end
 
 xt0 = discretize(at0, sigLevels); 
 
