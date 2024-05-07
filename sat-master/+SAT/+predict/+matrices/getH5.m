@@ -23,6 +23,7 @@ arguments
     x0
     nTimeBins = size(nStates,1); % number of time bins forward for convolution. 
     vars.type {mustBeMember(vars.type, {'L', 'M'})} = 'L'; 
+    vars.method {mustBeMember(vars.method, {'static', 'average'})} = 'static'; 
 end
 
 M = pxTools.getMarkovFromXt(x0, nStates); 
@@ -30,12 +31,21 @@ M = pxTools.getMarkovFromXt(x0, nStates);
 % __ The average distribution within the interval +1:+nTime bins = average
 % of terminal matrices leading to this point; 
 %
-Mdt = zeros(nStates); 
-for t = 1:nTimeBins
-    Mdt = Mdt+(M^t)/nTimeBins; 
+
+switch vars.method
+    case 'static'
+        %// Single Markov Prediction; DT forward in time; 
+        % __>> This is the Markov as reported in the paper
+        Mdt = M^nTimeBins; 
+    case 'average'
+        %// Take the average Markov over all time steps; 
+
+        Mdt = zeros(nStates); 
+        for t = 1:nTimeBins
+            Mdt = Mdt+(M^t)/nTimeBins; 
+        end
 end
-%}
-%Mdt = M^nTimeBins;  
+ 
 switch vars.type
     case 'M'
         mat = Mdt;  
@@ -44,6 +54,5 @@ switch vars.type
         mat = Mdt-diag(sum(Mdt)); 
 end
 
-1; 
 
 end
