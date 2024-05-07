@@ -26,7 +26,7 @@
 % 2.2.2024 - Upgrade to the V5 (assymetric) estimation script, parallel compute
 
 %// caution should be taken w/ inherited methods from the superclass; 
-classdef sdoMultiMat < handle %& dataCellSuperClass
+classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
     properties
         fs              = 0; 
         % __ SuperSet ___
@@ -209,7 +209,16 @@ classdef sdoMultiMat < handle %& dataCellSuperClass
 
             % __ This is the efficient 'internal' based prediction using
             % classes; 
-           
+            
+            if isempty(xtdc.trTimeLen) || isempty(ppdc.trTimeLen)
+                disp("xtDataCell or ppDataCell needs to be passed to generate predictions.")
+                errorStruct = []; 
+                return
+            end
+
+            1; 
+
+
             px0 = pxtDataCell(); 
             px0.duraMs = obj.px0DuraMs; 
             
@@ -288,7 +297,7 @@ classdef sdoMultiMat < handle %& dataCellSuperClass
                 obj
                 useXtChannels = 1; 
                 usePpChannels = 1; 
-                vars.matField  {mustBeMember(vars.matField, {'sdos', 'sdosJoint', 'drift'})} = 'sdos'; 
+                vars.matField  {mustBeMember(vars.matField, {'sdos', 'sdosJoint', 'drift', 'bkgrndSDO'})} = 'sdos'; 
                 vars.norm      {mustBeNumericOrLogical} = 0;  
             end
             N_USE_XT = length(useXtChannels); 
@@ -310,6 +319,8 @@ classdef sdoMultiMat < handle %& dataCellSuperClass
                     switch vars.matField
                         case {'sdos', 'sdosJoint'}
                             mat = obj.sdoStruct(m).(vars.matField){u}; 
+                        case 'bkgrndSDO'
+                        mat = obj.sdoStruct(m).(vars.matField); 
                         case 'drift'
                             m1 = obj.sdoStruct(m).sdos{u}; 
                             [mat, ~] = SAT.sdoUtils.splitSymmetry(m1);
@@ -323,7 +334,7 @@ classdef sdoMultiMat < handle %& dataCellSuperClass
                     subplot(N_ROWS, N_COLS, ii)
                     imagesc(mat); 
                     switch vars.matField
-                        case {'sdos', 'drift'}
+                        case {'sdos', 'drift', 'bkgrndSDO'}
                             cMap = SAT.sdoUtils.getSdoColormap(mat); 
                             colormap(cMap);
                             line([1, length(mat)], [1, length(mat)], 'lineStyle', '--', 'color', 'black'); 

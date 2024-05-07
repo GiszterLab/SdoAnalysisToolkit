@@ -190,10 +190,11 @@ classdef predictionError < handle
 
         end
 
-        function plotMatrices(obj, type)
+        function plotMatrices(obj, type, useMatrices)
             arguments
                 obj
                 type {mustBeMember(type, {'L', 'M'})} = 'L'; 
+                useMatrices = 1:length(obj.errorStruct); 
             end
 
             % __ Will require our external functions... 
@@ -204,12 +205,12 @@ classdef predictionError < handle
                 figure; 
                 switch type
                     case 'L'
-                        plotSdoStack(mats);
+                        plotSdoStack(mats(:,:,useMatrices));
                     case 'M'
                         for z = 1:size(mats,3)
                             mats(:,:,z) = mats(:,:,z)+eye(length(mats)); 
                         end
-                        plotSdoStack(mats); 
+                        plotSdoStack(mats(:,:,useMatrices)); 
                 end
             catch
                 disp("Not Fully Implemented Yet"); 
