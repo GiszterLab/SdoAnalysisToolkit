@@ -234,7 +234,7 @@ for m = 1:N_XT_CHANNELS
 
         switch vars.method
             case {'original'}%, 'asymmetric'}
-                [bkgdTrDeltaSDO, bkgdTrJointSDO] = SAT.compute.sdo3(pxt0_Bkgd, pxt1_Bkgd, 0, ...
+                [bkgdTrDeltaSDO, bkgdTrJointSDO] = SAT.compute.sdo3(pxt0_Bkgd(:,rand_idx), pxt1_Bkgd(:,rand_idx), 0, ...
                     parallelCompute=vars.parallelCompute, rescale=false); 
                 %
                 % this is generally unnecessary if N_XT >> nSpikes; 
