@@ -35,6 +35,12 @@ end
 cMax = max(sMat,[],"all"); 
 cMin = min(sMat,[], "all"); 
 
+if cMax == cMin % all empty or zero/equal
+    cMap = ones(nColors,3); 
+    return; 
+end
+
+
 cWidth = (cMax-cMin)/(nColors-1);
 
 cV = cMin:cWidth:cMax; 
@@ -50,6 +56,7 @@ end
 % __ count number of iterations we want to make (smooth)
 nNeg = (zI-1); 
 nPos = (nColors-zI); 
+
 
 % ___ Seed with the semi-heatmap SDO (blue --> Orange)
 %hList = {'#008d7f', '#11988a', '#22a394', '#33af9f', '#44baa9', '#55c5b4', '#77d1c3', '#99dcd2', '#bbe8e1', '#ddf3f0', '#ffffff', '#efd3c5', '#eeb59a', '#ec976e', '#ea8150', '#e66d38', '#e35a21', '#e45b16', '#ed8625', '#f6b135', '#ffdc44'}; 
