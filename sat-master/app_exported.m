@@ -5,19 +5,17 @@ classdef app_exported < matlab.apps.AppBase
         UIFigure                     matlab.ui.Figure
         GridLayout                   matlab.ui.container.GridLayout
         NoofEventsDropDown           matlab.ui.control.DropDown
-        DefaultLabel_2               matlab.ui.control.Label
-        Label11                      matlab.ui.control.Label
-        Label10                      matlab.ui.control.Label
-        Label9                       matlab.ui.control.Label
-        Label8                       matlab.ui.control.Label
-        Label7                       matlab.ui.control.Label
-        Label6                       matlab.ui.control.Label
-        DefaultLabel                 matlab.ui.control.Label
-        Label5                       matlab.ui.control.Label
-        Label4                       matlab.ui.control.Label
-        Label3                       matlab.ui.control.Label
-        Label2                       matlab.ui.control.Label
-        Label                        matlab.ui.control.Label
+        DefaultLabelPPDC             matlab.ui.control.Label
+        DefaultLabelFilterStd        matlab.ui.control.Label
+        DefaultLabelFilterWidth      matlab.ui.control.Label
+        DefaultLabelNShift           matlab.ui.control.Label
+        DefaultLabelZDelay           matlab.ui.control.Label
+        DefaultLabelPX1              matlab.ui.control.Label
+        DefaultLabelPX0              matlab.ui.control.Label
+        DefaultLabelXTDC             matlab.ui.control.Label
+        DefaultLabelNoOfBins         matlab.ui.control.Label
+        DefaultLabelMaxMode          matlab.ui.control.Label
+        DefaultLabelMapMethod        matlab.ui.control.Label
         SensorDropDown               matlab.ui.control.DropDown
         SensorDropDownLabel          matlab.ui.control.Label
         SMMLabel                     matlab.ui.control.Label
@@ -48,8 +46,9 @@ classdef app_exported < matlab.apps.AppBase
         MapMethodDropDown            matlab.ui.control.DropDown
         MapMethodDropDownLabel       matlab.ui.control.Label
         TabGroup                     matlab.ui.container.TabGroup
-        Tab                          matlab.ui.container.Tab
-        Tab2                         matlab.ui.container.Tab
+        XTDCTab                      matlab.ui.container.Tab
+        PPDCTab                      matlab.ui.container.Tab
+        SMMTab                       matlab.ui.container.Tab
         PPChannelsDropDown           matlab.ui.control.DropDown
         PPChannelsDropDownLabel      matlab.ui.control.Label
         SelectColumnListBoxLabel     matlab.ui.control.Label
@@ -78,7 +77,7 @@ classdef app_exported < matlab.apps.AppBase
         PlotAllButton                matlab.ui.control.Button
         ImportXTCSVButton            matlab.ui.control.Button
         UITable                      matlab.ui.control.Table
-        xtDataLabel                  matlab.ui.control.Label
+        XTDataLabel                  matlab.ui.control.Label
         UIAxes                       matlab.ui.control.UIAxes
     end
 
@@ -251,21 +250,25 @@ classdef app_exported < matlab.apps.AppBase
 
         % Create SMM object and compute it with filled XT datacell object
         % and PP datacell object
-        function createSMM(app)
+        function createSMM(app, xt_index, pp_index)
             % Initialize the SMM object
             app.smm = sdoMultiMat();
             
             % Create a indeterminate progress bar while computing SMM
             d = uiprogressdlg(app.UIFigure,'Title','Computing SMM',...
             'Indeterminate','on');
-            app.smm.compute(app.xtdc, app.ppdc);
+            if nargin == 1
+                app.smm.compute(app.xtdc, app.ppdc);
+            elseif nargin == 3
+                app.smm.compute(app.xtdc, app.ppdc, xt_index, pp_index);
+            end
             close(d);
 
             % Store the original SMM Data
-            app.original_smm = app.smm;
+            app.original_smm = copy(app.smm);
 
             % Enable the plot button for SMM
-            enablePlotSMM(app);
+            app.enablePlotSMM();
             % Enable the variable boxes for SMM
             app.enableSMMVariables();
             % Display SMM Variables
@@ -273,13 +276,23 @@ classdef app_exported < matlab.apps.AppBase
         end
 
         function plotSMM(app)
+            % Clear all three Panels
+            delete(app.MatrixPanel.Children);
+            delete(app.StirpdPanel.Children);
+            delete(app.DiffusionPanel.Children);
+
             % Find the channel number for xt and pp
+            if app.smm.nXtChannels == 1 && app.smm.nPpChannels == 1
+                xt_column_number = 1;
+                pp_column_number = 1;
+            else
             xt_select_channel = app.XTChannelsDropDown.Value;
             pp_select_channel = app.PPChannelsDropDown.Value;
             xt_column_number = find(cellfun(@(x) strcmp(x, xt_select_channel), ...
                 app.XTChannelsDropDown.Items));
             pp_column_number = find(cellfun(@(x) strcmp(x, pp_select_channel), ...
                 app.PPChannelsDropDown.Items));
+            end
 
             app.smm.plotMatrix(xt_column_number, pp_column_number);
             % Only the children of figure(axis) can be copied into UIPanel
@@ -320,6 +333,9 @@ classdef app_exported < matlab.apps.AppBase
             % Close the figure after copying
             close(fig)
 
+            % TODO: Ask Trevor to implement the diffusion plotting with
+            % correct datacell
+
             % Plot all the smm plots
             app.smm.plot(xt_column_number, pp_column_number);
             % Find the third plot and copy it to UIPanel
@@ -345,11 +361,18 @@ classdef app_exported < matlab.apps.AppBase
             app.ChannelAmpMaxEditField.Value = app.original_xtdc.channelAmpMax(1,1);
             app.ChannelAmpMinEditField.Value = app.original_xtdc.channelAmpMin(1,1);
 
-            % Map Method and Max Mode is already manually inserted in the
+            % Map Method and Max Mode list is manually inserted
             % drop down menu
+            app.MapMethodDropDown.Value = app.original_xtdc.mapMethod;
+            app.MaxModeDropDown.Value = app.original_xtdc.maxMode;
 
             % No. of Bins
             app.NoofBinsSpinner.Value = app.original_xtdc.nBins;
+
+            % Default Label Values
+            app.DefaultLabelMapMethod.Text = app.original_xtdc.mapMethod;
+            app.DefaultLabelMaxMode.Text = app.original_xtdc.maxMode;
+            app.DefaultLabelNoOfBins.Text = string(app.original_xtdc.nBins);
         end
 
         function fillSMMVariable (app)
@@ -367,7 +390,18 @@ classdef app_exported < matlab.apps.AppBase
 
             % No. of events used depending on sensors
             app.NoofEventsEditField.Value = app.original_smm.nEventsUsed(1);
-            app.NoofEventsDropDown.Items = app.original_ppdc.sensor;
+            app.NoofEventsDropDown.Items = app.original_smm.sdoStruct.neuronNames;
+            % Always show the top option (This is useful when the user
+            % decides to create another smm)
+            app.NoofEventsDropDown.Value = app.NoofEventsDropDown.Items{1};
+
+            % Default Label Values
+            app.DefaultLabelPX0.Text = string(app.original_smm.px0DuraMs);
+            app.DefaultLabelPX1.Text = string(app.original_smm.px1DuraMs);
+            app.DefaultLabelZDelay.Text = string(app.original_smm.zDelay);
+            app.DefaultLabelNShift.Text = string(app.original_smm.nShift);
+            app.DefaultLabelFilterWidth.Text = string(app.original_smm.filterWid);
+            app.DefaultLabelFilterStd.Text = string(app.original_smm.filterStd);
         end 
 
         %% Three helper functions used for displaying on UITables
@@ -465,6 +499,7 @@ classdef app_exported < matlab.apps.AppBase
             no_check_box = app.NoCheckBoxFrequencyColumn.Value;
             if (yes_check_box || no_check_box) && ~isempty(app.pp_raw_data)
                 app.CreateSMMAllButton.Enable = "on";
+                app.CreateSMMSelectedButton.Enable = "on";
             end
         end
 
@@ -542,6 +577,7 @@ classdef app_exported < matlab.apps.AppBase
         % Disable the buttons for creating and plotting SMM
         function disableSMM (app)
             app.CreateSMMAllButton.Enable = "off";
+            app.CreateSMMSelectedButton.Enable = "off";
             app.PlotButton.Enable = "off";
         end
 
@@ -1019,7 +1055,10 @@ classdef app_exported < matlab.apps.AppBase
 
         % Button pushed function: CreateSMMSelectedButton
         function CreateSMMSelectedButtonPushed(app, event)
+            xt_channel = find(strcmp(app.XTChannelsDropDown.Value, app.XTChannelsDropDown.Items));
+            pp_channel = find(strcmp(app.PPChannelsDropDown.Value, app.PPChannelsDropDown.Items));
             
+            app.createSMM(xt_channel, pp_channel);
         end
     end
 
@@ -1053,14 +1092,14 @@ classdef app_exported < matlab.apps.AppBase
             app.UIAxes.Layout.Row = 2;
             app.UIAxes.Layout.Column = [2 10];
 
-            % Create xtDataLabel
-            app.xtDataLabel = uilabel(app.GridLayout);
-            app.xtDataLabel.HorizontalAlignment = 'center';
-            app.xtDataLabel.FontSize = 14;
-            app.xtDataLabel.FontWeight = 'bold';
-            app.xtDataLabel.Layout.Row = 5;
-            app.xtDataLabel.Layout.Column = [4 5];
-            app.xtDataLabel.Text = 'xtData';
+            % Create XTDataLabel
+            app.XTDataLabel = uilabel(app.GridLayout);
+            app.XTDataLabel.HorizontalAlignment = 'center';
+            app.XTDataLabel.FontSize = 14;
+            app.XTDataLabel.FontWeight = 'bold';
+            app.XTDataLabel.Layout.Row = 5;
+            app.XTDataLabel.Layout.Column = [4 5];
+            app.XTDataLabel.Text = 'XT Data';
 
             % Create UITable
             app.UITable = uitable(app.GridLayout);
@@ -1170,9 +1209,11 @@ classdef app_exported < matlab.apps.AppBase
 
             % Create PPDataLabel
             app.PPDataLabel = uilabel(app.GridLayout);
+            app.PPDataLabel.FontSize = 14;
+            app.PPDataLabel.FontWeight = 'bold';
             app.PPDataLabel.Layout.Row = 5;
             app.PPDataLabel.Layout.Column = 16;
-            app.PPDataLabel.Text = 'PPData';
+            app.PPDataLabel.Text = 'PP Data';
 
             % Create ImportPPCSVButton
             app.ImportPPCSVButton = uibutton(app.GridLayout, 'push');
@@ -1194,8 +1235,8 @@ classdef app_exported < matlab.apps.AppBase
             app.PlotButton = uibutton(app.GridLayout, 'push');
             app.PlotButton.ButtonPushedFcn = createCallbackFcn(app, @PlotButtonPushed, true);
             app.PlotButton.Enable = 'off';
-            app.PlotButton.Layout.Row = 12;
-            app.PlotButton.Layout.Column = 12;
+            app.PlotButton.Layout.Row = 14;
+            app.PlotButton.Layout.Column = [12 13];
             app.PlotButton.Text = 'Plot';
 
             % Create DiffusionPanel
@@ -1249,7 +1290,7 @@ classdef app_exported < matlab.apps.AppBase
             app.XTChannelsDropDown = uidropdown(app.GridLayout);
             app.XTChannelsDropDown.Items = {};
             app.XTChannelsDropDown.Layout.Row = 11;
-            app.XTChannelsDropDown.Layout.Column = [6 8];
+            app.XTChannelsDropDown.Layout.Column = [6 9];
             app.XTChannelsDropDown.Value = {};
 
             % Create SelectColumnListBoxLabel
@@ -1276,15 +1317,19 @@ classdef app_exported < matlab.apps.AppBase
             % Create TabGroup
             app.TabGroup = uitabgroup(app.GridLayout);
             app.TabGroup.Layout.Row = 23;
-            app.TabGroup.Layout.Column = [3 12];
+            app.TabGroup.Layout.Column = [2 17];
 
-            % Create Tab
-            app.Tab = uitab(app.TabGroup);
-            app.Tab.Title = 'Tab';
+            % Create XTDCTab
+            app.XTDCTab = uitab(app.TabGroup);
+            app.XTDCTab.Title = 'XTDC';
 
-            % Create Tab2
-            app.Tab2 = uitab(app.TabGroup);
-            app.Tab2.Title = 'Tab2';
+            % Create PPDCTab
+            app.PPDCTab = uitab(app.TabGroup);
+            app.PPDCTab.Title = 'PPDC';
+
+            % Create SMMTab
+            app.SMMTab = uitab(app.TabGroup);
+            app.SMMTab.Title = 'SMM';
 
             % Create MapMethodDropDownLabel
             app.MapMethodDropDownLabel = uilabel(app.GridLayout);
@@ -1517,95 +1562,82 @@ classdef app_exported < matlab.apps.AppBase
             app.SensorDropDown.Layout.Column = [4 7];
             app.SensorDropDown.Value = {};
 
-            % Create Label
-            app.Label = uilabel(app.GridLayout);
-            app.Label.HorizontalAlignment = 'center';
-            app.Label.Layout.Row = 16;
-            app.Label.Layout.Column = 9;
+            % Create DefaultLabelMapMethod
+            app.DefaultLabelMapMethod = uilabel(app.GridLayout);
+            app.DefaultLabelMapMethod.HorizontalAlignment = 'center';
+            app.DefaultLabelMapMethod.Layout.Row = 18;
+            app.DefaultLabelMapMethod.Layout.Column = 9;
+            app.DefaultLabelMapMethod.Text = '-';
 
-            % Create Label2
-            app.Label2 = uilabel(app.GridLayout);
-            app.Label2.HorizontalAlignment = 'center';
-            app.Label2.Layout.Row = 17;
-            app.Label2.Layout.Column = 9;
-            app.Label2.Text = 'Label2';
+            % Create DefaultLabelMaxMode
+            app.DefaultLabelMaxMode = uilabel(app.GridLayout);
+            app.DefaultLabelMaxMode.HorizontalAlignment = 'center';
+            app.DefaultLabelMaxMode.Layout.Row = 19;
+            app.DefaultLabelMaxMode.Layout.Column = 9;
+            app.DefaultLabelMaxMode.Text = '-';
 
-            % Create Label3
-            app.Label3 = uilabel(app.GridLayout);
-            app.Label3.HorizontalAlignment = 'center';
-            app.Label3.Layout.Row = 18;
-            app.Label3.Layout.Column = 9;
-            app.Label3.Text = 'Label3';
+            % Create DefaultLabelNoOfBins
+            app.DefaultLabelNoOfBins = uilabel(app.GridLayout);
+            app.DefaultLabelNoOfBins.HorizontalAlignment = 'center';
+            app.DefaultLabelNoOfBins.Layout.Row = 20;
+            app.DefaultLabelNoOfBins.Layout.Column = 9;
+            app.DefaultLabelNoOfBins.Text = '-';
 
-            % Create Label4
-            app.Label4 = uilabel(app.GridLayout);
-            app.Label4.HorizontalAlignment = 'center';
-            app.Label4.Layout.Row = 19;
-            app.Label4.Layout.Column = 9;
-            app.Label4.Text = 'Label4';
+            % Create DefaultLabelXTDC
+            app.DefaultLabelXTDC = uilabel(app.GridLayout);
+            app.DefaultLabelXTDC.HorizontalAlignment = 'center';
+            app.DefaultLabelXTDC.Layout.Row = 14;
+            app.DefaultLabelXTDC.Layout.Column = 9;
+            app.DefaultLabelXTDC.Text = 'Default';
 
-            % Create Label5
-            app.Label5 = uilabel(app.GridLayout);
-            app.Label5.HorizontalAlignment = 'center';
-            app.Label5.Layout.Row = 20;
-            app.Label5.Layout.Column = 9;
-            app.Label5.Text = 'Label5';
+            % Create DefaultLabelPX0
+            app.DefaultLabelPX0 = uilabel(app.GridLayout);
+            app.DefaultLabelPX0.HorizontalAlignment = 'center';
+            app.DefaultLabelPX0.Layout.Row = 15;
+            app.DefaultLabelPX0.Layout.Column = 17;
+            app.DefaultLabelPX0.Text = '-';
 
-            % Create DefaultLabel
-            app.DefaultLabel = uilabel(app.GridLayout);
-            app.DefaultLabel.HorizontalAlignment = 'center';
-            app.DefaultLabel.Layout.Row = 14;
-            app.DefaultLabel.Layout.Column = 9;
-            app.DefaultLabel.Text = 'Default';
+            % Create DefaultLabelPX1
+            app.DefaultLabelPX1 = uilabel(app.GridLayout);
+            app.DefaultLabelPX1.HorizontalAlignment = 'center';
+            app.DefaultLabelPX1.Layout.Row = 16;
+            app.DefaultLabelPX1.Layout.Column = 17;
+            app.DefaultLabelPX1.Text = '-';
 
-            % Create Label6
-            app.Label6 = uilabel(app.GridLayout);
-            app.Label6.HorizontalAlignment = 'center';
-            app.Label6.Layout.Row = 15;
-            app.Label6.Layout.Column = 17;
-            app.Label6.Text = 'Label6';
+            % Create DefaultLabelZDelay
+            app.DefaultLabelZDelay = uilabel(app.GridLayout);
+            app.DefaultLabelZDelay.HorizontalAlignment = 'center';
+            app.DefaultLabelZDelay.Layout.Row = 17;
+            app.DefaultLabelZDelay.Layout.Column = 17;
+            app.DefaultLabelZDelay.Text = '-';
 
-            % Create Label7
-            app.Label7 = uilabel(app.GridLayout);
-            app.Label7.HorizontalAlignment = 'center';
-            app.Label7.Layout.Row = 16;
-            app.Label7.Layout.Column = 17;
-            app.Label7.Text = 'Label7';
+            % Create DefaultLabelNShift
+            app.DefaultLabelNShift = uilabel(app.GridLayout);
+            app.DefaultLabelNShift.HorizontalAlignment = 'center';
+            app.DefaultLabelNShift.Layout.Row = 18;
+            app.DefaultLabelNShift.Layout.Column = 17;
+            app.DefaultLabelNShift.Text = '-';
 
-            % Create Label8
-            app.Label8 = uilabel(app.GridLayout);
-            app.Label8.HorizontalAlignment = 'center';
-            app.Label8.Layout.Row = 17;
-            app.Label8.Layout.Column = 17;
-            app.Label8.Text = 'Label8';
+            % Create DefaultLabelFilterWidth
+            app.DefaultLabelFilterWidth = uilabel(app.GridLayout);
+            app.DefaultLabelFilterWidth.HorizontalAlignment = 'center';
+            app.DefaultLabelFilterWidth.Layout.Row = 19;
+            app.DefaultLabelFilterWidth.Layout.Column = 17;
+            app.DefaultLabelFilterWidth.Text = '-';
 
-            % Create Label9
-            app.Label9 = uilabel(app.GridLayout);
-            app.Label9.HorizontalAlignment = 'center';
-            app.Label9.Layout.Row = 18;
-            app.Label9.Layout.Column = 17;
-            app.Label9.Text = 'Label9';
+            % Create DefaultLabelFilterStd
+            app.DefaultLabelFilterStd = uilabel(app.GridLayout);
+            app.DefaultLabelFilterStd.HorizontalAlignment = 'center';
+            app.DefaultLabelFilterStd.Layout.Row = 20;
+            app.DefaultLabelFilterStd.Layout.Column = 17;
+            app.DefaultLabelFilterStd.Text = '-';
 
-            % Create Label10
-            app.Label10 = uilabel(app.GridLayout);
-            app.Label10.HorizontalAlignment = 'center';
-            app.Label10.Layout.Row = 19;
-            app.Label10.Layout.Column = 17;
-            app.Label10.Text = 'Label10';
-
-            % Create Label11
-            app.Label11 = uilabel(app.GridLayout);
-            app.Label11.HorizontalAlignment = 'center';
-            app.Label11.Layout.Row = 20;
-            app.Label11.Layout.Column = 17;
-            app.Label11.Text = 'Label11';
-
-            % Create DefaultLabel_2
-            app.DefaultLabel_2 = uilabel(app.GridLayout);
-            app.DefaultLabel_2.HorizontalAlignment = 'center';
-            app.DefaultLabel_2.Layout.Row = 14;
-            app.DefaultLabel_2.Layout.Column = 17;
-            app.DefaultLabel_2.Text = 'Default';
+            % Create DefaultLabelPPDC
+            app.DefaultLabelPPDC = uilabel(app.GridLayout);
+            app.DefaultLabelPPDC.HorizontalAlignment = 'center';
+            app.DefaultLabelPPDC.Layout.Row = 14;
+            app.DefaultLabelPPDC.Layout.Column = 17;
+            app.DefaultLabelPPDC.Text = 'Default';
 
             % Create NoofEventsDropDown
             app.NoofEventsDropDown = uidropdown(app.GridLayout);
