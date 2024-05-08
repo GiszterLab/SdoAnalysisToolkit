@@ -43,7 +43,7 @@ function plotJointDiffSDO(sdo,XT_CH_NO, PP_CH_NO, varargin)
 
 normColormapType = 'sdo'; 
 expectColormapType = {'sdo', 'parula', 'polar'}; 
-normNormType = {'unity'}; 
+normNormType = 'unity'; 
 expectNormType  = {'none','px0', 'unity'}; 
 
 p = inputParser; 
