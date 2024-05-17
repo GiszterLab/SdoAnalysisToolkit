@@ -68,7 +68,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 usePpChannels {mustBeInteger} = 1:ppdc.nChannels; 
                 useTrials     {mustBeInteger} = 1:xtdc.nTrials; 
                 vars.condenseShuffles = 0; 
-                vars.method {mustBeMember(vars.method, {'original', 'asymmetric'})} = 'asymmetric'; 
+                vars.method {mustBeMember(vars.method, {'original', 'asymmetric'})} = 'original';%'asymmetric'; 
                 vars.parallelCompute = 0; 
                 %useTrials = []; 
             end

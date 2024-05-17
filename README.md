@@ -17,7 +17,7 @@ __Toolboxes__:
 
 
 ## Citation Requirement
-If you use any version of this software, please cite this toolbox. 
+If you use any version of this software, please cite [our preprint](https://www.biorxiv.org/content/10.1101/2024.05.10.593606v1)
 
 If you modify or adapt the <em>Toolkit</em>, please contact the authors or share your modifications under the 'Discussions' tab. 
 
