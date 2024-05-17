@@ -4,6 +4,7 @@ classdef app_exported < matlab.apps.AppBase
     properties (Access = public)
         UIFigure                     matlab.ui.Figure
         GridLayout                   matlab.ui.container.GridLayout
+        ImportXTDirectoryButton      matlab.ui.control.Button
         NoofEventsDropDown           matlab.ui.control.DropDown
         DefaultLabelPPDC             matlab.ui.control.Label
         DefaultLabelFilterStd        matlab.ui.control.Label
@@ -1006,7 +1007,8 @@ classdef app_exported < matlab.apps.AppBase
         % Value changed function: NoofBinsSpinner
         function NoofBinsSpinnerValueChanged(app, event)
             value = app.NoofBinsSpinner.Value;
-            app.xtdc.nBins = value;           
+            app.xtdc.nBins = value;
+            app.xtdc.discretize();
         end
 
         % Value changed function: PX0DuraMsEditField
@@ -1060,6 +1062,11 @@ classdef app_exported < matlab.apps.AppBase
             
             app.createSMM(xt_channel, pp_channel);
         end
+
+        % Button pushed function: ImportXTDirectoryButton
+        function ImportXTDirectoryButtonPushed(app, event)
+            
+        end
     end
 
     % Component initialization
@@ -1077,7 +1084,7 @@ classdef app_exported < matlab.apps.AppBase
             % Create GridLayout
             app.GridLayout = uigridlayout(app.UIFigure);
             app.GridLayout.ColumnWidth = {47, 53, 41, 24, 27, 28, 45, 43, 57, 25, 41, 100, 125, 26, 57, 80, '1.18x', 97, 47};
-            app.GridLayout.RowHeight = {47, 300, 33, 250, 22, 37, 22, 22, 22, 22, 22, 22, 300, 'fit', 'fit', 'fit', 'fit', 'fit', 'fit', 'fit', 'fit', 300, 'fit', 70};
+            app.GridLayout.RowHeight = {47, 300, 33, 250, 22, 'fit', 37, 22, 22, 22, 22, 22, 22, 300, 'fit', 'fit', 'fit', 'fit', 'fit', 'fit', 'fit', 'fit', 300, 'fit', 70};
             app.GridLayout.ColumnSpacing = 1.66666666666667;
             app.GridLayout.RowSpacing = 7.36956455396569;
             app.GridLayout.Padding = [1.66666666666667 7.36956455396569 1.66666666666667 7.36956455396569];
@@ -1114,7 +1121,7 @@ classdef app_exported < matlab.apps.AppBase
             app.ImportXTCSVButton = uibutton(app.GridLayout, 'push');
             app.ImportXTCSVButton.ButtonPushedFcn = createCallbackFcn(app, @ImportXTCSVButtonPushed, true);
             app.ImportXTCSVButton.WordWrap = 'on';
-            app.ImportXTCSVButton.Layout.Row = 6;
+            app.ImportXTCSVButton.Layout.Row = 7;
             app.ImportXTCSVButton.Layout.Column = [3 6];
             app.ImportXTCSVButton.Text = 'Import XT CSV';
 
@@ -1130,13 +1137,13 @@ classdef app_exported < matlab.apps.AppBase
             app.TimesFrequencyLabel = uilabel(app.GridLayout);
             app.TimesFrequencyLabel.FontSize = 14;
             app.TimesFrequencyLabel.FontWeight = 'bold';
-            app.TimesFrequencyLabel.Layout.Row = 7;
+            app.TimesFrequencyLabel.Layout.Row = 8;
             app.TimesFrequencyLabel.Layout.Column = [3 6];
             app.TimesFrequencyLabel.Text = 'Times/Frequency';
 
             % Create IsTimesdataonthefirstcolumnoftheCSVfileLabel
             app.IsTimesdataonthefirstcolumnoftheCSVfileLabel = uilabel(app.GridLayout);
-            app.IsTimesdataonthefirstcolumnoftheCSVfileLabel.Layout.Row = 8;
+            app.IsTimesdataonthefirstcolumnoftheCSVfileLabel.Layout.Row = 9;
             app.IsTimesdataonthefirstcolumnoftheCSVfileLabel.Layout.Column = [2 8];
             app.IsTimesdataonthefirstcolumnoftheCSVfileLabel.Text = 'Is Times data on the first column of the CSV file?';
 
@@ -1153,7 +1160,7 @@ classdef app_exported < matlab.apps.AppBase
             app.YesCheckBoxFrequencyColumn.ValueChangedFcn = createCallbackFcn(app, @YesCheckBoxFrequencyColumnValueChanged, true);
             app.YesCheckBoxFrequencyColumn.Enable = 'off';
             app.YesCheckBoxFrequencyColumn.Text = 'Yes';
-            app.YesCheckBoxFrequencyColumn.Layout.Row = 9;
+            app.YesCheckBoxFrequencyColumn.Layout.Row = 10;
             app.YesCheckBoxFrequencyColumn.Layout.Column = 3;
 
             % Create NoCheckBoxFrequencyColumn
@@ -1161,14 +1168,14 @@ classdef app_exported < matlab.apps.AppBase
             app.NoCheckBoxFrequencyColumn.ValueChangedFcn = createCallbackFcn(app, @NoCheckBoxFrequencyColumnValueChanged, true);
             app.NoCheckBoxFrequencyColumn.Enable = 'off';
             app.NoCheckBoxFrequencyColumn.Text = 'No';
-            app.NoCheckBoxFrequencyColumn.Layout.Row = 9;
+            app.NoCheckBoxFrequencyColumn.Layout.Row = 10;
             app.NoCheckBoxFrequencyColumn.Layout.Column = [5 6];
 
             % Create ImportTimesButton
             app.ImportTimesButton = uibutton(app.GridLayout, 'push');
             app.ImportTimesButton.ButtonPushedFcn = createCallbackFcn(app, @ImportTimesButtonPushed, true);
             app.ImportTimesButton.Visible = 'off';
-            app.ImportTimesButton.Layout.Row = 10;
+            app.ImportTimesButton.Layout.Row = 11;
             app.ImportTimesButton.Layout.Column = [1 2];
             app.ImportTimesButton.Text = 'Import Times';
 
@@ -1177,7 +1184,7 @@ classdef app_exported < matlab.apps.AppBase
             app.ORLabel.HorizontalAlignment = 'center';
             app.ORLabel.FontColor = [1 0 0];
             app.ORLabel.Visible = 'off';
-            app.ORLabel.Layout.Row = 10;
+            app.ORLabel.Layout.Row = 11;
             app.ORLabel.Layout.Column = 4;
             app.ORLabel.Text = 'OR';
 
@@ -1219,7 +1226,7 @@ classdef app_exported < matlab.apps.AppBase
             app.ImportPPCSVButton = uibutton(app.GridLayout, 'push');
             app.ImportPPCSVButton.ButtonPushedFcn = createCallbackFcn(app, @ImportPPCSVButtonPushed, true);
             app.ImportPPCSVButton.WordWrap = 'on';
-            app.ImportPPCSVButton.Layout.Row = 6;
+            app.ImportPPCSVButton.Layout.Row = 7;
             app.ImportPPCSVButton.Layout.Column = [15 16];
             app.ImportPPCSVButton.Text = 'Import PP CSV';
 
@@ -1227,7 +1234,7 @@ classdef app_exported < matlab.apps.AppBase
             app.CreateSMMAllButton = uibutton(app.GridLayout, 'push');
             app.CreateSMMAllButton.ButtonPushedFcn = createCallbackFcn(app, @CreateSMMAllButtonPushed, true);
             app.CreateSMMAllButton.Enable = 'off';
-            app.CreateSMMAllButton.Layout.Row = 11;
+            app.CreateSMMAllButton.Layout.Row = 12;
             app.CreateSMMAllButton.Layout.Column = 12;
             app.CreateSMMAllButton.Text = 'CreateSMM All';
 
@@ -1235,30 +1242,30 @@ classdef app_exported < matlab.apps.AppBase
             app.PlotButton = uibutton(app.GridLayout, 'push');
             app.PlotButton.ButtonPushedFcn = createCallbackFcn(app, @PlotButtonPushed, true);
             app.PlotButton.Enable = 'off';
-            app.PlotButton.Layout.Row = 14;
+            app.PlotButton.Layout.Row = 15;
             app.PlotButton.Layout.Column = [12 13];
             app.PlotButton.Text = 'Plot';
 
             % Create DiffusionPanel
             app.DiffusionPanel = uipanel(app.GridLayout);
-            app.DiffusionPanel.Layout.Row = 22;
+            app.DiffusionPanel.Layout.Row = 23;
             app.DiffusionPanel.Layout.Column = [8 16];
 
             % Create MatrixPanel
             app.MatrixPanel = uipanel(app.GridLayout);
-            app.MatrixPanel.Layout.Row = 13;
+            app.MatrixPanel.Layout.Row = 14;
             app.MatrixPanel.Layout.Column = [2 11];
 
             % Create StirpdPanel
             app.StirpdPanel = uipanel(app.GridLayout);
-            app.StirpdPanel.Layout.Row = 13;
+            app.StirpdPanel.Layout.Row = 14;
             app.StirpdPanel.Layout.Column = [14 18];
 
             % Create TypeFrequencyEditFieldLabel
             app.TypeFrequencyEditFieldLabel = uilabel(app.GridLayout);
             app.TypeFrequencyEditFieldLabel.HorizontalAlignment = 'right';
             app.TypeFrequencyEditFieldLabel.Visible = 'off';
-            app.TypeFrequencyEditFieldLabel.Layout.Row = 10;
+            app.TypeFrequencyEditFieldLabel.Layout.Row = 11;
             app.TypeFrequencyEditFieldLabel.Layout.Column = [6 8];
             app.TypeFrequencyEditFieldLabel.Text = 'Type Frequency';
 
@@ -1266,7 +1273,7 @@ classdef app_exported < matlab.apps.AppBase
             app.TypeFrequencyEditField = uieditfield(app.GridLayout, 'numeric');
             app.TypeFrequencyEditField.ValueChangedFcn = createCallbackFcn(app, @TypeFrequencyEditFieldValueChanged, true);
             app.TypeFrequencyEditField.Visible = 'off';
-            app.TypeFrequencyEditField.Layout.Row = 10;
+            app.TypeFrequencyEditField.Layout.Row = 11;
             app.TypeFrequencyEditField.Layout.Column = [9 10];
 
             % Create SelectColumnListBox
@@ -1282,14 +1289,14 @@ classdef app_exported < matlab.apps.AppBase
             % Create XTChannelsDropDownLabel
             app.XTChannelsDropDownLabel = uilabel(app.GridLayout);
             app.XTChannelsDropDownLabel.HorizontalAlignment = 'center';
-            app.XTChannelsDropDownLabel.Layout.Row = 11;
+            app.XTChannelsDropDownLabel.Layout.Row = 12;
             app.XTChannelsDropDownLabel.Layout.Column = [3 5];
             app.XTChannelsDropDownLabel.Text = 'XT Channels';
 
             % Create XTChannelsDropDown
             app.XTChannelsDropDown = uidropdown(app.GridLayout);
             app.XTChannelsDropDown.Items = {};
-            app.XTChannelsDropDown.Layout.Row = 11;
+            app.XTChannelsDropDown.Layout.Row = 12;
             app.XTChannelsDropDown.Layout.Column = [6 9];
             app.XTChannelsDropDown.Value = {};
 
@@ -1303,20 +1310,20 @@ classdef app_exported < matlab.apps.AppBase
 
             % Create PPChannelsDropDownLabel
             app.PPChannelsDropDownLabel = uilabel(app.GridLayout);
-            app.PPChannelsDropDownLabel.Layout.Row = 11;
+            app.PPChannelsDropDownLabel.Layout.Row = 12;
             app.PPChannelsDropDownLabel.Layout.Column = 16;
             app.PPChannelsDropDownLabel.Text = 'PP Channels';
 
             % Create PPChannelsDropDown
             app.PPChannelsDropDown = uidropdown(app.GridLayout);
             app.PPChannelsDropDown.Items = {};
-            app.PPChannelsDropDown.Layout.Row = 11;
+            app.PPChannelsDropDown.Layout.Row = 12;
             app.PPChannelsDropDown.Layout.Column = 17;
             app.PPChannelsDropDown.Value = {};
 
             % Create TabGroup
             app.TabGroup = uitabgroup(app.GridLayout);
-            app.TabGroup.Layout.Row = 23;
+            app.TabGroup.Layout.Row = 24;
             app.TabGroup.Layout.Column = [2 17];
 
             % Create XTDCTab
@@ -1335,7 +1342,7 @@ classdef app_exported < matlab.apps.AppBase
             app.MapMethodDropDownLabel = uilabel(app.GridLayout);
             app.MapMethodDropDownLabel.HorizontalAlignment = 'center';
             app.MapMethodDropDownLabel.Enable = 'off';
-            app.MapMethodDropDownLabel.Layout.Row = 18;
+            app.MapMethodDropDownLabel.Layout.Row = 19;
             app.MapMethodDropDownLabel.Layout.Column = [2 3];
             app.MapMethodDropDownLabel.Text = 'Map Method';
 
@@ -1344,7 +1351,7 @@ classdef app_exported < matlab.apps.AppBase
             app.MapMethodDropDown.Items = {'linear', 'log', 'linearsigned', 'logsigned'};
             app.MapMethodDropDown.ValueChangedFcn = createCallbackFcn(app, @MapMethodDropDownValueChanged, true);
             app.MapMethodDropDown.Enable = 'off';
-            app.MapMethodDropDown.Layout.Row = 18;
+            app.MapMethodDropDown.Layout.Row = 19;
             app.MapMethodDropDown.Layout.Column = [4 7];
             app.MapMethodDropDown.Value = 'log';
 
@@ -1352,7 +1359,7 @@ classdef app_exported < matlab.apps.AppBase
             app.MaxModeDropDownLabel = uilabel(app.GridLayout);
             app.MaxModeDropDownLabel.HorizontalAlignment = 'center';
             app.MaxModeDropDownLabel.Enable = 'off';
-            app.MaxModeDropDownLabel.Layout.Row = 19;
+            app.MaxModeDropDownLabel.Layout.Row = 20;
             app.MaxModeDropDownLabel.Layout.Column = [2 3];
             app.MaxModeDropDownLabel.Text = 'Max Mode';
 
@@ -1361,7 +1368,7 @@ classdef app_exported < matlab.apps.AppBase
             app.MaxModeDropDown.Items = {'pTrial', 'xTrialxSeg'};
             app.MaxModeDropDown.ValueChangedFcn = createCallbackFcn(app, @MaxModeDropDownValueChanged, true);
             app.MaxModeDropDown.Enable = 'off';
-            app.MaxModeDropDown.Layout.Row = 19;
+            app.MaxModeDropDown.Layout.Row = 20;
             app.MaxModeDropDown.Layout.Column = [4 7];
             app.MaxModeDropDown.Value = 'xTrialxSeg';
 
@@ -1369,7 +1376,7 @@ classdef app_exported < matlab.apps.AppBase
             app.ChannelAmpMaxEditFieldLabel = uilabel(app.GridLayout);
             app.ChannelAmpMaxEditFieldLabel.HorizontalAlignment = 'center';
             app.ChannelAmpMaxEditFieldLabel.Enable = 'off';
-            app.ChannelAmpMaxEditFieldLabel.Layout.Row = 16;
+            app.ChannelAmpMaxEditFieldLabel.Layout.Row = 17;
             app.ChannelAmpMaxEditFieldLabel.Layout.Column = [2 4];
             app.ChannelAmpMaxEditFieldLabel.Text = 'ChannelAmpMax';
 
@@ -1377,14 +1384,14 @@ classdef app_exported < matlab.apps.AppBase
             app.ChannelAmpMaxEditField = uieditfield(app.GridLayout, 'numeric');
             app.ChannelAmpMaxEditField.ValueChangedFcn = createCallbackFcn(app, @ChannelAmpMaxEditFieldValueChanged, true);
             app.ChannelAmpMaxEditField.Enable = 'off';
-            app.ChannelAmpMaxEditField.Layout.Row = 16;
+            app.ChannelAmpMaxEditField.Layout.Row = 17;
             app.ChannelAmpMaxEditField.Layout.Column = [5 7];
 
             % Create ChannelAmpMinEditFieldLabel
             app.ChannelAmpMinEditFieldLabel = uilabel(app.GridLayout);
             app.ChannelAmpMinEditFieldLabel.HorizontalAlignment = 'center';
             app.ChannelAmpMinEditFieldLabel.Enable = 'off';
-            app.ChannelAmpMinEditFieldLabel.Layout.Row = 17;
+            app.ChannelAmpMinEditFieldLabel.Layout.Row = 18;
             app.ChannelAmpMinEditFieldLabel.Layout.Column = [2 4];
             app.ChannelAmpMinEditFieldLabel.Text = 'ChannelAmpMin';
 
@@ -1392,14 +1399,14 @@ classdef app_exported < matlab.apps.AppBase
             app.ChannelAmpMinEditField = uieditfield(app.GridLayout, 'numeric');
             app.ChannelAmpMinEditField.ValueChangedFcn = createCallbackFcn(app, @ChannelAmpMinEditFieldValueChanged, true);
             app.ChannelAmpMinEditField.Enable = 'off';
-            app.ChannelAmpMinEditField.Layout.Row = 17;
+            app.ChannelAmpMinEditField.Layout.Row = 18;
             app.ChannelAmpMinEditField.Layout.Column = [5 7];
 
             % Create NoofBinsSpinnerLabel
             app.NoofBinsSpinnerLabel = uilabel(app.GridLayout);
             app.NoofBinsSpinnerLabel.HorizontalAlignment = 'center';
             app.NoofBinsSpinnerLabel.Enable = 'off';
-            app.NoofBinsSpinnerLabel.Layout.Row = 20;
+            app.NoofBinsSpinnerLabel.Layout.Row = 21;
             app.NoofBinsSpinnerLabel.Layout.Column = [2 3];
             app.NoofBinsSpinnerLabel.Text = 'No. of Bins';
 
@@ -1408,14 +1415,14 @@ classdef app_exported < matlab.apps.AppBase
             app.NoofBinsSpinner.Limits = [0 Inf];
             app.NoofBinsSpinner.ValueChangedFcn = createCallbackFcn(app, @NoofBinsSpinnerValueChanged, true);
             app.NoofBinsSpinner.Enable = 'off';
-            app.NoofBinsSpinner.Layout.Row = 20;
+            app.NoofBinsSpinner.Layout.Row = 21;
             app.NoofBinsSpinner.Layout.Column = [4 7];
 
             % Create ZDelayEditFieldLabel
             app.ZDelayEditFieldLabel = uilabel(app.GridLayout);
             app.ZDelayEditFieldLabel.HorizontalAlignment = 'center';
             app.ZDelayEditFieldLabel.Enable = 'off';
-            app.ZDelayEditFieldLabel.Layout.Row = 17;
+            app.ZDelayEditFieldLabel.Layout.Row = 18;
             app.ZDelayEditFieldLabel.Layout.Column = [14 15];
             app.ZDelayEditFieldLabel.Text = 'Z Delay';
 
@@ -1424,14 +1431,14 @@ classdef app_exported < matlab.apps.AppBase
             app.ZDelayEditField.Limits = [0 Inf];
             app.ZDelayEditField.ValueChangedFcn = createCallbackFcn(app, @ZDelayEditFieldValueChanged, true);
             app.ZDelayEditField.Enable = 'off';
-            app.ZDelayEditField.Layout.Row = 17;
+            app.ZDelayEditField.Layout.Row = 18;
             app.ZDelayEditField.Layout.Column = 16;
 
             % Create NShiftEditFieldLabel
             app.NShiftEditFieldLabel = uilabel(app.GridLayout);
             app.NShiftEditFieldLabel.HorizontalAlignment = 'center';
             app.NShiftEditFieldLabel.Enable = 'off';
-            app.NShiftEditFieldLabel.Layout.Row = 18;
+            app.NShiftEditFieldLabel.Layout.Row = 19;
             app.NShiftEditFieldLabel.Layout.Column = [14 15];
             app.NShiftEditFieldLabel.Text = 'N Shift';
 
@@ -1440,14 +1447,14 @@ classdef app_exported < matlab.apps.AppBase
             app.NShiftEditField.Limits = [0 Inf];
             app.NShiftEditField.ValueChangedFcn = createCallbackFcn(app, @NShiftEditFieldValueChanged, true);
             app.NShiftEditField.Enable = 'off';
-            app.NShiftEditField.Layout.Row = 18;
+            app.NShiftEditField.Layout.Row = 19;
             app.NShiftEditField.Layout.Column = 16;
 
             % Create FilterWidthEditFieldLabel
             app.FilterWidthEditFieldLabel = uilabel(app.GridLayout);
             app.FilterWidthEditFieldLabel.HorizontalAlignment = 'center';
             app.FilterWidthEditFieldLabel.Enable = 'off';
-            app.FilterWidthEditFieldLabel.Layout.Row = 19;
+            app.FilterWidthEditFieldLabel.Layout.Row = 20;
             app.FilterWidthEditFieldLabel.Layout.Column = [14 15];
             app.FilterWidthEditFieldLabel.Text = 'Filter Width';
 
@@ -1456,14 +1463,14 @@ classdef app_exported < matlab.apps.AppBase
             app.FilterWidthEditField.Limits = [0 Inf];
             app.FilterWidthEditField.ValueChangedFcn = createCallbackFcn(app, @FilterWidthEditFieldValueChanged, true);
             app.FilterWidthEditField.Enable = 'off';
-            app.FilterWidthEditField.Layout.Row = 19;
+            app.FilterWidthEditField.Layout.Row = 20;
             app.FilterWidthEditField.Layout.Column = 16;
 
             % Create FilterStdEditFieldLabel
             app.FilterStdEditFieldLabel = uilabel(app.GridLayout);
             app.FilterStdEditFieldLabel.HorizontalAlignment = 'center';
             app.FilterStdEditFieldLabel.Enable = 'off';
-            app.FilterStdEditFieldLabel.Layout.Row = 20;
+            app.FilterStdEditFieldLabel.Layout.Row = 21;
             app.FilterStdEditFieldLabel.Layout.Column = [14 15];
             app.FilterStdEditFieldLabel.Text = 'Filter Std';
 
@@ -1472,14 +1479,14 @@ classdef app_exported < matlab.apps.AppBase
             app.FilterStdEditField.Limits = [0 Inf];
             app.FilterStdEditField.ValueChangedFcn = createCallbackFcn(app, @FilterStdEditFieldValueChanged, true);
             app.FilterStdEditField.Enable = 'off';
-            app.FilterStdEditField.Layout.Row = 20;
+            app.FilterStdEditField.Layout.Row = 21;
             app.FilterStdEditField.Layout.Column = 16;
 
             % Create PX0DuraMsEditFieldLabel
             app.PX0DuraMsEditFieldLabel = uilabel(app.GridLayout);
             app.PX0DuraMsEditFieldLabel.HorizontalAlignment = 'center';
             app.PX0DuraMsEditFieldLabel.Enable = 'off';
-            app.PX0DuraMsEditFieldLabel.Layout.Row = 15;
+            app.PX0DuraMsEditFieldLabel.Layout.Row = 16;
             app.PX0DuraMsEditFieldLabel.Layout.Column = [14 15];
             app.PX0DuraMsEditFieldLabel.Text = 'PX0 DuraMs';
 
@@ -1488,14 +1495,14 @@ classdef app_exported < matlab.apps.AppBase
             app.PX0DuraMsEditField.Limits = [-Inf 0];
             app.PX0DuraMsEditField.ValueChangedFcn = createCallbackFcn(app, @PX0DuraMsEditFieldValueChanged, true);
             app.PX0DuraMsEditField.Enable = 'off';
-            app.PX0DuraMsEditField.Layout.Row = 15;
+            app.PX0DuraMsEditField.Layout.Row = 16;
             app.PX0DuraMsEditField.Layout.Column = 16;
 
             % Create PX1DuraMsEditFieldLabel
             app.PX1DuraMsEditFieldLabel = uilabel(app.GridLayout);
             app.PX1DuraMsEditFieldLabel.HorizontalAlignment = 'center';
             app.PX1DuraMsEditFieldLabel.Enable = 'off';
-            app.PX1DuraMsEditFieldLabel.Layout.Row = 16;
+            app.PX1DuraMsEditFieldLabel.Layout.Row = 17;
             app.PX1DuraMsEditFieldLabel.Layout.Column = [14 15];
             app.PX1DuraMsEditFieldLabel.Text = 'PX1 DuraMs';
 
@@ -1504,14 +1511,14 @@ classdef app_exported < matlab.apps.AppBase
             app.PX1DuraMsEditField.Limits = [0 Inf];
             app.PX1DuraMsEditField.ValueChangedFcn = createCallbackFcn(app, @PX1DuraMsEditFieldValueChanged, true);
             app.PX1DuraMsEditField.Enable = 'off';
-            app.PX1DuraMsEditField.Layout.Row = 16;
+            app.PX1DuraMsEditField.Layout.Row = 17;
             app.PX1DuraMsEditField.Layout.Column = 16;
 
             % Create NoofEventsEditFieldLabel
             app.NoofEventsEditFieldLabel = uilabel(app.GridLayout);
             app.NoofEventsEditFieldLabel.HorizontalAlignment = 'center';
             app.NoofEventsEditFieldLabel.Enable = 'off';
-            app.NoofEventsEditFieldLabel.Layout.Row = 21;
+            app.NoofEventsEditFieldLabel.Layout.Row = 22;
             app.NoofEventsEditFieldLabel.Layout.Column = [14 15];
             app.NoofEventsEditFieldLabel.Text = 'No of Events';
 
@@ -1520,28 +1527,28 @@ classdef app_exported < matlab.apps.AppBase
             app.NoofEventsEditField.Limits = [0 Inf];
             app.NoofEventsEditField.Editable = 'off';
             app.NoofEventsEditField.Enable = 'off';
-            app.NoofEventsEditField.Layout.Row = 21;
+            app.NoofEventsEditField.Layout.Row = 22;
             app.NoofEventsEditField.Layout.Column = 16;
 
             % Create CreateSMMSelectedButton
             app.CreateSMMSelectedButton = uibutton(app.GridLayout, 'push');
             app.CreateSMMSelectedButton.ButtonPushedFcn = createCallbackFcn(app, @CreateSMMSelectedButtonPushed, true);
             app.CreateSMMSelectedButton.Enable = 'off';
-            app.CreateSMMSelectedButton.Layout.Row = 11;
+            app.CreateSMMSelectedButton.Layout.Row = 12;
             app.CreateSMMSelectedButton.Layout.Column = 13;
             app.CreateSMMSelectedButton.Text = 'CreateSMM Selected';
 
             % Create XTDCLabel
             app.XTDCLabel = uilabel(app.GridLayout);
             app.XTDCLabel.HorizontalAlignment = 'center';
-            app.XTDCLabel.Layout.Row = 14;
+            app.XTDCLabel.Layout.Row = 15;
             app.XTDCLabel.Layout.Column = [2 7];
             app.XTDCLabel.Text = 'XTDC';
 
             % Create SMMLabel
             app.SMMLabel = uilabel(app.GridLayout);
             app.SMMLabel.HorizontalAlignment = 'center';
-            app.SMMLabel.Layout.Row = 14;
+            app.SMMLabel.Layout.Row = 15;
             app.SMMLabel.Layout.Column = [14 16];
             app.SMMLabel.Text = 'SMM';
 
@@ -1549,7 +1556,7 @@ classdef app_exported < matlab.apps.AppBase
             app.SensorDropDownLabel = uilabel(app.GridLayout);
             app.SensorDropDownLabel.HorizontalAlignment = 'center';
             app.SensorDropDownLabel.Enable = 'off';
-            app.SensorDropDownLabel.Layout.Row = 15;
+            app.SensorDropDownLabel.Layout.Row = 16;
             app.SensorDropDownLabel.Layout.Column = [2 3];
             app.SensorDropDownLabel.Text = 'Sensor';
 
@@ -1558,84 +1565,84 @@ classdef app_exported < matlab.apps.AppBase
             app.SensorDropDown.Items = {};
             app.SensorDropDown.ValueChangedFcn = createCallbackFcn(app, @SensorDropDownValueChanged, true);
             app.SensorDropDown.Enable = 'off';
-            app.SensorDropDown.Layout.Row = 15;
+            app.SensorDropDown.Layout.Row = 16;
             app.SensorDropDown.Layout.Column = [4 7];
             app.SensorDropDown.Value = {};
 
             % Create DefaultLabelMapMethod
             app.DefaultLabelMapMethod = uilabel(app.GridLayout);
             app.DefaultLabelMapMethod.HorizontalAlignment = 'center';
-            app.DefaultLabelMapMethod.Layout.Row = 18;
+            app.DefaultLabelMapMethod.Layout.Row = 19;
             app.DefaultLabelMapMethod.Layout.Column = 9;
             app.DefaultLabelMapMethod.Text = '-';
 
             % Create DefaultLabelMaxMode
             app.DefaultLabelMaxMode = uilabel(app.GridLayout);
             app.DefaultLabelMaxMode.HorizontalAlignment = 'center';
-            app.DefaultLabelMaxMode.Layout.Row = 19;
+            app.DefaultLabelMaxMode.Layout.Row = 20;
             app.DefaultLabelMaxMode.Layout.Column = 9;
             app.DefaultLabelMaxMode.Text = '-';
 
             % Create DefaultLabelNoOfBins
             app.DefaultLabelNoOfBins = uilabel(app.GridLayout);
             app.DefaultLabelNoOfBins.HorizontalAlignment = 'center';
-            app.DefaultLabelNoOfBins.Layout.Row = 20;
+            app.DefaultLabelNoOfBins.Layout.Row = 21;
             app.DefaultLabelNoOfBins.Layout.Column = 9;
             app.DefaultLabelNoOfBins.Text = '-';
 
             % Create DefaultLabelXTDC
             app.DefaultLabelXTDC = uilabel(app.GridLayout);
             app.DefaultLabelXTDC.HorizontalAlignment = 'center';
-            app.DefaultLabelXTDC.Layout.Row = 14;
+            app.DefaultLabelXTDC.Layout.Row = 15;
             app.DefaultLabelXTDC.Layout.Column = 9;
             app.DefaultLabelXTDC.Text = 'Default';
 
             % Create DefaultLabelPX0
             app.DefaultLabelPX0 = uilabel(app.GridLayout);
             app.DefaultLabelPX0.HorizontalAlignment = 'center';
-            app.DefaultLabelPX0.Layout.Row = 15;
+            app.DefaultLabelPX0.Layout.Row = 16;
             app.DefaultLabelPX0.Layout.Column = 17;
             app.DefaultLabelPX0.Text = '-';
 
             % Create DefaultLabelPX1
             app.DefaultLabelPX1 = uilabel(app.GridLayout);
             app.DefaultLabelPX1.HorizontalAlignment = 'center';
-            app.DefaultLabelPX1.Layout.Row = 16;
+            app.DefaultLabelPX1.Layout.Row = 17;
             app.DefaultLabelPX1.Layout.Column = 17;
             app.DefaultLabelPX1.Text = '-';
 
             % Create DefaultLabelZDelay
             app.DefaultLabelZDelay = uilabel(app.GridLayout);
             app.DefaultLabelZDelay.HorizontalAlignment = 'center';
-            app.DefaultLabelZDelay.Layout.Row = 17;
+            app.DefaultLabelZDelay.Layout.Row = 18;
             app.DefaultLabelZDelay.Layout.Column = 17;
             app.DefaultLabelZDelay.Text = '-';
 
             % Create DefaultLabelNShift
             app.DefaultLabelNShift = uilabel(app.GridLayout);
             app.DefaultLabelNShift.HorizontalAlignment = 'center';
-            app.DefaultLabelNShift.Layout.Row = 18;
+            app.DefaultLabelNShift.Layout.Row = 19;
             app.DefaultLabelNShift.Layout.Column = 17;
             app.DefaultLabelNShift.Text = '-';
 
             % Create DefaultLabelFilterWidth
             app.DefaultLabelFilterWidth = uilabel(app.GridLayout);
             app.DefaultLabelFilterWidth.HorizontalAlignment = 'center';
-            app.DefaultLabelFilterWidth.Layout.Row = 19;
+            app.DefaultLabelFilterWidth.Layout.Row = 20;
             app.DefaultLabelFilterWidth.Layout.Column = 17;
             app.DefaultLabelFilterWidth.Text = '-';
 
             % Create DefaultLabelFilterStd
             app.DefaultLabelFilterStd = uilabel(app.GridLayout);
             app.DefaultLabelFilterStd.HorizontalAlignment = 'center';
-            app.DefaultLabelFilterStd.Layout.Row = 20;
+            app.DefaultLabelFilterStd.Layout.Row = 21;
             app.DefaultLabelFilterStd.Layout.Column = 17;
             app.DefaultLabelFilterStd.Text = '-';
 
             % Create DefaultLabelPPDC
             app.DefaultLabelPPDC = uilabel(app.GridLayout);
             app.DefaultLabelPPDC.HorizontalAlignment = 'center';
-            app.DefaultLabelPPDC.Layout.Row = 14;
+            app.DefaultLabelPPDC.Layout.Row = 15;
             app.DefaultLabelPPDC.Layout.Column = 17;
             app.DefaultLabelPPDC.Text = 'Default';
 
@@ -1644,9 +1651,16 @@ classdef app_exported < matlab.apps.AppBase
             app.NoofEventsDropDown.Items = {};
             app.NoofEventsDropDown.ValueChangedFcn = createCallbackFcn(app, @NoofEventsDropDownValueChanged, true);
             app.NoofEventsDropDown.Enable = 'off';
-            app.NoofEventsDropDown.Layout.Row = 21;
+            app.NoofEventsDropDown.Layout.Row = 22;
             app.NoofEventsDropDown.Layout.Column = 17;
             app.NoofEventsDropDown.Value = {};
+
+            % Create ImportXTDirectoryButton
+            app.ImportXTDirectoryButton = uibutton(app.GridLayout, 'push');
+            app.ImportXTDirectoryButton.ButtonPushedFcn = createCallbackFcn(app, @ImportXTDirectoryButtonPushed, true);
+            app.ImportXTDirectoryButton.Layout.Row = 6;
+            app.ImportXTDirectoryButton.Layout.Column = [3 6];
+            app.ImportXTDirectoryButton.Text = 'Import XT Directory';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
