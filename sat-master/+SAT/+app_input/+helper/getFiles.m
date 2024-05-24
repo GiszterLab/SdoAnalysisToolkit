@@ -14,6 +14,7 @@ function files = getFiles ()
     files = fullfile(path, file_name);
 
     % If files return a character, turn it into a cell
+    % This happens when user only selects one file
     if iscell(files) 
        files = files';
     else

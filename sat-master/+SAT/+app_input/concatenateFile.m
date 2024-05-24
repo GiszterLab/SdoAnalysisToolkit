@@ -6,10 +6,19 @@
 %                           2 refers to pp directory
 % Return Value: None
 %               However, it will create a new csv file
+
 function concatenateFile(file_type)
 arguments
     file_type {mustBeOneOrTwo} = 1
 end
+    
+    % Get files' names
+    try files = SAT.app_input.helper.getFiles();
+    catch
+        return
+    end
+
+    % Check what type of file the user selected
     if file_type == 1
         filename = "xt.csv";
     elseif file_type == 2
@@ -20,13 +29,6 @@ end
     if isfile(filename)
         delete(filename);
     end
-    
-    % Get files' names
-    files = SAT.app_input.helper.getFiles();
-    % try files = SAT.app_input.helper.getFiles();
-    % catch
-    %     return
-    % end
 
     trial_no = 1; 
     % Loop through all the files
