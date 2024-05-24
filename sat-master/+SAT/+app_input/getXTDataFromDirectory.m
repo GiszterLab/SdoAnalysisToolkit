@@ -1,16 +1,13 @@
-% Description:  Get XT data from a directory 
-% Parameter:    None
+% Description:  Get XT data from multiple XT files 
+% Parameter:    xt_files - A cell array containing files' path
 % Return Value: xt_cell - Nx2 cell array where the {1,1} contains the header
 %                         and the second column contains xt matrix data for 
 %                         each trial
-% Note:         The directory must contain only the 
 
-function xt_cell = getXTDataFromDirectory ()
-    % Get XT Files from directory
-     try xt_files = SAT.app_input.helper.getFiles();
-     catch 
-         return
-     end
+function xt_cell = getXTDataFromDirectory (xt_files)
+arguments
+    xt_files (1,:) cell 
+end
 
     % Initialize the cell
     xt_cell = cell(length(xt_files), 2);

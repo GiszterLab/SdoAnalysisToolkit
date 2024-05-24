@@ -1,43 +1,23 @@
-% Description:  Get the PP data and header from concatenated PP file (.csv) 
-% Parameter:    pp_file_name - the file path for where the
-%                              concatenated pp file is
+% Description:  Get the PP data from concatenated PP file (.csv) 
+% Parameter:    pp_data - A cell array containing pp data with only two 
+%                         columns, the first column contains the time and
+%                         the second column contains the interger
+%                         representation of sensor
+%               char_index - Index of row numbers where char/str row exists
+%               pp_header_struct - A struct containing sensor names and
+%                                  integer representation of them
 % Return Value: pp_cell - Nx1 cell array where each row contains Mx2 cell for
 %                         each trial (N = Trials, M = No. of Sensors)
-% Note:         -I am expecting a json-style header at the first row, 
-%               then the trial header and the data, trial header and data, ...
-%               and so on
-%               -A trial header can be anything as long as is a character or
-%               string
-function pp_cell = getPPDataFromConcatenatedFile (pp_file_name)
-    % Get the header from the first line of pp file
-    fid = fopen(pp_file_name);
-    header_line = fgetl(fid);
-    fclose(fid);
+
+function pp_cell = getPPDataFromConcatenatedFile (pp_data, char_index, pp_header_struct)
+arguments
+    pp_data (:,2) cell
+    char_index (1,:) double {mustBeInteger, mustBePositive}
+    pp_header_struct struct
+end
     
-    pp_header_struct = jsondecode(header_line); % Structure for original pp data
-    pp_sensors = fields(pp_header_struct); % Sensor Names
-    
-    % Use readcell to read the concatenated file
-    a = readcell(pp_file_name, "NumHeaderLines", 1);
-    
-    % Find the character index for 'trial' char
-    % ** Trials Limit = 1000 **
-    char_index = zeros(1, 1000);
-    counter = 1;
-    for i = 1 : height(a)
-        % If the data is a character, then this is the row 
-        % where 'trial' is written
-        if ischar(a{i,1})
-            char_index(counter) = i;
-            counter = counter + 1;
-        end
-    end
-    char_index = char_index(char_index ~= 0);
-    
-    % Error Check: User might forget the trial header
-    if isempty(char_index)
-        error("!!! Could not find the TRIAL HEADERS !!!")
-    end
+    % Get the sensors' cell
+    pp_sensors = fields(pp_header_struct);
 
     % Initialize a cell array to store each trial
     pp_cell = cell(length(char_index), 1);
@@ -46,9 +26,9 @@ function pp_cell = getPPDataFromConcatenatedFile (pp_file_name)
     for i = 1 : length(char_index)
         % The assignment behaves differently at the last index
         if i == length(char_index)
-            pp_cell{i} = cell2mat(a(char_index(i) + 1 : end, :));
+            pp_cell{i} = cell2mat(pp_data(char_index(i) + 1 : end, :));
         else
-            pp_cell{i} = cell2mat(a(char_index(i) + 1 : char_index(i+1) - 1, :));
+            pp_cell{i} = cell2mat(pp_data(char_index(i) + 1 : char_index(i+1) - 1, :));
         end
         
         % Loop through that data to get pp data for each sensor
