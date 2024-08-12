@@ -41,12 +41,13 @@ classdef predictionError < handle
     end
     methods
         % __ calculate the prediction error 
-        function obj = computeError(obj, prd_pxt, obs_pxt, use_obs)
+        function obj = computeError(obj, prd_pxt, obs_pxt, use_obs, vars)
             arguments
                 obj
                 prd_pxt pxtDataCell  % predictions; 
                 obs_pxt pxtDataCell  % ground Truth;
                 use_obs = 1; %Numeric, Number for the observed data fit; 
+                vars.testSignificance = 1
             end
             
             n_use_obs = length(use_obs); 
@@ -123,7 +124,10 @@ classdef predictionError < handle
             obj.setPlotProperties(); 
             obj.errorStruct = errorS_All; 
             %
-            obj.testSignificance; 
+            if vars.testSignificance
+                % This can be slow with batch processing; 
+                obj.testSignificance; 
+            end
 
         end
 

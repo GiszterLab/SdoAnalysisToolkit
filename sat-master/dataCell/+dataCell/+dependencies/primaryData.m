@@ -45,12 +45,6 @@ classdef primaryData < handle
                 return
             end
             N_CHANNELS = size(obj.data{1,1},1); 
-            %{
-            if (obj.nTrials == 0) || (obj.nChannels == 0)
-                LI = false; 
-                return
-            end
-            %}
             LI = false; 
             %
             tr = 1; 

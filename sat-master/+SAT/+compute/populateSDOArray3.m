@@ -57,6 +57,10 @@
 %   'verbose': [0/1]
 %       - Whether to use long form (1) or short form (0) status reporting.
 %       - Default = 0. 
+%   'method'
+%       - 'original' = (V3 Algo) 
+%       - 'asymmetric' = (V5)
+%       - 'optimized' = V7
 %
 % OUTPUT: 
 %   'sdo': a 1*#XtChannels structure with fields; 
@@ -103,6 +107,9 @@
 % 2.2.2024 - Added the different algorithms for SDO estimation, and
 % included the optional parfor in-parallel synchronization
 
+% 7.20.2024 - Added the Constrained Optimization (V7) Algo as a possible
+% method. 
+
 %%
 function [sdo] = populateSDOArray3(xtdc, ppdc, vars)
 arguments
@@ -115,7 +122,7 @@ arguments
     vars.pxDelay        {mustBeInteger} = 0; 
     vars.useTrials      = 1:ppdc.nTrials; 
     vars.condenseShuffles {mustBeNumericOrLogical} = 0; % Only recommended with large datasets
-    vars.method         {mustBeMember(vars.method, {'original', 'asymmetric'})} = 'asymmetric'; 
+    vars.method         {mustBeMember(vars.method, {'original', 'asymmetric', 'optimized'})} = 'original'; %'asymmetric'; 
     vars.maxBackgroundDraws = 10000; 
     vars.parallelCompute = 0; 
    
@@ -161,6 +168,8 @@ if vars.condenseShuffles
     disp("NOTE: Condensing Shuffles may greatly increase compute time."); 
 end
 
+nUseTrials = length(vars.useTrials); 
+
 
 %% PreCastArr
 
@@ -169,7 +178,9 @@ end
 
 %%
 if ~ppdc.shuffledSpikes
-    ppdc.shuffle; 
+    if ppdc.nShuffles > 0
+        ppdc.shuffle;
+    end
 end
 
 shuffRasterCell = ppdc.getRasterIndices(XT_HZ, 'dataField', 'shuffle'); 
@@ -186,6 +197,7 @@ for m = 1:N_XT_CHANNELS
     for u = 1:N_PP_CHANNELS
         obs_xv0     = xtdc.getValuesAtIndices(obs_idx0(u,:), 'useChannels', m, "dataField","stateSignal", 'useTrials', vars.useTrials);  
         obs_xv1     = xtdc.getValuesAtIndices(obs_idx1(u,:), 'usechannels', m, "dataField","stateSignal", 'useTrials', vars.useTrials); 
+        %
         cat_xv0     = cellhcat(obs_xv0); 
         cat_xv1     = cellhcat(obs_xv1);  
         sdo(m).stirpd{u} = pxTools.getStirpd(cat_xv0, cat_xv1, N_BINS); 
@@ -223,6 +235,14 @@ for m = 1:N_XT_CHANNELS
     bkgdJointSDO    = zeros(N_BINS, N_BINS); 
     nTotalTrLength  = 0; 
     for tr = 1:N_TRIALS
+
+        % ___ Avoid using data from trials we don't care about; 
+        % 8.12.2024 Patch; 
+        if ~ismember(vars.useTrials, tr)
+            continue; 
+        end
+
+
         pxt0_Bkgd = pxt0Cell{1,tr}{m}; 
         pxt1_Bkgd = pxt1Cell{1,tr}{m}; 
 
@@ -236,7 +256,8 @@ for m = 1:N_XT_CHANNELS
         end
 
         switch vars.method
-            case {'original'}%, 'asymmetric'}
+            
+            case {'original', 'optimized'}%{'original'}%, 'asymmetric'}
                 [bkgdTrDeltaSDO, bkgdTrJointSDO] = SAT.compute.sdo3(pxt0_Bkgd(:,rand_idx), pxt1_Bkgd(:,rand_idx), 0, ...
                     parallelCompute=vars.parallelCompute, rescale=false); 
                 %
@@ -246,9 +267,14 @@ for m = 1:N_XT_CHANNELS
                     'asymmetry', asymmetry_type, ... 
                     parallelCompute=vars.parallelCompute, rescale=false); 
                 %}
+                %{
+            case 'optimized'
+                % This might not be preferable given the performance cost
+                [bkgdTrDeltaSDO, bkgdTrJointSDO] = SAT.compute.sdo7(pxt0_Bkgd(:,rand_idx), pxt1_Bkgd(:,rand_idx), 0, ...
+                    "parallelCompute",vars.parallelCompute, rescale=false); 
+                %}
         end
         %// iteratively update
-        %nTotalTrLength  = nTotalTrLength + size(pxt1_Bkgd,2); 
         nTotalTrLength  = nTotalTrLength + bkgndLen; 
         bkgdDeltaSDO    = bkgdDeltaSDO + bkgdTrDeltaSDO; 
         bkgdJointSDO    = bkgdJointSDO + bkgdTrJointSDO;  
@@ -282,13 +308,18 @@ for m = 1:N_XT_CHANNELS
             px1ShuffSS = reshape(shuffUnitTrPx1, N_BINS, nTrialSpikes, N_SHUFF);
             %
             switch vars.method
-                case 'original'
+                case {'original', 'optimized'} %'original'
                     [trShuffDeltaSDO, trShuffJointSDO] = SAT.compute.sdo3(px0ShuffSS, px1ShuffSS, 0, ...
                         "parallelCompute",vars.parallelCompute, rescale=false); 
                 case 'asymmetric'
                     [trShuffDeltaSDO, trShuffJointSDO] = SAT.compute.sdo5(px0ShuffSS, px1ShuffSS, 0, ...
                         'asymmetry', asymmetry_type, ... 
                         "parallelCompute",vars.parallelCompute, rescale=false);
+                    %{
+                case 'optimized'
+                    [trShuffDeltaSDO, trShuffJointSDO] = SAT.compute.sdo7(px0ShuffSS, px1ShuffSS, 0, ...
+                        "parallelCompute",vars.parallelCompute, rescale=false);               
+                    %}
             end
 
             % __ 
@@ -304,6 +335,9 @@ for m = 1:N_XT_CHANNELS
                 case 'asymmetric'
                     [trDeltaSDO, trJointSDO] = SAT.compute.sdo5(obsPxt0Cell{1,tr}{m,u},obsPxt1Cell{1,tr}{m,u}, 0, ...
                         'asymmetry', asymmetry_type, ... 
+                        parallelCompute=vars.parallelCompute, rescale=false);
+                case 'optimized'
+                    [trDeltaSDO, trJointSDO] = SAT.compute.sdo7(obsPxt0Cell{1,tr}{m,u},obsPxt1Cell{1,tr}{m,u}, 0, ...
                         parallelCompute=vars.parallelCompute, rescale=false); 
             end           
             tmp{tr} = trDeltaSDO;

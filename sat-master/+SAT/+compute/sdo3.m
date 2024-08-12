@@ -1,9 +1,12 @@
-%%
-% 3rd Generation of the compute SDO Matrix (backup for existing methods)
+%% SDO (3)
+% 3rd Variant of the compute SDO Matrix. 
 %
 % This is the 'original' definition of the SDO, which fits the identity: 
 % L*p(x,0) = dp(x,) --exactly--, but which may overestimate diffusion
-% effects for combinations of multiple SDOs. 
+% effects during combinations of multiple SDOs, but which maximizes
+% observations from a single process
+%
+% Has been hyperoptimized
 
 
 %_______________________________________
@@ -32,7 +35,7 @@ arguments
     vars.parallelCompute = 0; 
 end
 
-% If 'rescale' is set to 0, the output will NOT be markovian or bounded in
+% If 'rescale' is set to 0, the output will NOT be Markov or bounded in
 % probability space. Used to perform weighted averaging of SDOs with
 % unequal number of contributing observations; 
 
