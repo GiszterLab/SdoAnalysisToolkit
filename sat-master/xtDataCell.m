@@ -291,7 +291,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
         function obj = setWeightMatrix(obj, METHOD)
             arguments
                 obj
-                METHOD char {mustBeMember(METHOD, {'ica', 'pca', 'max'})}= obj.decomposeMethod; 
+                METHOD char {mustBeMember(METHOD, {'ica', 'pca', 'max', 'std'})}= obj.decomposeMethod; 
             end
             % The 'weight matrix' here is a left premultiplication matrix
             % of form [Components] = [Weight]*[xtData], where xtData is a
@@ -314,6 +314,13 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                     xtArr = reshape(xt, obj.nChannels, [], 1); %2D; 
                      [~, W] = iterativeVectorDecomposition(xtArr, METHOD); 
                      obj.weightMatrix = W;
+
+                case {'std'}
+                    xt = getTensor(obj); 
+                    %W = zeros(obj.nChannels); 
+                    V1 = std(xt, [], 3); 
+                    V0 = mean(V1,2); 
+                    obj.weightMatrix = diag(1./V0); 
             end
             obj.nActivationsUsed = obj.nChannels; 
         end
@@ -321,7 +328,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
         function obj = applyLinearTranform(obj, W, level)
             arguments
                 obj 
-                W = obj.WeightMatrix; 
+                W = obj.weightMatrix; 
                 level {mustBeNumericOrLogical} = 1; 
             end
             % // uses the linear transformation matrix to apply a method
@@ -642,6 +649,10 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 xt = dataArr(m,:)-(m-1)*offset; 
                 xMax = max(xMax, min(max(xt), offset) ); %up to +1 offset; 
                 xMin = min(xMin, max(min(xt), -(m)*offset) );
+                if all(isnan(xt))
+                    %/ 'missing/nan' values
+                    plot(-(m-1)*offset*ones(size(xt)), 'LineStyle',':'); 
+                end
                 plot(xt); 
                 hold on; 
             end
@@ -650,6 +661,14 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 xMax = max(xt); 
                 xMin = min(xt); 
             end
+            % __ Patch 6.8.24
+
+            yvect = -(N_PLOT_ROWS-1)*offset:offset:0; 
+            yticks(yvect); 
+
+            % __ 
+
+
             %// Rewindow axes to center on data 
             axis([-inf, inf,xMin, xMax]); 
             ylabel(strcat("Channel Offset = ", num2str(offset))); 

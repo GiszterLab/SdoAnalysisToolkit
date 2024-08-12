@@ -1,6 +1,6 @@
 %% pxTools_KLDiv
 % 
-% Calculate the Kullback Liebler Divergence (KLD) between two input
+% Calculate the Kullback Leibler Divergence (KLD) between two input
 % distributions. 
 %
 % varargin can be one input which determines the dimensions that form

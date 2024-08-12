@@ -68,7 +68,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 usePpChannels {mustBeInteger} = 1:ppdc.nChannels; 
                 useTrials     {mustBeInteger} = 1:xtdc.nTrials; 
                 vars.condenseShuffles = 0; 
-                vars.method {mustBeMember(vars.method, {'original', 'asymmetric'})} = 'original';%'asymmetric'; 
+                vars.method {mustBeMember(vars.method, {'original', 'asymmetric', 'optimized'})} = 'original';%'asymmetric'; 
                 vars.parallelCompute = 0; 
                 %useTrials = []; 
             end
@@ -138,7 +138,9 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 % otherwise, we perform stats during the direct computation
                 obj.sdoStruct = SAT.compute.performStats(obj.sdoStruct);
             end
-            obj.sdoStruct = SAT.compute.testStatSig(obj.sdoStruct, obj.sigPVal, obj.zScore); 
+            if ppdc.nShuffles > 0
+                obj.sdoStruct = SAT.compute.testStatSig(obj.sdoStruct, obj.sigPVal, obj.zScore);
+            end
             %___ 
         end
         %// find sig combos at specified threshold; 
@@ -195,6 +197,19 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 sdos = sdos{1};
             end
         end
+        %___ Optimization (ad-hoc)
+        function obj = optimize(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO)
+            arguments
+                obj
+                xtdc
+                ppdc
+                XT_CH_NO = 1:obj.nXtChannels; 
+                PP_CH_NO = 1:obj.nPpChannels;
+            end
+            % Wrapper for the V7
+            obj = SAT.sdoUtils.optimize(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO); 
+        end
+
 
         %___ Prediction
         function errorStruct = getPredictionError(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO, vars)
@@ -205,6 +220,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 XT_CH_NO = 1; 
                 PP_CH_NO = 1; 
                 vars.plot = 0; 
+                vars.testSignificance = 1; 
             end
 
             % __ This is the efficient 'internal' based prediction using
@@ -246,7 +262,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             pd_px1 = sdo.getPredictionPxt(px0);
 
             errorStruct = SAT.predict.predictionError(); 
-            errorStruct.computeError(pd_px1, px1); 
+            errorStruct.computeError(pd_px1, px1, 'testSignificance', vars.testSignificance); 
  
             if vars.plot
                 errorStruct.plot(); 
@@ -370,8 +386,6 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
         % __ Quick -plots; 
         function plotStirpd(obj, useXtChannels, usePpChannels)
             % General, "PLOT ALL" method for evaluating 
-            % useXtChannels = []
-            % usePpChannels = []; 
             arguments
                 obj
                 useXtChannels = 1; 

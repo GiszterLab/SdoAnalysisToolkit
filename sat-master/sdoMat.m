@@ -138,7 +138,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell
                 obj
                 pxt_0 pxtDataCell
                 pxt_1 pxtDataCell
-                vars.method {mustBeMember(vars.method, {'original', 'asymmetric'})} = 'asymmetric'; 
+                vars.method {mustBeMember(vars.method, {'original', 'asymmetric', 'optimized'})} = 'original'; %'asymmetric'; 
             end
             %// one-off generation from pxtDataCell classes (All necessary
             %params are upstream)
@@ -163,6 +163,9 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell
                 case 'asymmetric'
                     [dArr, jArr]        = SAT.compute.sdo5(px0_data, px1_data); 
                     [sdoSS, sdoJointSS] = SAT.compute.sdo5(pxt_0.shuffData, pxt_1.shuffData); 
+                case 'optimized'
+                    [dArr, jArr]        = SAT.compute.sdo7(px0_data, px1_data); 
+                    [sdoSS, sdoJointSS] = SAT.compute.sdo7(pxt_0.shuffData, pxt_1.shuffData); 
             end
 
 
