@@ -33,7 +33,10 @@ classdef dataCellSuperClass < handle
             N_USE_CH = length(ROW_IDX); 
             % ___ Strip
             obj_out.data        = obj_out.data(1,TRIAL_IDX); 
-            obj_out.metadata    = obj_out.metadata(1,TRIAL_IDX); 
+            try
+                % not usually mission critical
+                obj_out.metadata    = obj_out.metadata(1,TRIAL_IDX); 
+            end
             try
                 obj_out.sensor      = obj_out.sensor(ROW_IDX);
             end
@@ -100,8 +103,10 @@ classdef dataCellSuperClass < handle
                 end
             end
         end
+        %___
 
     end
+
 
     %____ Methods (Shared by some classes)
     methods (Hidden = true)
@@ -115,58 +120,109 @@ classdef dataCellSuperClass < handle
                 %vars.maxChannels    double = length(useChannels); %force override for tmpltDC
                 vars.DATAFIELD      char = obj.dataField;
                 vars.CONFORM_METHOD char {mustBeMember(vars.CONFORM_METHOD, {'pad', 'nanpad', 'trim'})} = 'pad'; 
+                vars.averageDown = 1; % for multiple observations w/in trial
             end
 
             N_TRIALS    = length(useTrials); 
             N_USE_CH    = length(useChannels);  
 
             % __ Slow Check
-            nElem = zeros(N_USE_CH, obj.nTrials); 
+            nElem = zeros(N_USE_CH, N_TRIALS); %obj.nTrials); 
+            nChObs = zeros(N_USE_CH,N_TRIALS); % for detecting stacks
             for tri = 1:N_TRIALS
                 tr = useTrials(tri); 
                 for chi = 1:N_USE_CH
                     ch = useChannels(chi);
-                    [szY, szX] = size(obj.data{1,tr}(ch).(vars.DATAFIELD)); 
+                    [szY, szX, ~] = size(obj.data{1,tr}(ch).(vars.DATAFIELD)); 
+                    nChObs(chi,tr) = szY; 
                     nElem(chi,tr) = max(szY, szX); 
                 end
             end            
             
+            %  Handle differences in X/ time
             switch vars.CONFORM_METHOD
                 case {'Pad', 'pad'}
                     TRIM = 0; 
                     %// Zero Pad signals to maximum trial length; 
                     maxLen = max(nElem, [], 'all'); 
-                    ten = zeros(N_USE_CH, maxLen, N_TRIALS); 
+                    if vars.averageDown == 1
+                        yMax = 1; 
+                    else
+                        yMax = max(nChObs, [], 'all'); 
+                    end
+                    ten = zeros(N_USE_CH, maxLen, N_TRIALS, yMax); 
+                    %ten = zeros(N_USE_CH, maxLen, N_TRIALS); 
                 case {'nanpad'}
                     TRIM = 0; 
                     maxLen = max(nElem, [], 'all'); 
-                    ten = nan*ones(N_USE_CH, maxLen, N_TRIALS); 
+                    if vars.averageDown == 1
+                        yMax = 1; 
+                    else
+                        yMax = max(nChObs, [], 'all'); 
+                    end
+                    ten = nan*ones(N_USE_CH, maxLen, N_TRIALS, yMax); 
+                    %ten = nan*ones(N_USE_CH, maxLen, N_TRIALS); 
                 case {'Trim', 'trim'}
                     TRIM = 1; 
                     %// Trim signals to shortest trial
                     minLen = min(nElem(nElem>0), [], 'all'); 
-                    ten = zeros(N_USE_CH, minLen, N_TRIALS); 
+                    if vars.averageDown == 1
+                        yMax = 1; 
+                    else
+                        yMax = min(min(nChObs, [], 'all'),1); 
+                    end                    
+                    ten = zeros(N_USE_CH, minLen, N_TRIALS, yMax);  
+                    %ten = zeros(N_USE_CH, minLen, N_TRIALS); 
             end
+
+           % Handle differences in Y/ # Observations; 
+
 
             for tri = 1:N_TRIALS
                 tr = useTrials(tri); 
-                xtData = cellvcat({(obj.data{1,tr}(useChannels).(vars.DATAFIELD))});
+%                if yMax < 2
+                    %// single obs; default; 
+                xtCell = {obj.data{1,tr}(useChannels).(vars.DATAFIELD)}; 
+                if (yMax < 2) && any(nChObs(:,tr)>1)
+                    % // average down; 
+                    xtData = cellvcat( cellfun(@mean, xtCell, repelem({1},1,N_USE_CH), 'UniformOutput', false)' ); 
+                elseif (yMax < 2)
+                    %// pass; 
+                    xtData = cellvcat(xtCell'); 
+                else
+                    %// retain sample depth; 
+                    % -->> NOTE: this will break if there is an unequal
+                    % number of obs per channel; 
+                    xtData = cellzcat(xtCell'); 
+                    xtData = permute(xtData, [3,2,1]); %[Channel; xt; event]
+
+                end
+
+                %xtData = cellvcat({(obj.data{1,tr}(useChannels).(vars.DATAFIELD))});
                 if isempty(xtData)
                     continue; 
                 end
-               [szY, szX] = size(xtData); 
+               [~,~, szZ] = size(xtData); 
+               %{
                if szY > N_USE_CH
                    %// if we have multiple observations; merge down; 
                    xtMat = reshape(xtData', szX, [], N_USE_CH); 
                    xtData = squeeze(mean(xtMat, 2))'; 
                end
+               %}
                 if (TRIM == 1)
                     tLast = minLen; 
-                    xtData = xtData(1:minLen); 
+                    xtData = xtData(:,1:minLen,:); 
                 else
                     tLast = size(xtData,2); 
                 end
-                ten(:,1:tLast,tri) = xtData(:,1:tLast); 
+                if szZ > 1
+                    %for z = 1:szZ
+                    ten(:,1:tLast,tri,1:szZ) = xtData(:,1:tLast,:); 
+                    %ten(:,1:tLast,tri,1:szZ) = xtData(:,1:tLast,:); 
+                else
+                    ten(:,1:tLast,tri,1) = xtData(:,1:tLast); 
+                end
             end                  
         end
         %___ 
