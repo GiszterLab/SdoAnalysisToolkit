@@ -86,9 +86,11 @@ if pR.reparameterize
     end
     % __ If reparameterizing shuffles, should take the mean of the
     % reparameterized shuffles rather than reparameterize the mean
-    sField = sFields{4}; 
-    rjSdo.(sField) = mean(rjSdo.(sFields{3}),3); 
-    rdSdo.(sField) = mean(rdSdo.(sFields{3}),3);
+    if length(sFields) >= 4 % mean-shuff
+        sField = sFields{4}; 
+        rjSdo.(sField) = mean(rjSdo.(sFields{3}),3); 
+        rdSdo.(sField) = mean(rdSdo.(sFields{3}),3);
+    end
 
 end
 

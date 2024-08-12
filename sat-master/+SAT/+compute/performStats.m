@@ -107,6 +107,9 @@ for m = 1:N_XT_CHANNELS
                 x2 = sFields{x2_i}; 
                     refField = strcat(x1, '_v_', x2); 
 
+                    if isempty(jSdo.(x1)); continue; end
+                    if isempty(jSdo.(x2)); continue; end
+
                     % ______ Test Joint Distributions for Deviations 
                     % No assumptions on priors
                     [statStruct.(refField).kld_px0_px0Normed, ...

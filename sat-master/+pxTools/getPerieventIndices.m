@@ -1,8 +1,5 @@
 %% getPeriEventIndices
 %
-% Take a [N_XT_, N_OBS] set of time series, and sample at {N_PP_CH}
-% time points, and extract the signal around it. 
-%
 % Given event times, get the indices of elements around, and
 % including, the event time, given the associated parameters. 
 %

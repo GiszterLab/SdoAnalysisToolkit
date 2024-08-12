@@ -1,5 +1,5 @@
 %%
-% 5th Generation of the compute SDO Matrix algorithm 
+% 5th Variant of the compute SDO Matrix algorithm 
 
 % NOTE: The assymmetrization of the net matrix DOES NOT give the same
 % matrix as the sum of assymmetrized matrices; 
