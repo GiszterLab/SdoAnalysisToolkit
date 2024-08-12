@@ -37,8 +37,8 @@ end
         new_cell = cell(length(pp_sensors), 2); % {Sensor_name(char) doubles}
         for j = 1 : length(pp_sensors)
             sensor_number = header_table.(pp_sensors{j});
-            new_cell{j, 1} = pp_sensors{j};
-            new_cell{j, 2} = pp_original_data(pp_original_data(:,2) == sensor_number);
+            new_cell{j, 1} = pp_sensors{j}; % Get sensor's name
+            new_cell{j, 2} = pp_original_data(pp_original_data(:,2) == sensor_number)'; % Get spikes (Column Data Only)
         end
         pp_cell{i} = new_cell;
     end

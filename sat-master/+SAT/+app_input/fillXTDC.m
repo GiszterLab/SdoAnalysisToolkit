@@ -20,9 +20,9 @@ function xtdc = fillXTDC(xt_cell, times)
         for j = 1 : length(xt_data_holder{1,i})
     
             % Insert raw data
-            xt_data_holder{1,i}(j).raw = xt_cell{i,2}(:,j)'; % row data required
+            xt_data_holder{1,i}(j).raw = xt_cell{i,2}(:,j)'; % column data required
             % Insert envelope data
-            xt_data_holder{1,i}(j).envelope = xt_cell{i,2}(:,j)'; % row data required
+            xt_data_holder{1,i}(j).envelope = xt_cell{i,2}(:,j)'; % column data required
     
             % Insert sensor's name
             xt_data_holder{1,i}(j).sensor = xt_cell{1,1}{j};
@@ -32,7 +32,7 @@ function xtdc = fillXTDC(xt_cell, times)
         end
         
         % Insert times
-        xt_data_holder{1,i}(1).times = times;
+        xt_data_holder{1,i}(1).times = times'; % row data required
     end
 
     % After filling the holder, initialize xt data cell and insert it
