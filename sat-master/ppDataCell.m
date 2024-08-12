@@ -5,6 +5,9 @@
 % TODO: Optimize input validations
 % TODO: Modularize Plotters
 
+% 8.12.2024 - Added Validation to the import method to ensure that the
+% arrangement of data corresponds to expectations
+
 %_______________________________________
 % Copyright (C) 2023 Trevor S. Smith
 % Drexel University College of Medicine
@@ -22,6 +25,7 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 %__________________________________________
+
 
 classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell.dependencies.primaryData
         %% 'Inherited Properties'
@@ -63,9 +67,20 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 LI = false;
                 return
             end
-            ix_tr = find(any(obj.nTrialEvents),1); 
-            ix_n = any(obj.nTrialEvents(:,1:ix_tr)); 
+            ix_tr = find(obj.nTrialEvents > 1, 1);
+            %ix_tr = find(any(obj.nTrialEvents),1); 
+            ix_n = find(obj.nTrialEvents(:,ix_tr),1);
+            %ix_n = any(obj.nTrialEvents(:,1:ix_tr)); 
             %ix_n = find(any(obj.nTrialEvents(:,1:ix_tr),1)); 
+            if isempty(ix_tr)
+                LI = false; 
+                return
+            end
+            if ~isfield(obj.data{1,ix_tr}, 'shuffle')
+                % used for compatability
+                LI = false; 
+                return
+            end
             if isempty(obj.data{1,ix_tr}(ix_n).shuffle) 
                 LI = false; 
             else
@@ -139,7 +154,11 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                     obj.nTrialEvents(ch,tr) = obj.data{1,tr}(ch).nEvents; 
                 end
                 % __ Metadata (copy)
-                obj.data{2,tr} = dataHolder{2,tr}; 
+                try
+                    obj.data{2,tr} = dataHolder{2,tr}; 
+                catch
+                    obj.data{2,tr} = {}; 
+                end
             end
             % __ >> Trialwise Max value = trMaxTime
             %// We can use a separate method to set the max times... 
@@ -150,6 +169,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                     end
                 end
             end
+            obj.validateData; 
         end
 
         function obj = subsample(obj, useTrials, useChannels)
@@ -237,7 +257,10 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
         end
         
         %// convert event times into positional indices of set sampleHz
+      
         function idxArr = getRasterIndices(obj, SAMPLE_HZ, useTrials, useChannels, vars)
+            % Return an {N_CHANNELS x N_TRIALS} cell of indices
+            %
             % sample_hz, useTrials, useChannels, 'dataField' {'times',
             % 'shuffle'}
             arguments
@@ -261,6 +284,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 end
             end
         end
+
+
         function [idx0_Cell, idx1_Cell] = getPerieventIndices(obj, useTrials, useChannels, vars)
             arguments
                 obj
@@ -278,6 +303,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             N_USE_PP        = length(useChannels); 
             %// Push out to the pxTools.getPerieventIndices.m script of the same name; 
             
+            % Get {N_CHANNELs x N_TRIALs} Cell array of indices; 
             spkData = obj.getRasterIndices(vars.fs, useTrials, useChannels, 'dataField', vars.useField); 
             %
             idx0_Cell = cell(N_USE_PP, N_USE_TRIALS); 
@@ -343,7 +369,45 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
             %______ 
         end
-        
+        %% 
+        function obj = merge(obj, ppdc)
+            arguments
+                 obj
+                 ppdc ppDataCell
+            end
+            % ___ 
+
+            if ~(obj.nTrials == ppdc.nTrials)
+                disp("EventDataCells do not have compatible sizes"); 
+                return
+            end
+
+            for tr = 1:obj.nTrials
+                obj.data{1,tr} = [obj.data{1,tr}, ppdc.data{1,tr}]; 
+                try
+                    obj.metadata{1,tr} = [obj.metadata{1,tr}, ppdc.metadata{1,tr}]; 
+                end
+            end
+
+            newFs = min(obj.fs, ppdc.fs); 
+            %{
+            if obj.fs > newFs
+                obj.resample(newFs); 
+            elseif ppdc.fs > newFs
+                ppdc.resample(newFs); 
+            end
+            %}
+            obj.fs = newFs; 
+
+            obj.nTrialEvents = [obj.nTrialEvents; ppdc.nTrialEvents]; 
+            obj.trTimeLen = max(obj.trTimeLen, ppdc.trTimeLen);
+            obj.sensor    = [obj.sensor, ppdc.sensor]; 
+            %obj.eventType = [obj.eventType, ppdc.eventType]; 
+            %obj.nEventTypes = length(obj.eventType); 
+
+        end
+
+
         %% Extraction Methods 
 
         %// Extract subsets of the dataCell containing points within a given range.  
@@ -512,5 +576,50 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             plotSpikes(obj, useTrials, useRows, PLOT_ALL); 
             plotWaves( obj, useTrials, useRows, PLOT_ALL); 
         end
+        %% UTILITIES; 
+        %___ validate dataFormats (Fix Alignment)
+        function validateData(obj)
+            if ~obj.sampledData
+                return; 
+            end
+            for tr = 1:obj.nTrials
+                for u =1:obj.nChannels
+                    % Horizontal Time row vectors; 
+                    % (Maybe one day we can flip this to cols...)
+                    if ~isempty(obj.data{1,tr}(u).times)
+                        [sz_y,sz_x] = size(obj.data{1,tr}(u).times);  
+                        if (sz_y > sz_x) && (sz_y > 1)
+                            obj.data{1,tr}(u).times = obj.data{1,tr}(u).times'; 
+                        end
+                    end
+                    % Horizontal Envelopes
+                    if ~isempty(obj.data{1,tr}(u).envelope)
+                        [sz_y,sz_x] = size(obj.data{1,tr}(u).envelope);
+                        if (sz_x == obj.data{1,tr}(u).nEvents) && ~(sz_x == sz_y)
+                            % This is set as col vects; 
+                            obj.data{1,tr}(u).envelope = obj.data{1,tr}(u).envelope'; 
+                        end
+                    else
+                        if obj.data{1,tr}(u).nEvents > 0
+                            %// Dummy with blank; 
+                            obj.data{1,tr}(u).envelope = ones(obj.data{1,tr}(u).nEvents, 2); 
+                        end
+                    end
+                    % --> Could insert validate shuffles; 
+                    if obj.shuffledSpikes 
+                        if obj.data{1,tr}(u).nEvents > 0
+                            [sz_y, sz_x] = size(obj.data{1,tr}(u).shuffle); 
+                            % Check that these are horizontal; 
+                            if ~(sz_x == obj.data{1,tr}(u).nEvents) && (sz_y > 1)
+                                obj.data{1,tr}(u).shuffle = obj.data{1,tr}(u).shuffle'; 
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+
+
     end  
 end

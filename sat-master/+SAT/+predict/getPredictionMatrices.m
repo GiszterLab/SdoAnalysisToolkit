@@ -19,7 +19,6 @@ sField = {'t0t1', 'gauss', 'STA', 'bck', 'mkv', 'staBck', 'SDO'};
 for h = 1:length(sField) 
     H_Struct.(sField{h}) = {}; 
 end
- %H_Struct = cell2struct(cell(1, 7), sField); 
 
 % // First, figure out exactly -WHAT- 'sdo' is 
 clID = class(sdo); 
@@ -96,10 +95,6 @@ H_Struct.(sField{2}) = SAT.predict.matrices.getH2(nStates, ...
     'type', vars.type); 
 
 % __ H3 Spike-Triggered Average (STA)
-%sta_method = 'effect'; 
-%sta_method = 'px'; 
-
-
 H_Struct.(sField{3}) = SAT.predict.matrices.getH3(nStates, ...
     at0, at1, sigLevels, ...
     'type', vars.type, ...
@@ -117,7 +112,7 @@ H_Struct.(sField{5}) = SAT.predict.matrices.getH5(nStates, xt0,  N_PX1_PTS, ...
 H_Struct.(sField{6}) = SAT.predict.matrices.getH6(at0, at1, sdoStruct, XT_CH_NO, ...
     'type', vars.type, 'method',vars.staMethod); 
 
-% __ H7
+% __ H7 Spike-triggered SDO
 H_Struct.(sField{7}) = SAT.predict.matrices.getH7(sdoStruct,XT_CH_NO, PP_CH_NO, ...
     'type', vars.type); 
 
