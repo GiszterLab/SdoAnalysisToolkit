@@ -1,5 +1,5 @@
 % Description:  Return a PP data cell object for SMM
-% Parameters:   pp_cell - Nx1 cell where N is a trial. Inside each
+% Parameters:   pp_cell -    Nx1 cell where N is a trial. Inside each
 %               cell is a Mx2 cell where M is sensor and the second column
 %               is the activation time
 %               frequency - from xt times data
@@ -19,7 +19,7 @@ end
             pp_data_holder{1,i}(j).sensor = pp_cell{i}{j,1};
             pp_data_holder{1,i}(j).times = pp_cell{i}{j,2};
             pp_data_holder{1,i}(j).envelope = pp_cell{i}{j,2};
-            pp_data_holder{1,i}(j).nEvents = height(pp_cell{i}{j,2});
+            pp_data_holder{1,i}(j).nEvents = width(pp_cell{i}{j,2});
             pp_data_holder{1,i}(j).fs = frequency;
         end
     end
