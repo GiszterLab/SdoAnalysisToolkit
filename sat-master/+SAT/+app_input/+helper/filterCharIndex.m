@@ -1,5 +1,5 @@
-% Description:      Remove the char/str row until only one is left in data 
-%                   and char_index, one is intentionally left to split into
+% Description:      Remove the char/str row until only one is left in 'data' 
+%                   and 'char_index', one is intentionally left to split into
 %                   trials
 % Parameters:       data - all the file data as cell 
 %                   char_index - char_index resulting from the
