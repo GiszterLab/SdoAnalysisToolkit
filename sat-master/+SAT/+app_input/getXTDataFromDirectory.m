@@ -23,8 +23,8 @@ end
             opts = detectImportOptions(xt_files{i});
             current_header_cell = opts.VariableNames;
             if ~SAT.app_input.helper.checkColumns(old_header_cell, current_header_cell)
-                error_msg = sprintf("!!!You don't have the same header at!!!");
-                error(error_msg);
+                error_file = split(xt_files{i},'\');
+                error("!!!You don't have the same header at %s!!!", error_file{end});
             end
             old_header_cell = current_header_cell;
         end
