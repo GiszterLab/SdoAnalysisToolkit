@@ -1,14 +1,14 @@
 % Description:  Return a PP data cell object for SMM
-% Parameters:   pp_cell -    Nx1 cell where N is a trial. Inside each
+% Parameters:   pp_cell - Nx1 cell where N is a trial. Inside each
 %               cell is a Mx2 cell where M is sensor and the second column
 %               is the activation time
-%               frequency - from xt times data
+%               frequency - sampling rate
 % Return Value: ppdc - ppDataCell object
 
 function ppdc = fillPPDC (pp_cell, frequency)
 arguments
     pp_cell (:,1) cell
-    frequency (1,1) double {mustBePositive}
+    frequency (1,1) double {mustBePositive} = 30000
 end
     % Initialize PP data holder object
     pp_data_holder = SAT.ppDataHolder_new(height(pp_cell), height(pp_cell{1}));
