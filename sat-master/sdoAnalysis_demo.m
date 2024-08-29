@@ -1,11 +1,11 @@
-%% sdoAnalysis_demo
+%% sdoAnalysis_demo (OOP)
 %
-% Demonstration of the SDO Analysis Toolkit;  
-% run an SDO analysis in completion using default settings with direct 
-% script calls. 
+% Demonstration of the SDO Analysis Toolkit; 
+% Run an SDO analysis using the Object-Oriented Programming (OOP)
+% class-method data wrappers. 
+%
 
-% The two provided examples below were used in the demonstration figures in
-% [Redacted for double blind review], et al, 2023. 
+% This can be used as a framework for designing custom SDO analysis
 
 %_______________________________________
 % Copyright (C) 2023 Trevor S. Smith
@@ -25,6 +25,7 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 %__________________________________________
 
+% // Default Demo-data loader
 if ~exist('xtData', 'var') || ~exist('ppData', 'var')
     [fpath_xt, fdir1] = uigetfile('*.mat', 'Open example xtData'); 
     [fpath_pp, fdir2] = uigetfile('*.mat', 'Open example ppData'); 
@@ -40,57 +41,83 @@ if ~exist('xtData', 'var') || ~exist('ppData', 'var')
     ppData = ppData0.(ppfield{1}); 
 end
 
-%% 
-%_____ BUILD SDO ________
+% __ Example SMU x EMG
+%XT_CH_NO = 8; 
+%PP_CH_NO = 12; 
+% __ Example IN x EMG
+XT_CH_NO = 6; 
+PP_CH_NO = 4; 
 
+% __ Initialize and populate an 'xtDataCell' class
+
+xtdc = xtDataCell(); 
+xtdc.import(xtData); 
 %
+xtdc.dataField = 'envelope'; 
+%xtdc.dataField = 'raw'; 
+%xtdc.mapMethod = 'logsigned'; 
+xtdc.mapMethod = 'log';
+%xtdc.mapMethod = 'linearsigned'; 
+xtdc.nBins      = 20; 
+%
+xtdc = xtdc.discretize(); %state-map signal
 
-SAT.validateDataHolders(xtData, ppData, 1); 
+% __ Initialize and populate a 'ppDataCell', class
 
-% // Run SDO analysis w/ default parameters; 
-SAT.computeSDO; 
 
-%// These can be changed to any value; we selected these for the demo and
-%documentation.
+ppdc = ppDataCell(); 
+ppdc.import(ppData); 
+% // Shuffle Spiketimes 
+ppdc.shuffle; 
 
-% __ Single Motor Unit x Synergist EMG
-XT_DC_CH_NO = 8; 
-PP_DC_CH_NO = 12; 
-% __ Spinal Interneuron x EMG
-%XT_DC_CH_NO = 6; 
-%PP_DC_CH_NO = 4; 
+% __ Generate pre-spike (px0) and post-spike (px1) 'pxt' classes; 
+%// Prespike
+px0 = pxtDataCell(); 
+px0.duraMs = -10; 
+%px0.duraMs = -10; % Negative here to refer to data -before- spiking event;
+px0.import(xtdc, ppdc, XT_CH_NO, PP_CH_NO); 
 
-%// Find the reference fields in the SDO. 
-XT_SDO_CH_NO = XT_DC_CH_NO; 
-PP_SDO_CH_NO = PP_DC_CH_NO; 
+%// PostSpike
+px1 = pxtDataCell(); 
+px1.duraMs = 10; 
+px1.import(xtdc, ppdc, XT_CH_NO, PP_CH_NO); 
 
-%// Uncomment if using dataCells with different indexed elements than in
-%original dataset.
-%[~, XT_SDO_CH_NO] = match_DC_and_SDO_fields(xtDataCell, {sdo(:).signalType}, XT_DC_CH_NO, 'electrode');
-%[~, PP_SDO_CH_NO] = match_DC_and_SDO_fields(ppDataCell, sdo(1).neuronNames,  PP_DC_CH_NO, 'electrode'); ; 
+% __ compute the sdo from the 'sdoMat' class as the difference between probability distributions; 
 
-%// Plot SDO 
-SAT.plotSDO(sdo, XT_SDO_CH_NO, PP_SDO_CH_NO); 
+% Construct the multi-comparisons class
+smm = sdoMultiMat(); 
 
-%_____ PREDICT SDO _________
-%// Use SDO to predict on data it was constructed against; 
-%// Generate Predicted-State Distributions; 
-[predicted_px, observed_px, observed_at] = SAT.predict.predictPx(sdo, ...
-    xtData, ppData, XT_DC_CH_NO, PP_DC_CH_NO); 
 
-%// Assign predictions of single state from distributions
-predicted_x = pxTools.getXfromPx(predicted_px); 
-observed_x  = pxTools.getXfromPx(observed_px); 
+% Calculate the SDOs 
+smm.compute(xtdc,ppdc); 
 
-sfields = fields(predicted_px); 
-plotProp = SAT.predict.assignPlotterProperties(sfields); 
 
-%// Plot predictions
-SAT.predict.plotter;
+% __ Plot SDOs
+smm.plot(XT_CH_NO,PP_CH_NO); 
 
-disp("COMPLETE!"); 
+smm.plotStirpd(XT_CH_NO, PP_CH_NO); 
 
-%% Cleanup Variable Space
-clear fdir1 fdir2 ffile1 ffile2 fpath_pp fpath_xt
-clear xtData0 ppDatal0 xtfield ppfield
-clear XT_SDO_CH_NO PP_SDO_CH_NO
+
+% __ Internal Prediction Error by. Matrix Hypotheses (H1-H7); 
+predictionError = smm.getPredictionError(xtdc, ppdc, XT_CH_NO, PP_CH_NO); 
+
+plot(predictionError)
+
+%{
+% __ Make transition Matrices from the 'sdoMat' class
+sdo.makeTransitionMatrices(xtdc, ppdc); 
+
+% __ Predict a probability distribution from the 'sdoMat' class from an
+% initial probability distribution; 
+pd_px1 = sdo.getPredictionPxt(px0); 
+
+% __ Compare predictions relative to observed post-spike probability
+% distributions; 
+
+pd_px1.comparePxt(px1); %compare against post-spike interval
+
+% __ Plot prediction errors between the two 'pxt' classes; 
+pd_px1.plotError; 
+%}
+
+clear ffile2 fdir1 ffile1 xtData0 ppData0

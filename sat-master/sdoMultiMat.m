@@ -23,7 +23,7 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 %__________________________________________
 
-% 2.2.2024 - Upgrade to the V5 (assymetric) estimation script, parallel compute
+% 2.2.2024 - Upgrade to the V5 (asymmetric) estimation script, parallel compute
 
 %// caution should be taken w/ inherited methods from the superclass; 
 classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
@@ -129,6 +129,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             %___
             obj.xtProperties = params.xt; 
             obj.ppProperties = params.pp; 
+            obj.pxProperties = params.px; 
             %__ 
             for m=1:obj.nXtChannels
                 obj.sdoStruct(m).params = params; 
@@ -198,16 +199,19 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             end
         end
         %___ Optimization (ad-hoc)
-        function obj = optimize(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO)
+        % Order 2 is faster; Order 4 is smoother
+        function obj = optimize(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO, vars)
             arguments
                 obj
                 xtdc
                 ppdc
                 XT_CH_NO = 1:obj.nXtChannels; 
                 PP_CH_NO = 1:obj.nPpChannels;
+                vars.errorOrder {mustBeMember(vars.errorOrder, [2,4])} = 2; 
             end
             % Wrapper for the V7
-            obj = SAT.sdoUtils.optimize(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO); 
+            obj = SAT.sdoUtils.optimize(obj, xtdc, ppdc, ...
+                XT_CH_NO, PP_CH_NO, 'errorOrder', vars.errorOrder); 
         end
 
 
@@ -232,11 +236,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 return
             end
 
-            1; 
-
-
-            px0 = pxtDataCell(); 
-            px0.duraMs = obj.px0DuraMs; 
+            px0 = dataCell.adaptors.getConformedPxtDataCell(obj, 'px0'); 
             
             % TODO: Streamline stirpd extraction; 
            
@@ -244,8 +244,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 'includeShuffles', 0, ...
                 'calculateStirpd', 0); 
 
-            px1 = pxtDataCell(); 
-            px1.duraMs = obj.px1DuraMs; 
+            px1 = dataCell.adaptors.getConformedPxtDataCell(obj, 'px1'); 
             px1.import(xtdc,ppdc,XT_CH_NO,PP_CH_NO, ...
                 'includeShuffles', 0, ...
                 'calculateStirpd', 0); 
@@ -261,7 +260,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
 
             pd_px1 = sdo.getPredictionPxt(px0);
 
-            errorStruct = SAT.predict.predictionError(); 
+            errorStruct = SAT.predict.predictionError(); %Constructor; 
             errorStruct.computeError(pd_px1, px1, 'testSignificance', vars.testSignificance); 
  
             if vars.plot
@@ -368,19 +367,29 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             
         end
         % __ X-Class plotting Methods; 
-        function plot(obj, XT_CH_NO, PP_CH_NO)
+        function plot(obj, XT_CH_NO, PP_CH_NO, options)
             arguments
                 obj
                 XT_CH_NO {mustBeInteger} = 1; 
                 PP_CH_NO {mustBeInteger} = 1; 
+                options.saveFig         {mustBeNumericOrLogical} = 0; 
+                options.saveFormat      {mustBeMember(options.saveFormat, {'png', 'svg'})} = 'png'; 
+                options.outputDirectory = []; 
+                options.filter          = 1; 
+
             end
             n_xt = length(XT_CH_NO); 
             n_pp = length(PP_CH_NO); 
             for m = 1:n_xt 
                 for u = 1:n_pp
-                    sdoM = obj.extract(XT_CH_NO(m), PP_CH_NO(u));
-                    plot(sdoM); 
+                    SAT.plot.plotHeader(obj, XT_CH_NO(m), PP_CH_NO(u), ...
+                        'filter', options.filter, ...
+                        'saveFig', options.saveFig, ....
+                        'saveFormat', options.saveFormat, ...
+                        'outputDirectory', options.outputDirectory); 
+                    %
                 end
+                obj.plotStirpd(XT_CH_NO(m), PP_CH_NO); 
             end
         end
         % __ Quick -plots; 
