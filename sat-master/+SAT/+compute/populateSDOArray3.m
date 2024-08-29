@@ -124,6 +124,7 @@ arguments
     vars.condenseShuffles {mustBeNumericOrLogical} = 0; % Only recommended with large datasets
     vars.method         {mustBeMember(vars.method, {'original', 'asymmetric', 'optimized'})} = 'original'; %'asymmetric'; 
     vars.maxBackgroundDraws = 10000; 
+    %vars.maxBackgroundDraws = 10e9; 
     vars.parallelCompute = 0; 
    
 end
@@ -251,7 +252,8 @@ for m = 1:N_XT_CHANNELS
             rand_idx = randi(bkgndLen, [1, vars.maxBackgroundDraws]);  
             bkgndLen = vars.maxBackgroundDraws; 
         else
-            %// only a few number of samples for background; 
+            %// only a few number of samples for background; Take
+            %everything; 
             rand_idx = 1:bkgndLen; 
         end
 

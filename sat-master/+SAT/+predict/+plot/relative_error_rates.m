@@ -88,7 +88,7 @@ for ee = 1:3
         ax.YColor = [0,0.804,0.4]; % green/olive
         %-- 
         yyaxis left    
-        % -- 
+        %-- 
         legend(lgnd, 'location', 'northwest');
         title( strcat("Cumulative \Delta", etitles{ee}, " error") ); 
         axis([1,N_SPIKES,-inf,inf]);

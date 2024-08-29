@@ -60,7 +60,8 @@ classdef pxtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass &data
         dataMatrices    = {}; % Containing the actual SDOs/Markovs; 
         %
         xs              = []; % State-at-spike; 
-        data            = {}; %{nPxTypes x 1} cell of doubles;  
+        data            = {}; %{nPxTypes x 1} cell of doubles;  Probability
+        data_x          = {}; %{nPxTypes x 1} cell of doubles;  Single State
         shuffData       = {}; %{nPxTypes x NShuff} cell of doubles; 
         % ___
         %stirpd          = zeros(20); %half-stirpd; inherited
@@ -211,6 +212,7 @@ classdef pxtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass &data
             obj.nPxtTypes       = 1;
             obj.backgroundPx    = histcounts(xt, N_STATES)/length(xt); 
             obj.data            = pxtData; 
+            obj.data_x          = pxTools.getXfromPx(pxtData, obj.stateAssignment); 
             obj.shuffData       = pxtShuff;  
             obj.markovMatrix    = pxTools.getMarkovFromXt(mkvData, N_STATES); 
             obj.backgroundMkv   = pxTools.getMarkovFromXt([xt(1:end-II); xt(II+1:end)], N_STATES); 

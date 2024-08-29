@@ -14,6 +14,7 @@ arguments
     vars.saveFormat {mustBeMember(vars.saveFormat, {'png', 'svg'})} = 'png'; 
     vars.statType = 'sum'; 
     vars.plotProperties = []; 
+    vars.x1 = []; % Allows us to figure out what these should be; 
 end
 SIG_PVAL    = vars.alpha; 
 SAVE_FIG    = vars.saveFig; 
@@ -42,13 +43,19 @@ SAT.predict.plot.error_v_state(errorStruct, ...
 
 x0 = errorStruct(1).x0States; 
 
+if isempty(vars.x1) 
+    x1 = x0; %dummy - Not ideal 
+else
+    x1 = vars.x1; 
+end
+
 
 for f  = 1:length(sfields)
     prd_px.(sfields{f}) = errorStruct(f).predicted_px; 
 end
 
-
-SAT.predict.plot.px_v_x(prd_px, x0);
+SAT.predict.plot.px_v_x(prd_px, x1); 
+%SAT.predict.plot.px_v_x(prd_px, x0);
 
 %
 SAT.predict.plot.error_rates(errorStruct, ...
@@ -75,10 +82,18 @@ SAT.predict.plot.pxDistance(errorStruct,PXFIELD, ...
     'saveFormat',       SAVE_FMT,...
     'outputDirectory',  SAVE_DIR,...    
     'plotProp', plotProp);
-
 %
+
 PXFIELD2 = 'logLikelihood'; 
 SAT.predict.plot.pxDistance(errorStruct,PXFIELD2, ...
+    N_SHUFFLES, ...
+    'saveFig',          SAVE_FIG,...
+    'saveFormat',       SAVE_FMT,...
+    'outputDirectory',  SAVE_DIR,...    
+    'plotProp', plotProp);
+%
+PXFIELD3 = 'DStat'; 
+SAT.predict.plot.pxDistance(errorStruct,PXFIELD3, ...
     N_SHUFFLES, ...
     'saveFig',          SAVE_FIG,...
     'saveFormat',       SAVE_FMT,...
@@ -87,7 +102,8 @@ SAT.predict.plot.pxDistance(errorStruct,PXFIELD2, ...
 
 
 if INCLUDE_STATS 
-   eFields = {'L0_running', 'L1_running', 'KLD', 'logLikelihood'}; 
+   eFields = {'L0_running', 'L1_running', 'KLD', 'logLikelihood', 'DStat'}; 
+    %eFields = {'L0_running', 'L1_running', 'KLD', 'logLikelihood'}; 
    N_E_FIELDS = length(eFields);
    for f = 1:N_E_FIELDS
        SAT.predict.testSig(errorStruct, ...

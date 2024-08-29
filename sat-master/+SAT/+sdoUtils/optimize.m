@@ -23,7 +23,7 @@
 % This will run into an error when the SDOs were generated from subsets of 
 % xtdc and ppdc
 
-function obj = optimizeSdo(obj, xtdc, ppdc, SDO_XT_CH_NO, SDO_PP_CH_NO)%, XTDC_CH_NO, PPDC_CH_NO)
+function obj = optimize(obj, xtdc, ppdc, SDO_XT_CH_NO, SDO_PP_CH_NO, vars)%, XTDC_CH_NO, PPDC_CH_NO, vars)
     arguments
         obj
         xtdc
@@ -32,6 +32,7 @@ function obj = optimizeSdo(obj, xtdc, ppdc, SDO_XT_CH_NO, SDO_PP_CH_NO)%, XTDC_C
         SDO_PP_CH_NO = 1:obj.nPpChannels; 
         %XTDC_CH_NO   = 1:obj.nXtChannels; 
         %PPDC_CH_NO   = 1:obj.nPpChannels; 
+        vars.errorOrder {mustBeMember(vars.errorOrder, [2,4])} = 4; 
     end
 
    n_xt = length(SDO_XT_CH_NO); 

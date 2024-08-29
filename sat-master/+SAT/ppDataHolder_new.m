@@ -44,7 +44,7 @@
 %__________________________________________
 
 
-function [ppDataCell] = ppDataHolder_new(N_TRIALS, N_PP_CHANNELS)
+function [ppDataHolder] = ppDataHolder_new(N_TRIALS, N_PP_CHANNELS)
 %// constructor function for generating an empty ppDataCell
 %// Only utilized fields are defined
 
@@ -54,24 +54,29 @@ end
 if ~exist('N_PP_CHANNELS', 'var')
     N_PP_CHANNELS = 1; 
 end
-
-ppDC = struct( ...
-    'sensor',           cell(1,N_PP_CHANNELS), ...
-    'times',            cell(1,N_PP_CHANNELS), ...
-    'envelope',         cell(1,N_PP_CHANNELS), ... 
-    'nEvents',          cell(1,N_PP_CHANNELS), ... 
-    'fs',               cell(1,N_PP_CHANNELS), ... 
-    'shuffle',          cell(1,N_PP_CHANNELS)); %added as empty here 
-
-ppMC = struct( ...
-    'trialNumber', 0); 
-
-ppDataCell = cell(2,N_TRIALS); 
-for tr=1:N_TRIALS
-    ppDataCell{1,tr} = ppDC; 
-    %
-    ppDataCell{2,tr} = ppMC; 
-    ppDataCell{2,tr}.trialNumber = tr; 
+try
+    ppDataHolder = dataCell.constructors.getPpDataHolder(N_TRIALS, N_PP_CHANNELS); 
+catch
+    %// Without argument parsing; MATLAB < 2019
+    % Not preferable, as these names may not be conserved
+    ppDC = struct( ...
+        'sensor',           cell(1,N_PP_CHANNELS), ...
+        'times',            cell(1,N_PP_CHANNELS), ...
+        'envelope',         cell(1,N_PP_CHANNELS), ... 
+        'nEvents',          cell(1,N_PP_CHANNELS), ... 
+        'fs',               cell(1,N_PP_CHANNELS), ... 
+        'shuffle',          cell(1,N_PP_CHANNELS)); %added as empty here 
+    
+    ppMC = struct( ...
+        'trialNumber', 0); 
+    
+    ppDataHolder = cell(2,N_TRIALS); 
+    for tr=1:N_TRIALS
+        ppDataHolder{1,tr} = ppDC; 
+        %
+        ppDataHolder{2,tr} = ppMC; 
+        ppDataHolder{2,tr}.trialNumber = tr; 
+    end
 end
 
 end

@@ -52,7 +52,7 @@
 %__________________________________________
 
 
-function [xtDataCell] = xtDataHolder_new(N_TRIALS, N_XT_CHANNELS)
+function [xtDataHolder] = xtDataHolder_new(N_TRIALS, N_XT_CHANNELS)
 %// constructor function for generating an empty xtDataCell
 %// Only utilized fields are defined
 
@@ -63,27 +63,33 @@ if ~exist('N_XT_CHANNELS', 'var')
     N_XT_CHANNELS = 1; 
 end
 
-%// Standardized fields used/populated for dataCell. 
-xtDC = struct(...
-    'sensor',           cell(1, N_XT_CHANNELS), ...
-    'fs',               cell(1, N_XT_CHANNELS), ...
-    'times',            cell(1, N_XT_CHANNELS), ... 
-    'envelope',         cell(1, N_XT_CHANNELS), ...
-    'raw',              cell(1, N_XT_CHANNELS), ... 
-    'offset',           cell(1, N_XT_CHANNELS), ... 
-    'stateSignal',      cell(1, N_XT_CHANNELS), ... 
-    'signalLevels',     cell(1, N_XT_CHANNELS) ); 
-
-%// Standardized fields for metadata; 
-xtMC = struct(...
-    'trialNumber', 0); 
-
-xtDataCell = cell(2,N_TRIALS); 
-for tr=1:N_TRIALS
-    xtDataCell{1,tr} = xtDC; 
+try
+    xtDataHolder = dataCell.constructors.getXtDataHolder(N_TRIALS, N_XT_CHANNELS); 
+catch
+    %// Direct Define
     %
-    xtDataCell{2,tr} = xtMC; 
-    xtDataCell{2,tr}.trialNumber = tr; 
+    %// Standardized fields used/populated for dataCell. 
+    xtDC = struct(...
+        'sensor',           cell(1, N_XT_CHANNELS), ...
+        'fs',               cell(1, N_XT_CHANNELS), ...
+        'times',            cell(1, N_XT_CHANNELS), ... 
+        'envelope',         cell(1, N_XT_CHANNELS), ...
+        'raw',              cell(1, N_XT_CHANNELS), ... 
+        'offset',           cell(1, N_XT_CHANNELS), ... 
+        'stateSignal',      cell(1, N_XT_CHANNELS), ... 
+        'signalLevels',     cell(1, N_XT_CHANNELS) ); 
+    
+    %// Standardized fields for metadata; 
+    xtMC = struct(...
+        'trialNumber', 0); 
+    
+    xtDataHolder = cell(2,N_TRIALS); 
+    for tr=1:N_TRIALS
+        xtDataHolder{1,tr} = xtDC; 
+        %
+        xtDataHolder{2,tr} = xtMC; 
+        xtDataHolder{2,tr}.trialNumber = tr; 
+    end
 end
 
 end
