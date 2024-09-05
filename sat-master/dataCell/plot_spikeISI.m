@@ -55,11 +55,20 @@ for tri=1:N_TRIALS
     end
 end
 
-try
-    spkCll = cellvcat(spkISICll); 
-catch
-    spkCll = cellhcat(spkISICll')'; 
+if (N_TRIALS) > 1 && (N_UNITS > 1)
+    try
+        spkCll = cellvcat(spkISICll); 
+    catch
+        spkCll = cellhcat(spkISICll')'; 
+    end
+else
+    spkCll = spkISIcll; 
 end
+
+if isa(spkCll, 'double')
+    spkCll = {spkCll}; 
+end
+
 
 nRows = ceil(sqrt(N_UNITS)); 
 nCols = ceil(N_UNITS/nRows); 
