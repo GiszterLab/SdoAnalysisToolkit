@@ -134,6 +134,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell
         
         function obj = computeSdo(obj, pxt_0, pxt_1, vars)
             % Direct computation of the SDO; 
+            % -->> Preferable to use the sdoMultiMat instead
             arguments
                 obj
                 pxt_0 pxtDataCell
@@ -278,9 +279,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell
                 usePpChNo = 1;
 
             end
-            %}
-            %useXtChNo = 1; 
-            %usePpChNo = 1; 
 
             HStruct = SAT.predict.getPredictionMatrices(obj, xtdc, ppdc, useXtChNo,usePpChNo,...
                 'type', MATTYPE); 
@@ -340,18 +338,31 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell
                 options.saveFig         {mustBeNumericOrLogical} = 0; 
                 options.saveFormat      {mustBeMember(options.saveFormat, {'png', 'svg'})} = 'png'; 
                 options.outputDirectory = []; 
+                options.filter          = 1; 
             end
             % MASTER 'plot all' method; 
             % ____
             if isempty(obj.stats)
                 performStats(obj);  
             end
-            sMat = bungleSdoStruct(obj); 
+            %sMat = bungleSdoStruct(obj);
+
+            SAT.plot.plotHeader(obj, ...
+                1,1, ...
+                'filter', options.filter, ...
+                'saveFig', options.saveFig, ....
+                'saveFormat', options.saveFormat, ...
+                'outputDirectory', options.outputDirectory); 
+            %SAT.plot.plotHeader(sMat); 
+
+            %{
             SAT.plotSDO(sMat, 1,1, ...
                 'filter', 0, ...
                 'saveFig', options.saveFig, ...
                 'saveFormat', options.saveFormat, ...
                 'outputDirectory', options.outputDirectory); 
+
+            %}
            
             N_PX0_PTS = round(abs(obj.px0DuraMs*obj.fs/1000));  
 
@@ -377,7 +388,9 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell
 
             %TODO: Check for mismatch in filters/etc. 
             
-            pxt_est = pxtDataCell(); 
+            pxt_est = dataCell.adaptors.getConformedPxtDataCell(obj, 'px1'); 
+
+            %pxt_est = pxtDataCell(); 
             pxt_est.data        = cell(1, obj.nPxtTypes); 
             pxt_est.pxtNames    = cell(1, obj.nPxtTypes);  
             if isa(px0.data, 'cell')
@@ -404,11 +417,13 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell
             %__ Be Cautious !!
             pxt_est.markovMatrix    = obj.markovMatrix; %// this isn't exactly the same. Px of prediction  
             % __ Unique/ Differing Calls
+            %{
             pxt_est.duraMs          = obj.px1DuraMs; 
             %pxt_est.stateMapping    = obj.stateMapping; 
             pxt_est.zDelay          = obj.pxProperties.zDelay; 
             pxt_est.filterWid       = obj.pxProperties.smoothingFilterWidth; 
             pxt_est.filterStd       = obj.pxProperties.smoothingFilterStd; 
+            %}
             %  __ DUMMY FILL ___ 
             pxt_est.backgroundPx    = zeros(obj.nStates,1); 
             pxt_est.backgroundMkv   = zeros(obj.nStates,1); 

@@ -2,7 +2,6 @@
 % OOP-based class for handling of point-process datatypes. Designed for use
 % within the SDO Analysis Toolkit. 
 
-% TODO: Optimize input validations
 % TODO: Modularize Plotters
 
 % 8.12.2024 - Added Validation to the import method to ensure that the
@@ -164,6 +163,9 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             %// We can use a separate method to set the max times... 
             for tr = 1:obj.nTrials
                 for ch = 1:obj.nChannels
+                    if isempty(obj.data{1,tr}(ch).(obj.dataField))
+                        continue 
+                    end
                     if max(obj.data{1,tr}(ch).(obj.dataField)) >  obj.trTimeLen(tr)
                         obj.trTimeLen(tr) = max(obj.data{1,tr}(ch).(obj.dataField)); 
                     end
@@ -171,6 +173,16 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
             obj.validateData; 
         end
+
+        % Added 8.29.2024
+        function obj = concat(obj, useTrials)
+            arguments
+                obj
+                useTrials = 1:obj.nTrials;
+            end
+            obj = dataCell.manipulate.concatenateTrials(obj, useTrials); 
+        end
+
 
         function obj = subsample(obj, useTrials, useChannels)
             arguments
@@ -386,6 +398,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 obj.data{1,tr} = [obj.data{1,tr}, ppdc.data{1,tr}]; 
                 try
                     obj.metadata{1,tr} = [obj.metadata{1,tr}, ppdc.metadata{1,tr}]; 
+                catch
+                    1; 
                 end
             end
 
@@ -501,6 +515,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             % __ Add pre-check here to exclude completely-empty channels
             try 
                 useChannels = intersect(useChannels, find(sum(obj.nTrialEvents, 2))); 
+            catch
+                1; 
             end
             % __ 
             N_USE_CHANNELS  = length(useChannels); 
@@ -548,6 +564,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             % __ Add pre-check here to exclude completely-empty channels
             try 
                 useRows = intersect(useRows, find(sum(obj.nTrialEvents, 2))); 
+            catch
+                1; 
             end
             plot_spikeWaveforms(obj.data, useTrials, useRows, PLOT_ALL, 'useField', 'envelope');
         end
@@ -569,9 +587,13 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 PLOT_ALL  = 0; 
             end   
 
+            %{
             try 
                 useChannels = intersect(useChannels, find(sum(obj.nTrialEvents, 2))); 
+            catch
+                1;
             end
+            %}
 
             plotSpikes(obj, useTrials, useRows, PLOT_ALL); 
             plotWaves( obj, useTrials, useRows, PLOT_ALL); 

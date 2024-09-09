@@ -88,7 +88,7 @@ for m = 1:N_XT_CHANNELS
             bkgd_score = bkgd_score + any(sdoStruct(m).stats{u}.isSig_Bkgd.(sig_sfields{ii}), 'all'); 
         end
         lookupStruct(ypos).nSigValues = score; 
-        lookupStruct(ypos).nBackgroundSigtVals = bkgd_score; 
+        lookupStruct(ypos).nBackgroundSigVals = bkgd_score; 
         try
             lookupStruct(ypos).nSpikes  =  sdoStruct(m).stats{u}.nEvents; 
         catch

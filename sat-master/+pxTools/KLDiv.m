@@ -1,14 +1,14 @@
 %% pxTools_KLDiv
 % 
 % Calculate the Kullback Leibler Divergence (KLD) between two input
-% distributions. 
+% distributions (Using Log2, which estimates the bits)
 %
 % varargin can be one input which determines the dimensions that form
 % distributions, other dimensions are just pointing to different
 % distributions in p1 and p2
 % if I don't give varargin then I vectorize the p1 and p2 as single dists
 %
-%
+% P --> Q
 
 % Copyright (C) 2018  Maryam Abolfath-Beygi
 % 
@@ -41,9 +41,10 @@ px2=px2+eps;
 if (s)==0
     px1=px1(:);
     px2=px2(:);
-    px1=px1/sum(px1);
-    px2=px2/sum(px2);
-    KL=sum(px1.*log2(px1./px2));
+    npx1=px1/sum(px1);
+    npx2=px2/sum(px2);
+    KL=sum(npx1.*log2(npx1./npx2));
+    1; 
     % KL2=sum(p2.*log2(p2./p1));
     % KL=(KL1+KL2)/2;
 else

@@ -71,6 +71,7 @@ cl = cl(:,nonEmptyCols);
 if any(sz0x == [0]) && any(~nonEmptyCols)
 %if any(sz0x == [1,0]) && any(~nonEmptyCols)
     arr = cl; 
+    offset = arr; 
     return
 end
 

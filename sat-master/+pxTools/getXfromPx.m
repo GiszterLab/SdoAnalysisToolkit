@@ -28,7 +28,7 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function [X] = pxTools_getXfromPx(px, method)
+function [X] = getXfromPx(px, method)
 if ~exist('method', 'var')
     method = 'max'; 
 end

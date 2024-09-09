@@ -214,6 +214,15 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
             obj.importTensor(xtData2); 
         end
+
+        % Added 8.29.2024
+        function obj = concat(obj, useTrials)
+            arguments
+                obj
+                useTrials = 1:obj.nTrials; 
+            end
+            obj = dataCell.manipulate.concatenateTrials(obj, useTrials); 
+        end
         
         function obj = resetEnvelope(obj)
            %// Quick way to reset the 'envelope' field in the xtdc by
@@ -667,7 +676,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             yticks(yvect); 
 
             % __ 
-
 
             %// Rewindow axes to center on data 
             axis([-inf, inf,xMin, xMax]); 

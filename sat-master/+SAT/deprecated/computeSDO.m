@@ -1,4 +1,4 @@
-%% computeSDO
+%% computeSDO [Deprecated]
 % Standalone programmatic script for SDO Analysis. Generates and analyzes the sdo
 % structure  from the supplied xtData, ppData, and specified parameters.
 % (Parameters must be adjusted within script body.)
