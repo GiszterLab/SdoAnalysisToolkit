@@ -65,11 +65,11 @@ line( [Xi Xi], [0,1], 'lineStyle', '--', 'color', [0.8500 0.3250 0.0980]);
 text(Xi,SIG_PVAL,[num2str(prob*100) '% sig. threshold']),
 line( [testStat, testStat], [0,1], 'lineWidth', 2, 'color', 'g'); 
 
-leg2={'Shuffle CDF','Significance Threshold', 'Observed value'};
+leg2={'Shuffle eCDF','Significance Threshold', 'Observed value'};
 legend(leg2)
 
 xlabel('Total Deviation from baseline, over all states')
-ylabel('CDF(null distance of shuffles)')
+ylabel('eCDF(null distance of shuffles)')
 title({'SDO at Spike ';   strcat(sigString, ' Significant, pVal=', num2str(SIG_PVAL))});
 
 end

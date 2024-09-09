@@ -131,15 +131,30 @@ for ff = 1:N_FIELDS
     eMin = floor(min(min(errorDist))) - 1; %ensure we have endpoints
     eMax = ceil(max(max(errorDist))) + 1;  %ensure we have endpoints
     
+    % __>> Bound here to better whole numbers to improve intervals; 
+    if (eMin > 1) && (eMax > eMin)
+        %// need at least whole integer values, otherwise this will  get
+        %odd. 
+        BOUND = 1;
+    else
+        BOUND = 0; 
+    end
+    if BOUND
+        eMin = getidealaxislength(eMin, 'min'); 
+        eMax = getidealaxislength(eMax, 'max'); 
+    end
+    % __
+
+
     N_HH = length(hhNames); 
-    
+    % Generate empirical distributions 
     edfArr = zeros(eMax-eMin, N_HH); 
     for xi = 1:(eMax-eMin) 
         edfArr(xi,:) = sum(errorDist < eMin+xi)/N_SHUFFLES; 
     end
     xBar = mean(errorDist); 
     CI  = zeros(1, N_HH); 
-    
+    %// Find X value to place 95% Confidence Intervals
     for hh = 1:N_HH
         rowPos = find(edfArr(:,hh) > 1-P_VAL,1); 
         try
@@ -181,13 +196,15 @@ for ff = 1:N_FIELDS
         pC      = plotProp.(fName).color; 
         pLS     = plotProp.(fName).LineStyle; 
         pLW     = plotProp.(fName).LineWidth; 
+        % Here we assume that the empirical distribution is sufficiently
+        % smooth that a difference will provide a differential
         plot(diff(edfArr(:,hh)), 'color', pC, 'Marker', 'none', 'LineStyle', pLS, 'LineWidth', pLW); 
         hold on
         end
     else
         plot(diff(edfArr)); 
     end    
-    xticklabels(xticks+eMin); 
+    xticklabels(xticks+eMin); % Convert from indices to values; 
     xlabel("Cumulative Error"); 
     ylabel("p(Error)"); 
     title(strcat(STAT_TYPE, " ", FNAME_PRINT, " BS-Distribution")); 

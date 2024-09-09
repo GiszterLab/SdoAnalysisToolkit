@@ -81,13 +81,13 @@ dSdoNames = {'Unit', 'Background', 'Shuffle Mean'};
 dSdos = cell(1,3); 
 dSdos{1} = sdo(XT_CH_NO).sdos{PP_CH_NO}; % Unit
 dSdos{2} = sdo(XT_CH_NO).bkgrndSDO;      % Background; 
+dSdos{3} = []; 
 try
-    try
-        dSdos{3} = sdo(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff_mean; 
-    catch
-        dSdos{3} = mean(sdo(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff,3); % shuffle
-    end
+    dSdos{3} = sdo(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff_mean; 
 catch
+    dSdos{3} = mean(sdo(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff,3); % shuffle
+end
+if isempty(dSdos{3})
     dSdos{3} = zeros(size(dSdos{1})); 
 end
 
@@ -95,13 +95,13 @@ end
 jSdos = cell(1,3); 
 jSdos{1} = sdo(XT_CH_NO).sdosJoint{PP_CH_NO}; 
 jSdos{2} = sdo(XT_CH_NO).bkgrndJointSDO; 
-try     
-    try
-        jSdos{3} = sdo(XT_CH_NO).shuffles{PP_CH_NO}.SDOJointShuff_mean; 
-    catch
-        jSdos{3} = mean(sdo(XT_CH_NO).shuffles{PP_CH_NO}.SDOJointShuff,3);
-    end
+jSdos{3} = [];  
+try
+    jSdos{3} = sdo(XT_CH_NO).shuffles{PP_CH_NO}.SDOJointShuff_mean; 
 catch
+    jSdos{3} = mean(sdo(XT_CH_NO).shuffles{PP_CH_NO}.SDOJointShuff,3);
+end
+if isempty(jSdos{3})
     jSdos{3} = ones(size(dSdos{1})); 
 end
 %==================================================
@@ -173,6 +173,13 @@ for c = 1:nCols
         if z == 2
             cMap = parula; 
         end
+        % __ Edge cases 
+        if minVal == maxVal
+            eps = 1e-6; % tiny offset; 
+            minVal = minVal-eps; 
+            maxVal = maxVal+eps; 
+        end
+
         %____
         colormap(ax(z,c), cMap); 
         clim([minVal, maxVal]);

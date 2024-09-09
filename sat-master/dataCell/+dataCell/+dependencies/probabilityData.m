@@ -63,7 +63,6 @@ classdef probabilityData < handle
                 x1_vals = []; 
             end
             %
-            %obj.stirpd = pxTools.getStirpd(x0_vals, x1_vals, obj.nBins); 
             obj.stirpd = pxTools.getStirpd(x0_vals, x1_vals, obj.nStates); 
         end
     end

@@ -122,6 +122,8 @@ for m = 1:N_XT_CH
             errorS(f).KLD   = pxTools.KLDiv(pdPx, x1Px,1); %MAB script
             %// Log-Likelihood (less meaningful, but present metric)
             errorS(f).logLikelihood = pxTools.getLikelihood(pdPx, x1Px, 'log', 'nPoints', N_XT_PTS); 
+            %// D-Statistic; Maximum differences of ecdf; 
+            errorS(f).DStat = pxTools.dstat(pdPx, x1Px); 
         end
         errorArr{m,u} = errorS; 
     end
