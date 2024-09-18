@@ -13,8 +13,14 @@
 %               concatenated file must always be input as ONE only. ***
 
 function pp_cell = determinePPFileType ()
-    try files = SAT.app_input.helper.getFiles();
-    catch 
+arguments(Output)
+    pp_cell (:,1) cell
+end
+    % Get the files
+    files = SAT.app_input.helper.getFiles();
+    % if the user inputted nothing
+    if isempty(files)
+        pp_cell = cell.empty(0,1);
         return
     end
     

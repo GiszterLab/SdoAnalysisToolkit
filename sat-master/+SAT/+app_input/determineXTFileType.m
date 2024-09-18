@@ -12,8 +12,14 @@
 %               concatenated file must always be input as ONE only. ***
 
 function xt_cell = determineXTFileType()
-    try files = SAT.app_input.helper.getFiles();
-    catch 
+arguments(Output)
+    xt_cell (:,2) cell
+end
+    % Get the files
+    files = SAT.app_input.helper.getFiles();
+    % if the user inputted nothing
+    if isempty(files)
+        xt_cell = cell.empty(0,2);
         return
     end
 
