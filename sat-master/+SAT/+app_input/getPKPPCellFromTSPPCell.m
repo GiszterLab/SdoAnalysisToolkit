@@ -7,13 +7,20 @@ function [pk_pp_cell, ppdc] = getPKPPCellFromTSPPCell()
 % Return Values: pk_pp_cell - Phone's pp_cell
 %                ppdc - ppDataCell
 arguments(Output)
-    pk_pp_cell
-    ppdc
+    pk_pp_cell (:,1) cell
+    ppdc ppDataCell
 end
 
     % Get the filepath for '.mat' file
     [file_name, path] = uigetfile({'*.mat', '.mat Files'}, 'MultiSelect','off');
     file_path = fullfile(path, file_name);
+
+    % If the user inputted nothing
+    if file_name == 0
+        pk_pp_cell = {};
+        ppdc = ppDataCell();
+        return
+    end
 
     % We only want one variable inside the '.mat' file
     if length(whos('-file', file_path)) > 1

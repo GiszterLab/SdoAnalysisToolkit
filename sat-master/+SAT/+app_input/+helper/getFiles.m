@@ -8,6 +8,7 @@ function files = getFiles ()
 
     % If no files are selected
     if isequal(file_name, 0)
+        files = {};
         return
     end
 

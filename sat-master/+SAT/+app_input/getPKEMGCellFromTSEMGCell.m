@@ -8,13 +8,20 @@ function [pk_xt_cell, xtdc] = getPKEMGCellFromTSEMGCell()
 %                xtdc - xtDataCell
 
 arguments(Output)
-    pk_xt_cell
-    xtdc
+    pk_xt_cell (:,2) cell
+    xtdc xtDataCell
 end
    
     % Get the filepath for '.mat' file
     [file_name, path] = uigetfile({'*.mat', '.mat Files'}, 'MultiSelect','off');
     file_path = fullfile(path, file_name);
+    
+    % If the user inputted nothing
+    if file_name == 0
+        pk_xt_cell = {};
+        xtdc = xtDataCell();
+        return
+    end
 
     % We only want one variable inside the '.mat' file
     if length(whos('-file', file_path)) > 1
