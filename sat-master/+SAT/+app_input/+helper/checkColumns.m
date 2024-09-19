@@ -1,3 +1,5 @@
+% Name:         Phone Kyaw
+% Date:         09/19/2024
 % Description:  Check whether the old_column_cell and current_column_cell 
 %               has the same character data
 % Parameters:   old_column_cell - 1xN cell containing char/str

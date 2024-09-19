@@ -1,3 +1,5 @@
+% Name:         Phone Kyaw
+% Date:         09/19/2024
 % Description:  Return the index numbers of rows that has nothing but
 %               char/string inside it
 % Parameters:   data - a 2D cell array

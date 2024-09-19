@@ -1,3 +1,5 @@
+% Name:         Phone Kyaw
+% Date:         09/19/2024
 % Description:  Return a PP data cell object for SMM
 % Parameters:   pp_cell - Nx1 cell where N is a trial. Inside each
 %               cell is a Mx2 cell where M is sensor and the second column

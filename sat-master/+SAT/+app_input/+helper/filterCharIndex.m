@@ -1,3 +1,5 @@
+% Name:         Phone Kyaw
+% Date:         09/19/2024
 % Description:      Remove the char/str row until only one is left in 'data' 
 %                   and 'char_index', one is intentionally left to split into
 %                   trials

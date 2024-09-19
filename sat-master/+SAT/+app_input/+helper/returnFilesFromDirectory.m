@@ -1,3 +1,5 @@
+% Name:         Phone Kyaw
+% Date:         09/19/2024
 % Description:  Extract all the files inside a directory
 % Parameters:   None
 % Return Value: files - Nx1 cell containing all the files' path inside the
