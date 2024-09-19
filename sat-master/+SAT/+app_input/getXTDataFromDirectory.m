@@ -1,3 +1,5 @@
+% Name:         Phone Kyaw
+% Date:         09/19/2024
 % Description:  Get XT data from multiple XT files 
 % Parameter:    xt_files - A cell array containing files' path
 % Return Value: xt_cell - Nx2 cell array where the {1,1} contains the header

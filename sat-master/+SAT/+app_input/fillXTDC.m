@@ -1,3 +1,5 @@
+% Name:         Phone Kyaw
+% Date:         09/19/2024
 % Description:  Create an XT data cell object for SMM
 % Parameters:   xt_cell - Nx2 cell where N is trials
 %                         The headers are at {1,1} position

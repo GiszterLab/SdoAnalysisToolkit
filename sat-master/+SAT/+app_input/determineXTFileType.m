@@ -1,3 +1,5 @@
+% Name:         Phone Kyaw
+% Date:         09/19/2024
 % Description:  Return a xt_cell when a user inputs XT files
 % Parameter:    None
 % Return Value: xt_cell - Nx2 cell array where the {1,1} contains the header

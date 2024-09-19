@@ -1,3 +1,5 @@
+% Name:         Phone Kyaw
+% Date:         09/19/2024
 % Description:  Get the XT data and header from concatenated XT file 
 % Parameter:    xt_data - A cell array containing XT data
 %               char_index - Index of row numbers where char/str row exists

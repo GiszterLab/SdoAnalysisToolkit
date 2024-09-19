@@ -1,3 +1,5 @@
+% Name:         Phone Kyaw
+% Date:         09/19/2024
 % Description:  Return the XT header after stripping the XT data until
 %               the cut parameter and finding the header in the stripped
 %               data
