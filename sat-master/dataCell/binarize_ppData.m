@@ -28,7 +28,11 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function [binArr] = binarize_ppData(eventTimes, RASTER_HZ, ARR_LENGTH)
+function [binArr] = binarize_ppData(eventTimes, RASTER_HZ, ARR_LENGTH, METHOD)
+if ~exist('METHOD', 'var')
+    METHOD = 1; 
+end
+
 
 eventClss = class(eventTimes); 
 switch eventClss
@@ -51,7 +55,13 @@ for ch = 1:N_CHANNELS
     cnfrm_ts = round(ts*RASTER_HZ); %conformed spiketimes == indices
     LI = (cnfrm_ts >=1) & (cnfrm_ts <= binArrLen);
     cnfrm_ts = cnfrm_ts(LI);     
-    binArr(ch, cnfrm_ts) = 1; 
+    if METHOD == 1
+        % // Binary
+        binArr(ch, cnfrm_ts) = 1;
+    else
+        %// Accumulation
+        binArr(ch, :) = accumarray(cnfrm_ts', LI, [binArrLen,1])'; 
+    end
 end
     
 
