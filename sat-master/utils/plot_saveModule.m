@@ -16,6 +16,8 @@
 
 % 2.26.2024 - Added capability for no-resize, by setting fDim = 0; 
 
+% 9.23.2024 - Added 'fig' as an alternative format, for saving Matlab figs
+
 % Copyright (C) 2023 Trevor S. Smith
 % Drexel University College of Medicine
 % 
@@ -79,7 +81,11 @@ switch SAVE_FMT
     case 'png'
         print(f, name, '-dpng'); 
     case 'svg'
-        print(f, '-painters', name, '-dsvg'); 
+        print(f, '-painters', name, '-dsvg');
+    case 'fig'
+        %09.23.2024
+        savefig(f, name); % default save; 
+
 end
 
 end
