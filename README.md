@@ -17,13 +17,13 @@ __Toolboxes__:
 
 
 ## Citation Requirement
-If you use any version of this software, please cite [our preprint](https://www.biorxiv.org/content/10.1101/2024.05.10.593606v1)
+If you use any version of this software, please cite [our paper](https://pubmed.ncbi.nlm.nih.gov/39375031/). Additional details can be found in the supplemental of [our preprint](https://www.biorxiv.org/content/10.1101/2024.05.10.593606v1)
 
-If you modify or adapt the <em>Toolkit</em>, please contact the authors or share your modifications under the 'Discussions' tab. 
+If you modify or adapt the <em>Toolkit</em>, please contact the authors or share your modifications under the 'Discussions' tab. We strive to make SDO Analysis accessible and interpretable for physiologists. Please let us know if you run into difficulties.  
 
 ## Installation
 
-A full walkthrough for installing and using the <em> SDO Analysis Toolkit </em> can be found within '\sat-master\documentation'.
+A full walkthrough for installing and using the <em> SDO Analysis Toolkit </em> can be found within '\sat-master\documentation'. More information can also be found on the [wiki](https://github.com/GiszterLab/SdoAnalysisToolkit/wiki). 
 
 A quick-run MATLAB live script is included in the folder, as 'sdoAnalysis_demo.mlx'. This can be used as an introduction to basic use of the toolkit. 
 
