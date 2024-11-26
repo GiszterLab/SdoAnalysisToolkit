@@ -1,4 +1,4 @@
-%% computeSDO_populateSDOArray
+%% computeSDO_populateSDOArray (V4)
 % Given supplied point-process and time series data sets, compute the
 % stochastic dynamic operator for every supplied combination. 
 %
@@ -74,6 +74,10 @@
 %       - 'neuronName   : PP Unit names
 %       - 'stats'       : contains statistical information and shuffles
 
+% Version 4 is designed for efficient extraction of spike-triggered effects
+% v. background effects. 
+
+
 % NOTE: The version 3 algorithm used here is optimized, so that the
 % calculation of the SDO is not directly between each time bin in pre-spike
 % to each time bin in post-spike. Because it the effects are averaged, the
@@ -111,7 +115,7 @@
 % method. 
 
 %%
-function [sdo] = populateSDOArray3(xtdc, ppdc, vars)
+function [sdo] = populateSDOArray4(xtdc, ppdc, vars)
 arguments
     xtdc xtDataCell
     ppdc ppDataCell
@@ -126,7 +130,8 @@ arguments
     vars.maxBackgroundDraws = 10000; 
     %vars.maxBackgroundDraws = 10e9; 
     vars.parallelCompute = 0; 
-   
+    vars.backgroundSubtraction = 1; 
+    vars.backgroundSubtractionMethod = 'subtract'; 
 end
 
 %Note that these are self-referential
@@ -164,6 +169,10 @@ asymmetry_type = 'step';
 retainShuffles = 1; 
 
 % ___ 
+if vars.backgroundSubtraction == 1
+    disp("Subtracting Background Effects."); 
+end
+
 
 if vars.condenseShuffles
     disp("NOTE: Condensing Shuffles may greatly increase compute time."); 
@@ -284,6 +293,7 @@ for m = 1:N_XT_CHANNELS
     bkgdDeltaSDO = bkgdDeltaSDO/nTotalTrLength; 
     bkgdJointSDO = bkgdJointSDO/nTotalTrLength; 
 
+    %----------------------------------------------------------------------
     % __ Unitwise-Trialwise eval
     for u = 1:N_PP_CHANNELS
         unitDeltaSDO        = zeros(N_BINS, N_BINS); 
@@ -306,9 +316,32 @@ for m = 1:N_XT_CHANNELS
             %
             shuffUnitTrPx0 = pxt0Cell{1,tr}{m}(:,flatTrShuffSpikes); 
             shuffUnitTrPx1 = pxt1Cell{1,tr}{m}(:,flatTrShuffSpikes); 
+
+            if vars.backgroundSubtraction == 1
+                %/ Subtract off backgrounds; predict spike-triggered
+                %responses as the residuals from backgrounds
+
+                % Expected background; 
+                L0 = SAT.sdoUtils.normsdo(bkgdDeltaSDO, bkgdJointSDO);
+
+                % __ TODO: Swap this by method
+                L0pdPx1 = L0*shuffUnitTrPx0+shuffUnitTrPx0; 
+
+                shuffUnitTrPx0 = L0pdPx1; % OVERRIDE observations; 
+                %L0pdPx1 = SAT.sdo_pxt(
+
+            end
+
+
             px0ShuffSS = reshape(shuffUnitTrPx0, N_BINS, nTrialSpikes, N_SHUFF); 
             px1ShuffSS = reshape(shuffUnitTrPx1, N_BINS, nTrialSpikes, N_SHUFF);
             %
+
+            % V4 Addition -- Background Subtraction; 
+
+
+            
+
             switch vars.method
                 case {'original', 'optimized'} %'original'
                     [trShuffDeltaSDO, trShuffJointSDO] = SAT.compute.sdo3(px0ShuffSS, px1ShuffSS, 0, ...
@@ -330,6 +363,21 @@ for m = 1:N_XT_CHANNELS
             %over all spikes. Hence, the average effects may be derived
             %from the distributions of state
             %
+            if vars.backgroundSubtraction == 1
+                %// Sort of awkward way to override. 
+
+                L0pdPx1_u = L0*obsPxt0Cell{1,tr}{m,u}+obsPxt0Cell{1,tr}{m,u}; 
+                % 
+
+                % OVERRIDE
+                %// We are measuring difference between
+                %background-predicted effects and spike-triggered
+                % effects rather than both; 
+                obsPxt0Cell{1,tr}{m,u} = L0pdPx1_u; 
+
+            end
+            
+
             switch vars.method
                 case 'original'
                     [trDeltaSDO, trJointSDO] = SAT.compute.sdo3(obsPxt0Cell{1,tr}{m,u},obsPxt1Cell{1,tr}{m,u}, 0, ...

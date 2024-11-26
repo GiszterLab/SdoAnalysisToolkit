@@ -58,6 +58,9 @@ classdef primaryData < handle
                     m = m+1; 
                 end
                 tr = tr+1; 
+                if LI == true
+                    break
+                end
             end
         end
     end

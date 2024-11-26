@@ -47,6 +47,9 @@ end
 if ~exist('fName', 'var')
     fName = []; 
 end
+if ~exist('f', 'var')
+    f = gcf; 
+end
 
 if isempty(fDIM)
     fDIM = [0, 0, 1920, 1200]; 

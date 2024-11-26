@@ -55,6 +55,9 @@ for ch = 1:N_CHANNELS
     cnfrm_ts = round(ts*RASTER_HZ); %conformed spiketimes == indices
     LI = (cnfrm_ts >=1) & (cnfrm_ts <= binArrLen);
     cnfrm_ts = cnfrm_ts(LI);     
+    if isempty(cnfrm_ts)
+        continue; 
+    end
     if METHOD == 1
         % // Binary
         binArr(ch, cnfrm_ts) = 1;

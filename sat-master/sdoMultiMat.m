@@ -69,7 +69,8 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 useTrials     {mustBeInteger} = 1:xtdc.nTrials; 
                 vars.condenseShuffles = 0; 
                 vars.method {mustBeMember(vars.method, {'original', 'asymmetric', 'optimized'})} = 'original';%'asymmetric'; 
-                vars.parallelCompute = 0; 
+                vars.parallelCompute = 0;
+                vars.backgroundSubtraction = 0; % NOT yet fully implemented; default = 0; 
                 %useTrials = []; 
             end
             %___ Just run the SDO Pipeline for all combinations using common params
@@ -91,6 +92,14 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             obj.nEventsUsed = sum(ppdc.nTrialEvents, 2); 
     
             % // 12.8.2023 Update
+            if vars.backgroundSubtraction == 1
+                % Experimental; 
+            obj.sdoStruct = SAT.compute.populateSDOArray4(xtdc, ppdc, ... 
+                'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
+                'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
+                'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
+            else
+
             try 
             obj.sdoStruct = SAT.compute.populateSDOArray3(xtdc, ppdc, ... 
                 'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
@@ -103,6 +112,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             obj.sdoStruct = SAT.compute.populateSDOArray2(xtdc, ppdc, ... 
                 'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
                 'pxShift', obj.nShift, 'pxDelay', obj.zDelay); %, 'useTrials', useTrials); 
+            end
             end
           %}
             %}
@@ -214,7 +224,6 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 XT_CH_NO, PP_CH_NO, 'errorOrder', vars.errorOrder); 
         end
 
-
         %___ Prediction
         function errorStruct = getPredictionError(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO, vars)
             arguments
@@ -268,7 +277,72 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             end
 
         end
-%
+        %% ____ 
+        function [px0, px1] = getPx0Px1(obj, xtdc, ppdc, USE_XT_CH, USE_PP_CH)
+            arguments
+                obj sdoMultiMat
+                xtdc xtDataCell
+                ppdc ppDataCell
+                USE_XT_CH = 1:xtdc.nChannels;  % --> Maybe make these ranges?
+                USE_PP_CH = 1:ppdc.nChannels; 
+            end
+            % After importing original data classes, return the probability
+            % distributions used for calculating the SDO/dpx. Use the parameters
+            % stored in the sdoMultiMat Class. 
+            
+            % // Get pre and post-spike distributions/classes from data
+            
+            nUsePpChannels = length(USE_PP_CH);
+            nUseXtChannels = length(USE_XT_CH); 
+            
+            ppdcs = ppdc.subsample(1:ppdc.nTrials, USE_PP_CH); 
+            xtdcs = xtdc.subsample(1:xtdc.nTrials, USE_XT_CH); 
+            ppData = ppdcs.data; 
+            xtData = xtdcs.data; 
+            
+            useXtChannels = 1:nUseXtChannels; 
+            
+            % __ >> RIP Parameters; 
+            [obsPxt0Cell, obsPxt1Cell] = pxTools.getTrialwisePxt( ...
+                    xtData, ppData, ...
+                    1:xtdc.nTrials, useXtChannels, ...
+                    'xtDataField', xtdc.dataField,...
+                    'ppDataField', ppdc.dataField, ... 
+                    'pxNPoints', [abs(obj.pxProperties.px0DurationMs), obj.pxProperties.px1DurationMs], ...
+                    'pxFilter',  [obj.pxProperties.smoothingFilterWidth, obj.pxProperties.smoothingFilterStd], ...
+                    'pxShift',   obj.pxProperties.nShift, ...
+                    'pxDelay',   obj.pxProperties.zDelay); 
+            
+            % __>> TODO: Export/Standardize these functions to a macro; 
+            if nUsePpChannels > 1
+                % We have [1 x nTrials] cell of [1 x nChannels]
+                px0 = cell(nUseXtChannels,nUsePpChannels); 
+                px1 = cell(nUseXtChannels,nUsePpChannels); 
+                for u = 1:nUsePpChannels
+                    x0Cell = cell(nUseXtChannels,xtdc.nTrials); 
+                    x1Cell = cell(nUseXtChannels,xtdc.nTrials); 
+                    %
+                    for m = 1:nUseXtChannels
+                        for tr = 1:xtdc.nTrials
+                            x0Cell{m,tr} = obsPxt0Cell{1,tr}{m,u}; 
+                            x1Cell{m,tr} = obsPxt1Cell{1,tr}{m,u}; 
+                        end
+                    end
+                    px0(:,u) = cellhcat(x0Cell); 
+                    px1(:,u) = cellhcat(x1Cell); 
+                end
+            
+            else
+                p0_0 = cellhcat(obsPxt0Cell); 
+                p0_1 = cellhcat(obsPxt1Cell);  
+                %
+                px0 = cellhcat(p0_0); 
+                px1 = cellhcat(p0_1); 
+            end
+        
+        end
+
+        %%
 
         %// Because we often care about the properly normalized SDOs; 
         % Returning these as a STACK 

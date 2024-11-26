@@ -8,7 +8,8 @@
 % timeseries datasets when filtering in frequency
 %
 % INPUTS: 
-%   'signal' - A timeseries data signal to filter; [1xN Array]
+%   'signal' - A timeseries data signal to filter; [N_CHANNELS x N_OBSERVATIONS Array]
+%               -->> Note that these are ROW vectors;
 %   'type'- The filter type to use. Filters may be in time domain or
 %       frequency domain. 
 %       -- 'mov'
@@ -53,6 +54,10 @@
 %   NAME-VALUE PAIRS
 %       'fs' - Signal frequency. Required if using a frequency filter. 
 
+% REQUIRES: 
+%   ffxt - An implementation of the zero-phase filtfilt MATLAB function,
+%   which pads the endpoints of the signal to avoid filter rings
+
 % Adapted from Maryam A.B.'s original filter definitions, then expanded and
 % generalized. 
 
@@ -77,7 +82,7 @@
 
 %% Maryam's filtersets
 %function [fSignal, filterparams]=callAfilter(tinterval,signal,type,argvarin)
-function [fSignal]=callAfilter(signal,type,varargin)
+function [fSignal]=callAfilter(sig,type,varargin)
 
 p = inputParser; 
 addOptional(p, 'nPoints', 25);  
@@ -86,6 +91,8 @@ addParameter(p, 'fs', 1000);
 parse(p, varargin{:}); 
 pR = p.Results; 
 %____
+
+signal = sig; 
 
 %// Pass to either time-domain of frequency-domain filters; 
 N_POINTS    = pR.nPoints; 
@@ -102,24 +109,41 @@ switch type
             NOTCH_HZ = SUPPORT_VAR; 
         end
 end
-    %case {'mov', 'gaussmov', 'trimov', 'expmov', 'rmsmov'
-
 
 [sz_y, sz_x] = size(signal); 
+
 TRANSPOSE = 0; 
+if (sz_y > 1) && (sz_x > 1)
+    %// Assume [N_CHANNELS x N_OBSERVATIONS]
+    TRANSPOSE = 1; 
+end
+
+
+
 %// we use a row-vector notation for our input to this function, but MATLAB
 %by default uses column-vector notation; transpose as necessary
-if sz_y > 1 && sz_x < 2
+if (sz_y > 1) && (sz_x > 1)
+    TRANSPOSE = 1;
+    signal = signal'; 
+elseif (sz_y > 1) && (sz_x == 1)
+    %// Flipped [N x 1] 
+    TRANSPOSE = 0; 
+
+elseif (sz_y == 1) && (sz_x > 1)
+    %// Default [ 1 x N]
     TRANSPOSE = 1; 
     signal = signal'; 
 end
 
-[~, sz_x] = size(signal); 
+
+sigLen = size(signal,1); 
 % __ Add in a 'bookending' operation by default, to ensure that we don't
 % get endpoint artifacts  __ 3.5.2024
 
-bkLen = ceil(sz_x*0.1); 
-signal = bookendSignal(signal, bkLen,1); 
+bkLen = ceil(sigLen*0.1); % At most, 10% of signal; 
+
+signal = bookendSignal(signal', bkLen,2)'; % type 2 = reflect
+%signal = bookendSignal(signal', bkLen,1)'; %type 1 = meanpad
 
 switch type
     
@@ -158,7 +182,8 @@ switch type
         mov = N_POINTS; %IDK why this was set to 'support_var' ? 
         %mov = SUPPORT_VAR; 
         b = 1/mov*ones(1,mov); 
-        fsig2 = filtfilt(b,1,sig2); 
+        fsig2 = ffxt(b,1,sig2); 
+        %fsig2 = filtfilt(b,1,sig2); 
         fSignal = sqrt(abs(fsig2)); 
     case 'hamming'
         %// Hamming-Type window; Requires the DSP toolbox
@@ -166,7 +191,7 @@ switch type
             signal = abs(signal); 
         end
         b = hamming(N_POINTS); 
-        filtfilt(b,1,signal)
+        fSignal = ffxt(b,1,signal); 
 
     case 'hanning'
         %// Hanning-Type window; Requires the DSP toolbox
@@ -174,7 +199,7 @@ switch type
             signal = abs(signal); 
         end
         b = hann(N_POINTS); 
-        filtfilt(b,1,signal); 
+        fSignal = ffxt(b,1,signal); 
 
     case 'blackman'
         %// Blackman type window; Requires the DSP toolbox
@@ -182,31 +207,32 @@ switch type
             signal = abs(signal); 
         end
         b = blackman(N_POINTS); 
-        filtfilt(b,1,signal); 
-
+        fSignal = ffxt(b,1,signal); 
         
     %% Frequency-based Filters
     case {'bandpass', 'bp'} 
        %// Book-ended variant of Bandpass filter to avoid artifacting
        %endpoints
-       signal_bkend = [fliplr(signal(1:SIG_HZ)) signal fliplr(signal(end-SIG_HZ+1:end))];
-       %bp0 = argvarin{1}(1); %Lower bound
-       %bp1 = argvarin{2}(2); %Upper bound
-      
-       fSig = bandpass(signal_bkend, FILT_HZ, SIG_HZ); 
-       
-       %fSig = bandpass(signal_bkend, argvarin, SIG_HZ); 
-       fSignal = fSig(SIG_HZ+1:end-SIG_HZ);
+       %signal_bkend = [fliplr(signal(1:SIG_HZ)) signal fliplr(signal(end-SIG_HZ+1:end))];
+       %fSig = bandpass(signal_bkend, FILT_HZ, SIG_HZ); 
+       fSignal = bandpass(signal, FILT_HZ, SIG_HZ); 
+       %fSignal = fSig(SIG_HZ+1:end-SIG_HZ);
+       1; 
         
+    case {'highpass'}
+        fSignal = highpass(signal, FILT_HZ, SIG_HZ); 
+        1; 
+
+    case {'lowpass'}
+        fSignal = lowpass(signal, FILT_HZ, SIG_HZ); 
+        1; 
+
    case 'butter'
-       %// Generic butterwoth
-       
+       %// Generic butterworth (default = 4th order)
        cutHz = FILT_HZ; 
-       %cutHz=argvarin(:);
        Wn=cutHz/SIG_HZ*2;
        [B,A]=butter(4,Wn);
-       fSignal=filtfilt(B,A,signal);
-
+        fSignal = ffxt(B,A,signal); 
     %{
     case 'nonlinear'
         [B,A] = butter(4,10/SIG_HZ*2,'high');
@@ -223,7 +249,7 @@ switch type
         cutHz = FILT_HZ; 
         Wn=cutHz/SIG_HZ*2;
         [BL,AL] = butter(4,Wn,'low');
-        fSignal=filtfilt(BL,AL,abs(signalH));
+        fSignal = ffxt(BL,AL,abs(signalH)); 
 
     case 'notch'
         %// First 8 harmonics
@@ -251,7 +277,14 @@ switch type
         max_out_ratio = 0.7;
         [fSignal, filterparams] = emg_filter_test(absSignalH,max_emg,max_out_ratio);
     %}
-        
+
+    case {'trirmsmov', 'triRMSmov'}
+        % 10.23.2024 - TS added
+        %// Triangular-weighted zero phase Root- Mean Squares filter
+        % Assuming Column major; 
+
+        fSignal = triRMSMov(signal',N_POINTS)'; % Ext.Func. expected [nch x nobs]
+           
     case {'notchRMS', 'notchrms'}
         for i=1:8 %for each harmonic
             wo = i* NOTCH_HZ/(SIG_HZ/2);  
@@ -259,30 +292,31 @@ switch type
             [b,a] = iirnotch(wo,bw);
             signal = ffxt(b,a,signal); 
         end
-        %mov=argvarin(:);
-        % -- Bookend signal to prevent endpoint filter artifacts
-        %signal_bkend = [fliplr(signal(1:mov)) signal fliplr(signal(end-mov+1:end))]; 
-        %signal_bkend = [mean(signal(1:mov))*ones(1,mov) signal mean(signal(end-mov+1:end))*ones(1,mov)]; 
         [B,A] = butter(4,10/SIG_HZ*2,'high');
         [b2] = 1/N_POINTS*ones(1,N_POINTS); 
-        %signalH=filtfilt(B,A,signal_bkend);
-        %fSignal_bkend=sqrt(filtfilt(1/mov*ones(1,mov),1,signalH.^2));
         signalH = ffxt(B,A,signal); 
         fSignal = sqrt(ffxt(b2,1,signalH.^2)); 
         1; 
 end
 
+if TRANSPOSE
+    fSignal = fSignal'; 
+end
+
+
+1; 
+
+
+
 % __ Remove Bookends
 
-fSignal = fSignal(bkLen+1:end-bkLen); 
+fSignal = fSignal(:,bkLen+1:end-bkLen); 
 
 
 % ______ 
 
 
-if TRANSPOSE
-    fSignal = fSignal'; 
-end
+
 
 end
 
