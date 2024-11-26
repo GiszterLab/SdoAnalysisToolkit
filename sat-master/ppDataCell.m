@@ -66,10 +66,10 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 LI = false;
                 return
             end
-            ix_tr = find(obj.nTrialEvents > 1, 1);
+            % Find first trial w/ data
+            ix_tr = find(sum(obj.nTrialEvents,1)>1,1);
             %ix_tr = find(any(obj.nTrialEvents),1); 
             ix_n = find(obj.nTrialEvents(:,ix_tr),1);
-            %ix_n = any(obj.nTrialEvents(:,1:ix_tr)); 
             %ix_n = find(any(obj.nTrialEvents(:,1:ix_tr),1)); 
             if isempty(ix_tr)
                 LI = false; 
@@ -207,12 +207,13 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
         end
         
         %% EXTRACTION Methods
-        function binXtCell = getBinaryImpulses(obj, SAMPLE_HZ, useTrials, useChannels)
+        function binXtCell = getBinaryImpulses(obj, SAMPLE_HZ, useTrials, useChannels, vars)
             arguments 
                 obj
                 SAMPLE_HZ   {mustBeNumeric} = obj.fs; 
                 useTrials   {mustBeNumeric} = 1:obj.nTrials; 
                 useChannels {mustBeNumeric} = 1:obj.nChannels; 
+                vars.rateCode {mustBeNumericOrLogical} = 0;
             end
             %// Use to discretize event times into index positions, at some
             %set sample Hz.           
@@ -226,7 +227,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 trEventTimesAll = {obj.data{1,tr}.(obj.dataField)}; 
                 trEventTimes    = trEventTimesAll(useChannels); 
                 %// Call to external function; 
-                binXtCell{tr} = binarize_ppData(trEventTimes, SAMPLE_HZ, obj.trTimeLen(tr)); 
+                binXtCell{tr} = binarize_ppData(trEventTimes, SAMPLE_HZ, obj.trTimeLen(tr), vars.rateCode); 
             end
         end
         
@@ -464,12 +465,13 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
         end
 
         %% Conversion Methods; 
-        function xtDC = getXtDataCell(obj, SAMPLE_HZ)
+        function xtDC = getXtDataCell(obj, SAMPLE_HZ, vars)
             % // Method to convert the observed point process data into some
             % an xtDataCell; 
             arguments
                 obj
                 SAMPLE_HZ {mustBeNumeric} = obj.fs;  
+                vars.rateCode = 0; 
             end
             xtDC = xtDataCell();
             %// Copy-Over Primary data; 
@@ -483,7 +485,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             xtDC.trTimeLen  = obj.trTimeLen; 
             xtDC.dataField  = 'envelope'; %obj.dataField; 
             %____
-            binXtCell = getBinaryImpulses(obj, SAMPLE_HZ); %, useTrials, useChannels)
+            binXtCell = getBinaryImpulses(obj, SAMPLE_HZ, 'rateCode', vars.rateCode); %, useTrials, useChannels)
             S = dataCell.constructors.getXtDataHolder(xtDC.nTrials, xtDC.nChannels); 
             for tr = 1:xtDC.nTrials
                 timeArr = 0:1/xtDC.fs: (xtDC.trTimeLen(tr)- 1/xtDC.fs); 

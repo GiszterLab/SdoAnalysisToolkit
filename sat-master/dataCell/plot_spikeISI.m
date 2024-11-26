@@ -62,7 +62,7 @@ if (N_TRIALS) > 1 && (N_UNITS > 1)
         spkCll = cellhcat(spkISICll')'; 
     end
 else
-    spkCll = spkISIcll; 
+    spkCll = spkISICll; 
 end
 
 if isa(spkCll, 'double')

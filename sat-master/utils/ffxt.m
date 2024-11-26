@@ -7,10 +7,11 @@
 %
 % B = input filtering coefficient (as filtfilt)
 % A = input filtering coefficient (as filtfilt); 
-% xt= timeseries data/ collection of data to process (as filtfilt.
+% xt= timeseries data/ collection of data to process (as in filtfilt).
+%   [ N_OBS x N_CHANNELS] array; operating on columns independently; 
 %
-% If xt is a NxM doubles array, applying the filtering columnwise, as with
-% filtfilt. 
+
+% 10.23.2024 - Upgrade for better handling. 
 
 % Copyright (C) 2023 Trevor S. Smith
 % Drexel University College of Medicine
@@ -32,19 +33,36 @@ function [fxt] = ffxt(b, a, xt)
 
 N_PTS = length(b); 
 
-[SIZE_X, SIZE_Y] = size(xt); 
+[sz_y, sz_x] = size(xt); 
 
-if SIZE_X > 1
+TRANSPOSE = 0; 
+if sz_y == 1 && sz_x > 1
+    xt = xt'; 
+    TRANSPOSE = 1; 
+    [~, sz_x] = size(xt); 
+end
+
+%{
+if sz_y > 1
     %// normal colwise filtering; 
-    
-    buffArr = zeros(N_PTS, SIZE_Y); 
+    %}
+
+    buffArr = zeros(N_PTS, sz_x); 
     
     xtArr = [buffArr; xt; buffArr]; 
+    
+    nanLI = isnan(xtArr); 
+    
+    xtArr(nanLI) = 0; % temporary; 
     
     %
     fxtArr = filtfilt(b,a,xtArr); 
     
+    fxtArr(nanLI) = NaN; 
+
+
     fxt = fxtArr(N_PTS+1:end-N_PTS,:);
+    %{
 else
     %// perform row-wise 1x; 
     buffArr = zeros(1, N_PTS); 
@@ -55,6 +73,11 @@ else
     
     fxt = fxtArr(1, N_PTS+1:end-N_PTS);
     
+end
+    %}
+
+if TRANSPOSE
+    fxt = fxt'; 
 end
 
 

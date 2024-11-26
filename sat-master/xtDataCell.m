@@ -192,8 +192,10 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             arguments
                 obj
                 FILTERTYPE {mustBeMember(FILTERTYPE, {'notch', ...
-                    'notchRMS','mov', 'gaussmov', 'trimov', 'expmov', ...
-                    'rmsmov','bandpass', 'butter', 'emgButter'})}
+                    'notchRMS', 'triRMSmov', 'trirmsmov','mov', ...
+                    'gaussmov', 'trimov', 'expmov', ...
+                    'rmsmov','bandpass', 'highpass', 'lowpass',...
+                    'butter', 'emgButter'})}
                 N_POINTS
                 F_VAR = 1; %auxillary variable for ffilt
             end
@@ -204,13 +206,19 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             xtData = getTensor(obj); 
             xtData2 = xtData; 
             for tr = 1:obj.nTrials 
+                %{
                 for m = 1:obj.nChannels
                     % __ callAFilter 
-                    %// callAFilter filters on [1xN] Doubles
+                    %// callAFilter filters on [1xN] Doubles OR [NxM]
                     xt  = squeeze(xtData(m,:,tr)); 
                     fxt = callAfilter(xt, FILTERTYPE, obj.fs,  'nPoints', N_POINTS, 'auxVar', F_VAR); 
                     xtData2(m,:,tr) = fxt; 
                 end
+                %}
+                % --> upgraded callAfilter
+                xt = squeeze(xtData(:,:,tr)); 
+                fxt = callAfilter(xt,FILTERTYPE, obj.fs, 'nPoints', N_POINTS, 'auxVar', F_VAR); 
+                xtData2(:,:,tr) = fxt(:,1:size(xt,2)); 
             end
             obj.importTensor(xtData2); 
         end
@@ -577,6 +585,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             else
                 dataCellArr = {obj.data{1,useTrials}(:).(DATAFIELD)}'; 
             end
+
             dataArr = cellvcat(dataCellArr(useChannels,:)); 
             xtDataCell.plot_with_offset(dataArr, OFFSET); 
             %
