@@ -1,3 +1,6 @@
+%% SAT - app_input:: 
+%% fill_ppdc
+
 % Name:         Phone Kyaw
 % Date:         09/19/2024
 % Description:  Return a PP data cell object for SMM
@@ -7,7 +10,24 @@
 %               frequency - sampling rate
 % Return Value: ppdc - ppDataCell object
 
-function ppdc = fillPPDC (pp_cell, frequency)
+%_______________________________________
+% Copyright (C) 2024 Phone Kyaw
+% Drexel University College of Medicine
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+function ppdc = fill_ppdc (pp_cell, frequency)
 arguments
     pp_cell (:,1) cell
     frequency (1,1) double {mustBePositive} = 30000

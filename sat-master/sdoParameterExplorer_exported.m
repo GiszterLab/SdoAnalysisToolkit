@@ -1,123 +1,139 @@
-classdef app_exported < matlab.apps.AppBase
+classdef sdoParameterExplorer_exported < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        UIFigure                     matlab.ui.Figure
-        GridLayout                   matlab.ui.container.GridLayout
-        XTrialXSegWarningLabel       matlab.ui.control.Label
-        DiffusionPanel               matlab.ui.container.Panel
-        StirpdPanel                  matlab.ui.container.Panel
-        MatrixPanel                  matlab.ui.container.Panel
-        NoofEventsDropDown           matlab.ui.control.DropDown
-        NoofEventsEditField          matlab.ui.control.NumericEditField
-        NoofEventsEditFieldLabel     matlab.ui.control.Label
-        CreateSMMAllButton           matlab.ui.control.Button
-        DefaultLabelFilterStd        matlab.ui.control.Label
-        FilterStdEditField           matlab.ui.control.NumericEditField
-        FilterStdEditFieldLabel      matlab.ui.control.Label
-        CreateSMMSelectedButton      matlab.ui.control.Button
-        DefaultLabelFilterWidth      matlab.ui.control.Label
-        FilterWidthEditField         matlab.ui.control.NumericEditField
-        FilterWidthEditFieldLabel    matlab.ui.control.Label
-        DefaultLabelNShift           matlab.ui.control.Label
-        NShiftEditField              matlab.ui.control.NumericEditField
-        NShiftEditFieldLabel         matlab.ui.control.Label
-        SMMPlotButton                matlab.ui.control.Button
-        DefaultLabelZDelay           matlab.ui.control.Label
-        ZDelayEditField              matlab.ui.control.NumericEditField
-        ZDelayEditFieldLabel         matlab.ui.control.Label
-        PPChannelsDropDown           matlab.ui.control.DropDown
-        PPChannelsDropDownLabel      matlab.ui.control.Label
-        PPChannelsBeforeSMMListBox   matlab.ui.control.ListBox
-        PPChannelsLabel              matlab.ui.control.Label
-        DefaultLabelPX1              matlab.ui.control.Label
-        PX1DuraMsEditField           matlab.ui.control.NumericEditField
-        PX1DuraMsEditFieldLabel      matlab.ui.control.Label
-        XTChannelsDropDown           matlab.ui.control.DropDown
-        XTChannelsDropDownLabel      matlab.ui.control.Label
-        DefaultLabelPX0              matlab.ui.control.Label
-        PX0DuraMsEditField           matlab.ui.control.NumericEditField
-        PX0DuraMsEditFieldLabel      matlab.ui.control.Label
-        DefaultLabelSMM              matlab.ui.control.Label
-        SMMLabel                     matlab.ui.control.Label
-        EMGChannelsBeforeSMMListBox  matlab.ui.control.ListBox
-        EMGChannelsLabel             matlab.ui.control.Label
-        PX0PX1Panel                  matlab.ui.container.Panel
-        SDOMultiMatLabel             matlab.ui.control.Label
-        HTMLLineBreak2               matlab.ui.control.HTML
-        XTDCPlotHistograms           matlab.ui.control.Button
-        XTDCDataFieldButtonGroup     matlab.ui.container.ButtonGroup
-        XTDCFilteredButton           matlab.ui.control.ToggleButton
-        XTDCRawButton                matlab.ui.control.ToggleButton
-        DefaultLabelNoOfBins         matlab.ui.control.Label
-        NoofBinsSpinner              matlab.ui.control.Spinner
-        NoofBinsSpinnerLabel         matlab.ui.control.Label
-        DefaultLabelMaxMode          matlab.ui.control.Label
-        MaxModeDropDown              matlab.ui.control.DropDown
-        MaxModeDropDownLabel         matlab.ui.control.Label
-        DefaultLabelMapMethod        matlab.ui.control.Label
-        MapMethodDropDown            matlab.ui.control.DropDown
-        MapMethodDropDownLabel       matlab.ui.control.Label
-        XTDCChannelsListBox          matlab.ui.control.ListBox
-        EMGChannelsLabel_2           matlab.ui.control.Label
-        DefaultLabelChannelAmpMin    matlab.ui.control.Label
-        ChannelAmpMinEditField       matlab.ui.control.NumericEditField
-        ChannelAmpMinEditFieldLabel  matlab.ui.control.Label
-        DefaultLabelChannelAmpMax    matlab.ui.control.Label
-        ChannelAmpMaxEditField       matlab.ui.control.NumericEditField
-        ChannelAmpMaxEditFieldLabel  matlab.ui.control.Label
-        TrialDropDown                matlab.ui.control.DropDown
-        TrialDropDownLabel           matlab.ui.control.Label
-        SensorDropDown               matlab.ui.control.DropDown
-        SensorDropDownLabel          matlab.ui.control.Label
-        XTDCTrialsListBox            matlab.ui.control.ListBox
-        EMGTrialsLabel               matlab.ui.control.Label
-        DefaultLabelXTDC             matlab.ui.control.Label
-        XTDCLabel                    matlab.ui.control.Label
-        XTDCHistogramsLabel          matlab.ui.control.Label
-        HTMLLineBreak                matlab.ui.control.HTML
-        PPButton                     matlab.ui.control.Button
-        PPChannelsListBox            matlab.ui.control.ListBox
-        PPChannelsLabel_2            matlab.ui.control.Label
-        PPTrialsListBox              matlab.ui.control.ListBox
-        PPTrialsLabel                matlab.ui.control.Label
-        ISIPanel                     matlab.ui.container.Panel
-        ImportPPDCButton             matlab.ui.control.Button
-        ExportPPDCButton             matlab.ui.control.Button
-        ImportPPCustButton           matlab.ui.control.Button
-        ImportPPTrevorButton         matlab.ui.control.Button
-        PPDataLabel                  matlab.ui.control.Label
-        OriginalXTDCPlotButton       matlab.ui.control.Button
-        SpikesRatePanel              matlab.ui.container.Panel
-        OriginalXTDCDataFieldButtonGroup  matlab.ui.container.ButtonGroup
-        OriginalXTDCFilteredButton   matlab.ui.control.ToggleButton
-        OriginalXTDCRawButton        matlab.ui.control.ToggleButton
-        OriginalXTDCChannelsListBox  matlab.ui.control.ListBox
-        OriginalEMGChannelsLabel     matlab.ui.control.Label
-        OriginalXTDCTrialsListBox    matlab.ui.control.ListBox
-        OriginalEMGTrialsLabel       matlab.ui.control.Label
-        ImportTimesButton            matlab.ui.control.Button
-        ORLabel                      matlab.ui.control.Label
-        FrequencyEditField           matlab.ui.control.NumericEditField
-        FrequencyEditFieldLabel      matlab.ui.control.Label
-        ImportXTDCButton             matlab.ui.control.Button
-        NoCheckBoxFrequencyColumn    matlab.ui.control.CheckBox
-        YesCheckBoxFrequencyColumn   matlab.ui.control.CheckBox
-        ExportXTDCButton             matlab.ui.control.Button
-        ImportEMGCustButton          matlab.ui.control.Button
-        EMGPanel                     matlab.ui.container.Panel
-        CustomImportQuestion         matlab.ui.control.Label
-        ImportEMGTrevorButton        matlab.ui.control.Button
-        EMGDataLabel                 matlab.ui.control.Label
-        VariableViewingLabel         matlab.ui.control.Label
-        RawEMGHistogram              matlab.ui.control.UIAxes
-        StateEMGHistogram            matlab.ui.control.UIAxes
+        UIFigure                       matlab.ui.Figure
+        GridLayout                     matlab.ui.container.GridLayout
+        PlotSDOCombinationLabel        matlab.ui.control.Label
+        STIRPDLabel                    matlab.ui.control.Label
+        SDOMatrixLabel                 matlab.ui.control.Label
+        Image                          matlab.ui.control.Image
+        Label_2                        matlab.ui.control.Label
+        Label                          matlab.ui.control.Label
+        SelectoneormoretrialsandoneormorechannelstovisualizedataLabel_2  matlab.ui.control.Label
+        SelectoneormoretrialsandoneormorechannelstovisualizedataLabel  matlab.ui.control.Label
+        AllChannelsLabel               matlab.ui.control.Label
+        SelectedChannelsLabel          matlab.ui.control.Label
+        ExportLabel_2                  matlab.ui.control.Label
+        DiffusionPanel                 matlab.ui.container.Panel
+        ExportLabel                    matlab.ui.control.Label
+        ImportPointProcessLabel        matlab.ui.control.Label
+        ImportTimeSeriesLabel          matlab.ui.control.Label
+        XTrialXSegWarningLabel         matlab.ui.control.Label
+        StirpdPanel                    matlab.ui.container.Panel
+        MatrixPanel                    matlab.ui.container.Panel
+        NoofEventsDropDown             matlab.ui.control.DropDown
+        ofEventsEditField              matlab.ui.control.NumericEditField
+        ofEventsEditFieldLabel         matlab.ui.control.Label
+        PerformSDOAnalysisButton       matlab.ui.control.Button
+        DefaultLabelFilterStd          matlab.ui.control.Label
+        FilterStdEditField             matlab.ui.control.NumericEditField
+        FilterStdEditFieldLabel        matlab.ui.control.Label
+        PerformSDOAnalysisButton_2     matlab.ui.control.Button
+        DefaultLabelFilterWidth        matlab.ui.control.Label
+        FilterWidthEditField           matlab.ui.control.NumericEditField
+        FilterWidthEditFieldLabel      matlab.ui.control.Label
+        DefaultLabelNShift             matlab.ui.control.Label
+        NShiftEditField                matlab.ui.control.NumericEditField
+        NShiftEditFieldLabel           matlab.ui.control.Label
+        SMMPlotButton                  matlab.ui.control.Button
+        DefaultLabelZDelay             matlab.ui.control.Label
+        ZDelayEditField                matlab.ui.control.NumericEditField
+        ZDelayEditFieldLabel           matlab.ui.control.Label
+        PPChannelsDropDown             matlab.ui.control.DropDown
+        PPChannelsDropDownLabel        matlab.ui.control.Label
+        PPChannelsBeforeSMMListBox     matlab.ui.control.ListBox
+        PPChannelsLabel                matlab.ui.control.Label
+        DefaultLabelPX1                matlab.ui.control.Label
+        PX1DuraMsEditField             matlab.ui.control.NumericEditField
+        PX1DuraMsEditFieldLabel        matlab.ui.control.Label
+        XtChannelsDropDown             matlab.ui.control.DropDown
+        XtChannelsDropDownLabel        matlab.ui.control.Label
+        DefaultLabelPX0                matlab.ui.control.Label
+        PX0DuraMsEditField             matlab.ui.control.NumericEditField
+        PX0DuraMsEditFieldLabel        matlab.ui.control.Label
+        DefaultLabelSMM                matlab.ui.control.Label
+        sdoMultiMatParametersLabel     matlab.ui.control.Label
+        EMGChannelsBeforeSMMListBox    matlab.ui.control.ListBox
+        EMGChannelsLabel               matlab.ui.control.Label
+        PX_0PX_1Panel                  matlab.ui.container.Panel
+        SDOMultiMatLabel               matlab.ui.control.Label
+        HTMLLineBreak2                 matlab.ui.control.HTML
+        XTDCPlotHistograms             matlab.ui.control.Button
+        PlotFieldButtonGroup           matlab.ui.container.ButtonGroup
+        XTDCFilteredButton             matlab.ui.control.ToggleButton
+        XTDCRawButton                  matlab.ui.control.ToggleButton
+        DefaultLabelNoOfBins           matlab.ui.control.Label
+        NoofBinsSpinner                matlab.ui.control.Spinner
+        NoofBinsSpinnerLabel           matlab.ui.control.Label
+        DefaultLabelMaxMode            matlab.ui.control.Label
+        MaxModeDropDown                matlab.ui.control.DropDown
+        MaxModeDropDownLabel           matlab.ui.control.Label
+        DefaultLabelMapMethod          matlab.ui.control.Label
+        MapMethodDropDown              matlab.ui.control.DropDown
+        MapMethodDropDownLabel         matlab.ui.control.Label
+        XTDCChannelsListBox            matlab.ui.control.ListBox
+        EMGChannelsLabel_2             matlab.ui.control.Label
+        DefaultLabelChannelAmpMin      matlab.ui.control.Label
+        ChannelAmpMinEditField         matlab.ui.control.NumericEditField
+        ChannelAmpMinEditFieldLabel    matlab.ui.control.Label
+        DefaultLabelChannelAmpMax      matlab.ui.control.Label
+        ChannelAmpMaxEditField         matlab.ui.control.NumericEditField
+        ChannelAmpMaxEditFieldLabel    matlab.ui.control.Label
+        TrialDropDown                  matlab.ui.control.DropDown
+        TrialDropDownLabel             matlab.ui.control.Label
+        SensorDropDown                 matlab.ui.control.DropDown
+        SensorDropDownLabel            matlab.ui.control.Label
+        XTDCTrialsListBox              matlab.ui.control.ListBox
+        EMGTrialsLabel                 matlab.ui.control.Label
+        DefaultLabelXTDC               matlab.ui.control.Label
+        xtDataCellParametersLabel      matlab.ui.control.Label
+        TimeSeriesStateDefinitionHistogramsLabel  matlab.ui.control.Label
+        HTMLLineBreak                  matlab.ui.control.HTML
+        UpdatePlotButton               matlab.ui.control.Button
+        PointProcessChannelsListBox    matlab.ui.control.ListBox
+        PPChannelsLabel_2              matlab.ui.control.Label
+        PointProcessTrialsListBox      matlab.ui.control.ListBox
+        PPTrialsLabel                  matlab.ui.control.Label
+        PointProcessISIHistogramPanel  matlab.ui.container.Panel
+        ppDataCellButton               matlab.ui.control.Button
+        ppDataCellButton_2             matlab.ui.control.Button
+        csvButton_2                    matlab.ui.control.Button
+        ppDataButton                   matlab.ui.control.Button
+        PointProcessDataLabel          matlab.ui.control.Label
+        OriginalXTDCPlotButton         matlab.ui.control.Button
+        PointProcessRatePanel          matlab.ui.container.Panel
+        DataFieldButtonGroup           matlab.ui.container.ButtonGroup
+        OriginalXTDCFilteredButton     matlab.ui.control.ToggleButton
+        OriginalXTDCRawButton          matlab.ui.control.ToggleButton
+        OriginalXTDCChannelsListBox    matlab.ui.control.ListBox
+        OriginalEMGChannelsLabel       matlab.ui.control.Label
+        OriginalXTDCTrialsListBox      matlab.ui.control.ListBox
+        OriginalEMGTrialsLabel         matlab.ui.control.Label
+        ImportTimesButton              matlab.ui.control.Button
+        ORLabel                        matlab.ui.control.Label
+        FrequencyEditField             matlab.ui.control.NumericEditField
+        FrequencyEditFieldLabel        matlab.ui.control.Label
+        xtDataCellButton               matlab.ui.control.Button
+        NoCheckBoxFrequencyColumn      matlab.ui.control.CheckBox
+        YesCheckBoxFrequencyColumn     matlab.ui.control.CheckBox
+        xtDataCellButton_2             matlab.ui.control.Button
+        csvButton                      matlab.ui.control.Button
+        TimeSeriesPanel                matlab.ui.container.Panel
+        CustomImportQuestion           matlab.ui.control.Label
+        xtDataButton                   matlab.ui.control.Button
+        TimeSeriesDataLabel            matlab.ui.control.Label
+        SATSignalParameterExplorerLabel  matlab.ui.control.Label
+        StateEMGHistogram              matlab.ui.control.UIAxes
+        RawEMGHistogram                matlab.ui.control.UIAxes
     end
 
-    
+
     properties (Access = private)    
 
         %% Custom Cells
+        % NOTE: These are temporarily populated for the purposes of
+        % plotting and import; 
         xt_cell % (cell) 
         pp_cell % (cell)
 
@@ -152,7 +168,7 @@ classdef app_exported < matlab.apps.AppBase
         % Create SMM object and compute it with filled XT datacell object
         % and PP datacell object
         function createSMM(app, xt_index, pp_index)
-            % Initialize the SMM object
+            % Initialize the sdoMultiMat (smm) object
             app.smm = sdoMultiMat();
             % Always discretize after creating app.smm
             app.xtdc.discretize();
@@ -161,13 +177,13 @@ classdef app_exported < matlab.apps.AppBase
             'Indeterminate','on');
             if nargin == 1
                     app.smm.compute(app.xtdc, app.ppdc);
-                    % app.XTChannelsDropDown.Items = app.xt_cell{1,1};
-                    app.XTChannelsDropDown.Items = app.xtdc.sensor;
+                    % app.XtChannelsDropDown.Items = app.xt_cell{1,1};
+                    app.XtChannelsDropDown.Items = app.xtdc.sensor;
                     % app.PPChannelsDropDown.Items = app.pp_cell{1,1}(:,1);
                     app.PPChannelsDropDown.Items = app.ppdc.sensor;
             elseif nargin == 3
                 app.smm.compute(app.xtdc, app.ppdc, xt_index, pp_index);
-                app.XTChannelsDropDown.Items = app.xtdc.sensor(xt_index);
+                app.XtChannelsDropDown.Items = app.xtdc.sensor(xt_index);
                 app.PPChannelsDropDown.Items = app.ppdc.sensor(pp_index);
             end
             close(d);
@@ -192,10 +208,10 @@ classdef app_exported < matlab.apps.AppBase
                 xt_column_number = 1;
                 pp_column_number = 1;
             else
-            xt_select_channel = app.XTChannelsDropDown.Value;
+            xt_select_channel = app.XtChannelsDropDown.Value;
             pp_select_channel = app.PPChannelsDropDown.Value;
             xt_column_number = find(cellfun(@(x) strcmp(x, xt_select_channel), ...
-                app.XTChannelsDropDown.Items));
+                app.XtChannelsDropDown.Items));
             pp_column_number = find(cellfun(@(x) strcmp(x, pp_select_channel), ...
                 app.PPChannelsDropDown.Items));
             end
@@ -286,11 +302,11 @@ classdef app_exported < matlab.apps.AppBase
             end
 
             % Fill in the values
-            app.PPTrialsListBox.Items = trial_cell;
+            app.PointProcessTrialsListBox.Items = trial_cell;
             if ~isempty(app.ppdc)
-                % app.PPChannelsListBox.Items = app.pp_cell{1,1}(:,1)';
+                % app.PointProcessChannelsListBox.Items = app.pp_cell{1,1}(:,1)';
                 % app.PPChannelsBeforeSMMListBox.Items = app.pp_cell{1,1}(:,1)';
-                app.PPChannelsListBox.Items = app.ppdc.sensor;
+                app.PointProcessChannelsListBox.Items = app.ppdc.sensor;
                 app.PPChannelsBeforeSMMListBox.Items = app.ppdc.sensor;
             end
         end
@@ -305,8 +321,8 @@ classdef app_exported < matlab.apps.AppBase
 
             % Trials
             trial_cell = cell(1, app.original_xtdc.nTrials);
-            for i = 1 : length(trial_cell)
-                trial_cell{i} = num2str(i);
+            for tr = 1 : length(trial_cell)
+                trial_cell{tr} = num2str(tr);
             end
             app.TrialDropDown.Items = trial_cell;
             app.TrialDropDown.Value = app.TrialDropDown.Items{1};
@@ -370,7 +386,7 @@ classdef app_exported < matlab.apps.AppBase
             % app.FilterStdEditField.Value = app.original_smm.filterStd;
             % 
             % % No. of events used depending on sensors
-            % app.NoofEventsEditField.Value = app.original_smm.nEventsUsed(1);
+            % app.ofEventsEditField.Value = app.original_smm.nEventsUsed(1);
             % app.NoofEventsDropDown.Items = app.original_smm.sdoStruct.neuronNames;
             % % Always show the top option (This is useful when the user
             % % decides to create another smm)
@@ -397,7 +413,7 @@ classdef app_exported < matlab.apps.AppBase
             app.FilterStdEditField.Value = app.smm.filterStd;
 
             % No. of events used depending on sensors
-            app.NoofEventsEditField.Value = app.smm.nEventsUsed(1);
+            app.ofEventsEditField.Value = app.smm.nEventsUsed(1);
             app.NoofEventsDropDown.Items = app.smm.sdoStruct.neuronNames;
             % Always show the top option (This is useful when the user
             % decides to create another smm)
@@ -431,18 +447,18 @@ classdef app_exported < matlab.apps.AppBase
             no_check_box = app.NoCheckBoxFrequencyColumn.Value;
             % if (yes_check_box || no_check_box) && ~isempty(app.pp_raw_data)
             if ((yes_check_box || no_check_box) && ~isempty(app.ppdc)) || (~isempty(app.xtdc) && ~isempty(app.ppdc))
-                app.CreateSMMAllButton.Enable = "on";
-                app.CreateSMMSelectedButton.Enable = "on";
+                app.PerformSDOAnalysisButton.Enable = "on";
+                app.PerformSDOAnalysisButton_2.Enable = "on";
             end
         end
 
         % Enable the plot button for SMM
         % This depends on whether SMM object is created
         function enablePlotSMM (app)
-            if app.CreateSMMAllButton.Enable == "on" && ~isempty(app.smm)
+            if app.PerformSDOAnalysisButton.Enable == "on" && ~isempty(app.smm)
                 app.SMMPlotButton.Enable = "on";
-                app.XTChannelsDropDown.Enable = "on";
-                app.XTChannelsDropDownLabel.Enable = "on";
+                app.XtChannelsDropDown.Enable = "on";
+                app.XtChannelsDropDownLabel.Enable = "on";
                 app.PPChannelsDropDown.Enable = "on";
                 app.PPChannelsDropDownLabel.Enable = "on";
             end
@@ -456,7 +472,7 @@ classdef app_exported < matlab.apps.AppBase
             app.OriginalXTDCTrialsListBox.Enable = "on";
             app.OriginalEMGChannelsLabel.Enable = "on";
             app.OriginalXTDCChannelsListBox.Enable = "on";
-            app.OriginalXTDCDataFieldButtonGroup.Enable = "on";
+            app.DataFieldButtonGroup.Enable = "on";
             app.OriginalXTDCRawButton.Enable = "on";
             app.OriginalXTDCFilteredButton.Enable = "on";
             % Original XTDC Plot Button
@@ -470,7 +486,7 @@ classdef app_exported < matlab.apps.AppBase
             app.EMGChannelsBeforeSMMListBox.Enable = "on";
             app.EMGChannelsLabel.Enable = "on"; % Weird! I cannot change this to 
                                                 % 'EMGChannelsBeforeSMMlistBoxLabel'
-            app.XTDCDataFieldButtonGroup.Enable = "on";
+            app.PlotFieldButtonGroup.Enable = "on";
             app.XTDCRawButton.Enable = "on";
             app.XTDCFilteredButton.Enable = "on";         
             % Plot Button                                    
@@ -481,15 +497,15 @@ classdef app_exported < matlab.apps.AppBase
         % Enable them after creating PPDC
         function enablePPListBoxes (app)
             app.PPTrialsLabel.Enable = "on";
-            app.PPTrialsListBox.Enable = "on";
+            app.PointProcessTrialsListBox.Enable = "on";
             app.PPChannelsLabel_2.Enable = "on";
-            app.PPChannelsListBox.Enable = "on";
+            app.PointProcessChannelsListBox.Enable = "on";
             app.PPChannelsBeforeSMMListBox.Enable = "on";
             app.PPChannelsLabel.Enable = "on"; % Weird! I cannot change this to 
                                                % 'PPChannelsBeforeSMMlistBoxLabel'
             
             % Plot Button
-            app.PPButton.Enable = "on";
+            app.UpdatePlotButton.Enable = "on";
 
             % Enable Exporting PPDC to Matlab Workspace
             app.enableExportPPDC();
@@ -505,7 +521,7 @@ classdef app_exported < matlab.apps.AppBase
         % Enable XTVariables
         function enableXTVariables (app)
             % Enable the main 'XTDC' label and 'Default' label
-            app.XTDCLabel.Enable = "on";
+            app.xtDataCellParametersLabel.Enable = "on";
             app.DefaultLabelXTDC.Enable = "on";
 
             % Enable all variables for XTDC
@@ -535,7 +551,7 @@ classdef app_exported < matlab.apps.AppBase
         function enableSMMVariables (app)
             % Enable Labels
             % Enable the main 'SMM' label and 'Default' label
-            app.SMMLabel.Enable = "on";
+            app.sdoMultiMatParametersLabel.Enable = "on";
             app.DefaultLabelSMM.Enable = "on";
             % Enable SMM default SMM variables label
             app.DefaultLabelPX0.Enable = "on";
@@ -559,19 +575,19 @@ classdef app_exported < matlab.apps.AppBase
             app.FilterWidthEditFieldLabel.Enable = "on";
             app.FilterStdEditField.Enable = "on";
             app.FilterStdEditFieldLabel.Enable = "on";
-            app.NoofEventsEditField.Enable = "on";
-            app.NoofEventsEditFieldLabel.Enable = "on";
+            app.ofEventsEditField.Enable = "on";
+            app.ofEventsEditFieldLabel.Enable = "on";
             app.NoofEventsDropDown.Enable = "on";
 
             % Enable PX0PX1 Panel
-            app.PX0PX1Panel.Enable = "on";
+            app.PX_0PX_1Panel.Enable = "on";
         end
 
         function enableExportXTDC (app)
-            app.ExportXTDCButton.Enable = "on";
+            app.xtDataCellButton_2.Enable = "on";
         end
         function enableExportPPDC (app)
-            app.ExportPPDCButton.Enable = "on";
+            app.ppDataCellButton_2.Enable = "on";
         end
     
         % Disable Yes/No Checkbox
@@ -595,8 +611,8 @@ classdef app_exported < matlab.apps.AppBase
 
         % Disable plotting SMM
         function disablePlotSMM (app)
-            app.XTChannelsDropDown.Enable = "off";
-            app.XTChannelsDropDownLabel.Enable = "off";
+            app.XtChannelsDropDown.Enable = "off";
+            app.XtChannelsDropDownLabel.Enable = "off";
             app.PPChannelsDropDown.Enable = "off";
             app.PPChannelsDropDownLabel.Enable = "off";
             app.SMMPlotButton.Enable = "off";
@@ -604,8 +620,8 @@ classdef app_exported < matlab.apps.AppBase
 
         % Disable the buttons for creating and plotting SMM
         function disableSMM (app)
-            app.CreateSMMAllButton.Enable = "off";
-            app.CreateSMMSelectedButton.Enable = "off";
+            app.PerformSDOAnalysisButton.Enable = "off";
+            app.PerformSDOAnalysisButton_2.Enable = "off";
             app.diablePlotSMM();
             
         end
@@ -618,7 +634,7 @@ classdef app_exported < matlab.apps.AppBase
             app.OriginalXTDCTrialsListBox.Enable = "off";
             app.OriginalEMGChannelsLabel.Enable = "off";
             app.OriginalXTDCChannelsListBox.Enable = "off";
-            app.OriginalXTDCDataFieldButtonGroup.Enable = "off";
+            app.DataFieldButtonGroup.Enable = "off";
             app.OriginalXTDCRawButton.Enable = "off";
             app.OriginalXTDCFilteredButton.Enable = "off";
             % Original XTDC Plot Button
@@ -632,7 +648,7 @@ classdef app_exported < matlab.apps.AppBase
             app.EMGChannelsBeforeSMMListBox.Enable = "off";
             app.EMGChannelsLabel.Enable = "off"; % Weird! I cannot change this to 
                                                  % 'EMGChannelsBeforeSMMlistBoxLabel'
-            app.XTDCDataFieldButtonGroup.Enable = "off";
+            app.PlotFieldButtonGroup.Enable = "off";
             app.XTDCRawButton.Enable = "off";
             app.XTDCFilteredButton.Enable = "off"; 
             % XTDC Plot Button
@@ -643,15 +659,15 @@ classdef app_exported < matlab.apps.AppBase
         % Disable them after creating PPDC
         function disablePPListBoxes (app)
             app.PPTrialsLabel.Enable = "off";
-            app.PPTrialsListBox.Enable = "off";
+            app.PointProcessTrialsListBox.Enable = "off";
             app.PPChannelsLabel_2.Enable = "off";
-            app.PPChannelsListBox.Enable = "off";
+            app.PointProcessChannelsListBox.Enable = "off";
             app.PPChannelsBeforeSMMListBox.Enable = "off";
             app.PPChannelsLabel.Enable = "off"; % Weird! I cannot change this to 
                                                 % 'PPChannelsBeforeSMMlistBoxLabel'
             
             % Plot Button
-            app.PPButton.Enable = "off";
+            app.UpdatePlotButton.Enable = "off";
 
             % Disable Exporting PPDC to Matlab Workspace
             app.disableExportPPDC();
@@ -665,7 +681,7 @@ classdef app_exported < matlab.apps.AppBase
         % Disable XTVariables
         function disableXTVariables (app)
             % Disable the main 'XTDC' label and 'Default' label
-            app.XTDCLabel.Enable = "off";
+            app.xtDataCellParametersLabel.Enable = "off";
             app.DefaultLabelXTDC.Enable = "off";
 
             % Disable all variables for XTDC
@@ -697,7 +713,7 @@ classdef app_exported < matlab.apps.AppBase
         function disableSMMVariables (app)
             % Disable Labels
             % Disable the main 'SMM' label and 'Default' label
-            app.SMMLabel.Enable = "off";
+            app.sdoMultiMatParametersLabel.Enable = "off";
             app.DefaultLabelSMM.Enable = "off";
             % Disable SMM default SMM variables label
             app.DefaultLabelPX0.Enable = "off";
@@ -720,14 +736,14 @@ classdef app_exported < matlab.apps.AppBase
             app.FilterWidthEditFieldLabel.Enable = "off";
             app.FilterStdEditField.Enable = "off";
             app.FilterStdEditFieldLabel.Enable = "off";
-            app.NoofEventsEditField.Enable = "off";
-            app.NoofEventsEditFieldLabel.Enable = "off";
+            app.ofEventsEditField.Enable = "off";
+            app.ofEventsEditFieldLabel.Enable = "off";
             app.NoofEventsDropDown.Enable = "off";
             % Reset back to default sting for variables above
             % app.resetDefaultSMMVariables;
 
             % Disable PX0PX1 Panel
-            app.PX0PX1Panel.Enable = "off";
+            app.PX_0PX_1Panel.Enable = "off";
         end
 
         % Reset the default labels of XTDC variables to '-'
@@ -761,7 +777,7 @@ classdef app_exported < matlab.apps.AppBase
             app.disableXTNoResultants();
 
             % Disable the SMM buttons if enabled
-            if app.CreateSMMAllButton.Enable == "on"
+            if app.PerformSDOAnalysisButton.Enable == "on"
                 app.disableSMM();
             end
             app.disableXTVariables();
@@ -770,10 +786,10 @@ classdef app_exported < matlab.apps.AppBase
 
         % Disable Exporting XTDC/PPDC
         function disableExportXTDC (app)
-            app.ExportXTDCButton.Enable = "off";
+            app.xtDataCellButton_2.Enable = "off";
         end
         function disableExportPPDC (app)
-            app.ExportPPDCButton.Enable = "off";
+            app.ppDataCellButton_2.Enable = "off";
         end
 
 
@@ -810,7 +826,7 @@ classdef app_exported < matlab.apps.AppBase
             app.FilterStdEditField.Value = app.original_smm.filterStd;
 
             % % No. of events used depending on sensors
-            % app.NoofEventsEditField.Value = app.original_smm.nEventsUsed(1);
+            % app.ofEventsEditField.Value = app.original_smm.nEventsUsed(1);
             % app.NoofEventsDropDown.Items = app.original_smm.sdoStruct.neuronNames;
             % % Always show the top option (This is useful when the user
             % % decides to create another smm)
@@ -818,19 +834,19 @@ classdef app_exported < matlab.apps.AppBase
 
 
             % PX0PX1 plot
-            delete(app.PX0PX1Panel.Children);
+            delete(app.PX_0PX_1Panel.Children);
 
             fig = SAT.app_input.plotPx0Px1IntervalGraph('px0DuraMs', app.PX0DuraMsEditField.Value, ...
                 'px1DuraMs', app.PX1DuraMsEditField.Value, 'zDelay', ...
                 app.ZDelayEditField.Value, 'nShift', app.NShiftEditField.Value);
             axis = fig.Children;
-            copyobj(axis, app.PX0PX1Panel);
+            copyobj(axis, app.PX_0PX_1Panel);
             delete(fig);
 
         end
 
-        % Button pushed function: ImportEMGCustButton
-        function ImportEMGCustButtonPushed(app, event)
+        % Button pushed function: csvButton
+        function csvButtonPushed(app, event)
             pk_xt_cell = SAT.app_input.determineXTFileType();
 
             % Check whether the user inputted something
@@ -866,7 +882,7 @@ classdef app_exported < matlab.apps.AppBase
                 temp_xt_cell{1,1} = temp_xt_cell{1,1}(2:end);
 
                 % % Store the sensors' name in XT Drop-down menu
-                % app.XTChannelsDropDown.Items = temp_xt_cell{1,1};
+                % app.XtChannelsDropDown.Items = temp_xt_cell{1,1};
 
                 % Create the original/copy xtdc datacells
                 app.original_xtdc = SAT.app_input.fillXTDC(temp_xt_cell, app.xt_frequency);
@@ -907,7 +923,7 @@ classdef app_exported < matlab.apps.AppBase
             app.xt_frequency = app.FrequencyEditField.Value;
 
             % % Store the sensors' name in XT Drop-down menu
-            % app.XTChannelsDropDown.Items = app.xt_cell{1,1};
+            % app.XtChannelsDropDown.Items = app.xt_cell{1,1};
 
             % Create the original/copy xtdc datacells
             app.original_xtdc = SAT.app_input.fillXTDC(app.xt_cell, app.xt_frequency);
@@ -940,7 +956,7 @@ classdef app_exported < matlab.apps.AppBase
                 app.xt_frequency = 1 / (times(2) - times(1));
 
                 % % Store the sensors' name in XT Drop-down menu
-                % app.XTChannelsDropDown.Items = app.xt_cell{1,1};
+                % app.XtChannelsDropDown.Items = app.xt_cell{1,1};
 
                 % Create the original/copy xtdc datacells
                 app.original_xtdc = SAT.app_input.fillXTDC(app.xt_cell, app.xt_frequency);
@@ -964,8 +980,8 @@ classdef app_exported < matlab.apps.AppBase
             end
         end
 
-        % Button pushed function: ImportPPCustButton
-        function ImportPPCustButtonPushed(app, event)
+        % Button pushed function: csvButton_2
+        function csvButton_2Pushed(app, event)
             % TODO: check whether both values are double and double
             pk_pp_cell = SAT.app_input.determinePPFileType();
             % If the user inputted nothing
@@ -996,9 +1012,9 @@ classdef app_exported < matlab.apps.AppBase
             
         end
 
-        % Button pushed function: ImportEMGTrevorButton
-        function ImportEMGTrevorButtonPushed(app, event)
-            [pk_xt_cell, o_xtdc] = SAT.app_input.getPKEMGCellFromTSEMGCell();
+        % Button pushed function: xtDataButton
+        function xtDataButtonPushed(app, event)
+            [pk_xt_cell, o_xtdc] = SAT.app_input.getAppXtCellFromXtCell();
             % If the user inputted nothing
             if isempty(pk_xt_cell) || ~o_xtdc.sampledData
                 return;
@@ -1027,9 +1043,9 @@ classdef app_exported < matlab.apps.AppBase
             app.fillEMGListBoxes();
         end
 
-        % Button pushed function: ImportPPTrevorButton
-        function ImportPPTrevorButtonPushed(app, event)
-            [pk_pp_cell, o_ppdc] = SAT.app_input.getPKPPCellFromTSPPCell();
+        % Button pushed function: ppDataButton
+        function ppDataButtonPushed(app, event)
+            [pk_pp_cell, o_ppdc] = SAT.app_input.getAppPpCellFromPpCell();
             % If the user inputted nothing
             if isempty(pk_pp_cell) || ~o_ppdc.sampledData
                 return;
@@ -1059,8 +1075,8 @@ classdef app_exported < matlab.apps.AppBase
 
         end
 
-        % Button pushed function: ImportXTDCButton
-        function ImportXTDCButtonPushed(app, event)
+        % Button pushed function: xtDataCellButton
+        function xtDataCellButtonPushed(app, event)
             % Check whether 'xtdc' variable exists in Matlab workspace
             % If 'xtdc' exists, check whether EMG data is imported
             if evalin('base', "exist('xtdc', 'var')") && evalin('base', "xtdc.sampledData")
@@ -1088,8 +1104,8 @@ classdef app_exported < matlab.apps.AppBase
 
         end
 
-        % Button pushed function: ImportPPDCButton
-        function ImportPPDCButtonPushed(app, event)
+        % Button pushed function: ppDataCellButton
+        function ppDataCellButtonPushed(app, event)
             % Check whether 'ppdc' variable exists in Matlab workspace
             % If 'ppdc' exists, check whether PP data is imported
             if evalin('base', "exist('ppdc', 'var')") && evalin('base', "ppdc.sampledData")
@@ -1117,8 +1133,8 @@ classdef app_exported < matlab.apps.AppBase
             
         end
 
-        % Button pushed function: ExportXTDCButton
-        function ExportXTDCButtonPushed(app, event)
+        % Button pushed function: xtDataCellButton_2
+        function xtDataCellButton_2Pushed(app, event)
             % Check if 'app.xtdc' exists
             if ~isempty(app.xtdc)
                 org_name = 'app_xtdc'; % Original Name
@@ -1150,8 +1166,8 @@ classdef app_exported < matlab.apps.AppBase
 
         end
 
-        % Button pushed function: ExportPPDCButton
-        function ExportPPDCButtonPushed(app, event)
+        % Button pushed function: ppDataCellButton_2
+        function ppDataCellButton_2Pushed(app, event)
             % Check if 'app.ppdc' exists
             if ~isempty(app.ppdc)
                 org_name = 'app_ppdc'; % Original Name
@@ -1203,11 +1219,11 @@ classdef app_exported < matlab.apps.AppBase
             
         end
 
-        % Selection changed function: OriginalXTDCDataFieldButtonGroup
-        function OriginalXTDCDataFieldButtonGroupSelectionChanged(app, event)
+        % Selection changed function: DataFieldButtonGroup
+        function DataFieldButtonGroupSelectionChanged(app, event)
             if ~isempty(app.original_xtdc)
                 % Get the text data of the selected button
-                selectedButton = app.OriginalXTDCDataFieldButtonGroup.SelectedObject;
+                selectedButton = app.DataFieldButtonGroup.SelectedObject;
                 selectedText = strip(selectedButton.Text);
     
                 if strcmpi(selectedText, 'raw')
@@ -1221,14 +1237,14 @@ classdef app_exported < matlab.apps.AppBase
 
         % Button pushed function: OriginalXTDCPlotButton
         function OriginalXTDCPlotButtonPushed(app, event)
-            delete(app.EMGPanel.Children);
+            delete(app.TimeSeriesPanel.Children);
             
             % Check whether the user selected both the trials and channels
             if ~isempty(app.emg_original_listbox_trial_index) && ~isempty(app.emg_original_listbox_channel_index)               
                 app.original_xtdc.plot(app.emg_original_listbox_trial_index, app.emg_original_listbox_channel_index);
                 fig = gcf;
                 axis = fig.Children;
-                axis_copy = copyobj(axis, app.EMGPanel);
+                axis_copy = copyobj(axis, app.TimeSeriesPanel);
                 % Copy the Title and Labels
                 axis_copy.Title.String = axis.Title.String;
                 axis_copy.XLabel = axis.XLabel; 
@@ -1246,30 +1262,30 @@ classdef app_exported < matlab.apps.AppBase
 
         end
 
-        % Value changed function: PPTrialsListBox
-        function PPTrialsListBoxValueChanged(app, event)
+        % Value changed function: PointProcessTrialsListBox
+        function PointProcessTrialsListBoxValueChanged(app, event)
             % Get the index no. from user selected items
-            selected_cell = app.PPTrialsListBox.Value;
+            selected_cell = app.PointProcessTrialsListBox.Value;
     
-            selected_index = cellfun(@(x) find(strcmp(x, app.PPTrialsListBox.Items)), selected_cell);
+            selected_index = cellfun(@(x) find(strcmp(x, app.PointProcessTrialsListBox.Items)), selected_cell);
             app.pp_listbox_trial_index = sort(selected_index);
 
         end
 
-        % Value changed function: PPChannelsListBox
-        function PPChannelsListBoxValueChanged(app, event)
+        % Value changed function: PointProcessChannelsListBox
+        function PointProcessChannelsListBoxValueChanged(app, event)
             % Get the index no. from user selected items
-            selected_cell = app.PPChannelsListBox.Value;
+            selected_cell = app.PointProcessChannelsListBox.Value;
 
-            selected_index = cellfun(@(x) find(strcmp(x, app.PPChannelsListBox.Items)), selected_cell);
+            selected_index = cellfun(@(x) find(strcmp(x, app.PointProcessChannelsListBox.Items)), selected_cell);
             app.pp_listbox_channel_index = sort(selected_index);
 
         end
 
-        % Button pushed function: PPButton
+        % Button pushed function: UpdatePlotButton
         function PPPlotButtonPushed(app, event)
-            delete(app.SpikesRatePanel.Children);
-            delete(app.ISIPanel.Children);
+            delete(app.PointProcessRatePanel.Children);
+            delete(app.PointProcessISIHistogramPanel.Children);
             
             % Check whether the user selected both the trials and channels
             if ~isempty(app.pp_listbox_trial_index) && ~isempty(app.pp_listbox_channel_index)
@@ -1278,7 +1294,7 @@ classdef app_exported < matlab.apps.AppBase
                 % Put the Spike Rates' plot inside the panel and delete the plot
                 fig = gcf;
                 axis = fig.Children;
-                axis_copy = copyobj(axis, app.SpikesRatePanel);
+                axis_copy = copyobj(axis, app.PointProcessRatePanel);
                 % Copy the Title and Labels
                 axis_copy.Title.String = axis.Title.String;
                 axis_copy.XLabel = axis.XLabel; 
@@ -1298,7 +1314,7 @@ classdef app_exported < matlab.apps.AppBase
                 % Put the ISI's plot inside the panel and delete the plot
                 fig = gcf;
                 axis = fig.Children;
-                copyobj(axis, app.ISIPanel);
+                copyobj(axis, app.PointProcessISIHistogramPanel);
                 % % Copy the Title and Labels
                 % axis_copy.Title.String = axis.Title.String;
                 % axis_copy.XLabel = axis.XLabel; 
@@ -1455,11 +1471,11 @@ classdef app_exported < matlab.apps.AppBase
 
         end
 
-        % Selection changed function: XTDCDataFieldButtonGroup
-        function XTDCDataFieldButtonGroupSelectionChanged(app, event)
+        % Selection changed function: PlotFieldButtonGroup
+        function PlotFieldButtonGroupSelectionChanged(app, event)
             if ~isempty(app.xtdc)
                 % Get the text data of the selected button
-                selectedButton = app.XTDCDataFieldButtonGroup.SelectedObject;
+                selectedButton = app.PlotFieldButtonGroup.SelectedObject;
                 selectedText = strip(selectedButton.Text);
 
                 if strcmpi(selectedText, 'raw')
@@ -1472,7 +1488,7 @@ classdef app_exported < matlab.apps.AppBase
 
         % Button pushed function: XTDCPlotHistograms
         function EMGPlotButtonPushed(app, event)
-            % delete(app.EMGPanel.Children);
+            % delete(app.TimeSeriesPanel.Children);
             delete(app.StateEMGHistogram.Children);
             delete(app.RawEMGHistogram.Children);
             
@@ -1484,7 +1500,7 @@ classdef app_exported < matlab.apps.AppBase
                 color_map = lines(length(legend_names));
     
                 % STATE HISTOGRAM
-                % Discretize to the user inputted bins
+                % Discretize to the user inputed bins
                 app.xtdc.discretize();
                 % Get the user selected discretized bin tensor
                 state_tensor = app.xtdc.getTensor(app.emg_listbox_channel_index, ...
@@ -1549,13 +1565,13 @@ classdef app_exported < matlab.apps.AppBase
             value = app.PX0DuraMsEditField.Value;
             app.smm.px0DuraMs = value;
 
-            delete(app.PX0PX1Panel.Children);
+            delete(app.PX_0PX_1Panel.Children);
 
             fig = SAT.app_input.plotPx0Px1IntervalGraph('px0DuraMs', value, ...
                 'px1DuraMs', app.PX1DuraMsEditField.Value, 'zDelay', ...
                 app.ZDelayEditField.Value, 'nShift', app.NShiftEditField.Value);
             axis = fig.Children;
-            copyobj(axis, app.PX0PX1Panel);
+            copyobj(axis, app.PX_0PX_1Panel);
             delete(fig);
 
         end
@@ -1565,13 +1581,13 @@ classdef app_exported < matlab.apps.AppBase
             value = app.PX1DuraMsEditField.Value;
             app.smm.px1DuraMs = value;
 
-            delete(app.PX0PX1Panel.Children);
+            delete(app.PX_0PX_1Panel.Children);
 
             fig = SAT.app_input.plotPx0Px1IntervalGraph('px0DuraMs', app.PX0DuraMsEditField.Value, ...
                 'px1DuraMs', value, 'zDelay', ...
                 app.ZDelayEditField.Value, 'nShift', app.NShiftEditField.Value);
             axis = fig.Children;
-            copyobj(axis, app.PX0PX1Panel);
+            copyobj(axis, app.PX_0PX_1Panel);
             delete(fig);
 
         end
@@ -1581,13 +1597,13 @@ classdef app_exported < matlab.apps.AppBase
             value = app.ZDelayEditField.Value;
             app.smm.zDelay = value;
 
-            delete(app.PX0PX1Panel.Children);
+            delete(app.PX_0PX_1Panel.Children);
 
             fig = SAT.app_input.plotPx0Px1IntervalGraph('px0DuraMs', app.PX0DuraMsEditField.Value, ...
                 'px1DuraMs', app.PX1DuraMsEditField.Value, 'zDelay', ...
                 value, 'nShift', app.NShiftEditField.Value);
             axis = fig.Children;
-            copyobj(axis, app.PX0PX1Panel);
+            copyobj(axis, app.PX_0PX_1Panel);
             delete(fig);
 
         end
@@ -1597,13 +1613,13 @@ classdef app_exported < matlab.apps.AppBase
             value = app.NShiftEditField.Value;
             app.smm.nShift = value;
 
-            delete(app.PX0PX1Panel.Children);
+            delete(app.PX_0PX_1Panel.Children);
 
             fig = SAT.app_input.plotPx0Px1IntervalGraph('px0DuraMs', app.PX0DuraMsEditField.Value, ...
                 'px1DuraMs', app.PX1DuraMsEditField.Value, 'zDelay', ...
                 app.ZDelayEditField.Value, 'nShift', value);
             axis = fig.Children;
-            copyobj(axis, app.PX0PX1Panel);
+            copyobj(axis, app.PX_0PX_1Panel);
             delete(fig);
 
         end
@@ -1627,12 +1643,12 @@ classdef app_exported < matlab.apps.AppBase
             value = app.NoofEventsDropDown.Value;
             pp_sensor_index = find(strcmp(value, app.NoofEventsDropDown.Items));
 
-            app.NoofEventsEditField.Value = app.smm.nEventsUsed(pp_sensor_index, 1);
+            app.ofEventsEditField.Value = app.smm.nEventsUsed(pp_sensor_index, 1);
 
         end
 
-        % Button pushed function: CreateSMMSelectedButton
-        function CreateSMMSelectedButtonPushed(app, event)
+        % Button pushed function: PerformSDOAnalysisButton_2
+        function PerformSDOAnalysisButton_2Pushed(app, event)
             emg_selected_cell = app.EMGChannelsBeforeSMMListBox.Value;
             pp_selected_cell = app.PPChannelsBeforeSMMListBox.Value;
             emg_selected_index = cellfun(@(x) find(strcmp(x, app.EMGChannelsBeforeSMMListBox.Items)), emg_selected_cell);
@@ -1644,8 +1660,8 @@ classdef app_exported < matlab.apps.AppBase
 
         end
 
-        % Button pushed function: CreateSMMAllButton
-        function CreateSMMAllButtonPushed(app, event)
+        % Button pushed function: PerformSDOAnalysisButton
+        function PerformSDOAnalysisButtonPushed(app, event)
             app.createSMM();
 
         end
@@ -1665,60 +1681,63 @@ classdef app_exported < matlab.apps.AppBase
 
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [93 93 1094 2405];
+            app.UIFigure.Position = [0 0 1094 2405];
             app.UIFigure.Name = 'MATLAB App';
             app.UIFigure.Scrollable = 'on';
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.UIFigure);
             app.GridLayout.ColumnWidth = {50, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 50};
-            app.GridLayout.RowHeight = {40, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 40, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 40, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 300, 400, 40};
+            app.GridLayout.RowHeight = {40, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 40, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 40, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, '1x', 300, 400, 40};
             app.GridLayout.ColumnSpacing = 1.66666666666667;
             app.GridLayout.RowSpacing = 7.36956455396569;
             app.GridLayout.Padding = [1.66666666666667 7.36956455396569 1.66666666666667 7.36956455396569];
             app.GridLayout.Scrollable = 'on';
 
-            % Create StateEMGHistogram
-            app.StateEMGHistogram = uiaxes(app.GridLayout);
-            title(app.StateEMGHistogram, 'State Histogram')
-            xlabel(app.StateEMGHistogram, 'No. of Bins')
-            ylabel(app.StateEMGHistogram, 'Frequency')
-            zlabel(app.StateEMGHistogram, 'Z')
-            app.StateEMGHistogram.Layout.Row = [32 38];
-            app.StateEMGHistogram.Layout.Column = [27 38];
-
             % Create RawEMGHistogram
             app.RawEMGHistogram = uiaxes(app.GridLayout);
-            title(app.RawEMGHistogram, 'EMG Histogram')
-            xlabel(app.RawEMGHistogram, 'Amplitude')
+            title(app.RawEMGHistogram, 'Amplitude Histogram - p(\alpha)')
+            xlabel(app.RawEMGHistogram, 'Amplitude (\alpha)')
             ylabel(app.RawEMGHistogram, 'Frequency')
             zlabel(app.RawEMGHistogram, 'Z')
             app.RawEMGHistogram.Layout.Row = [25 31];
             app.RawEMGHistogram.Layout.Column = [27 38];
 
-            % Create VariableViewingLabel
-            app.VariableViewingLabel = uilabel(app.GridLayout);
-            app.VariableViewingLabel.HorizontalAlignment = 'center';
-            app.VariableViewingLabel.FontSize = 18;
-            app.VariableViewingLabel.FontWeight = 'bold';
-            app.VariableViewingLabel.Layout.Row = 1;
-            app.VariableViewingLabel.Layout.Column = [2 38];
-            app.VariableViewingLabel.Text = 'Variable Viewing';
+            % Create StateEMGHistogram
+            app.StateEMGHistogram = uiaxes(app.GridLayout);
+            title(app.StateEMGHistogram, 'State Histogram - p(X)')
+            xlabel(app.StateEMGHistogram, 'State (X)')
+            ylabel(app.StateEMGHistogram, 'Frequency')
+            zlabel(app.StateEMGHistogram, 'Z')
+            app.StateEMGHistogram.Layout.Row = [32 38];
+            app.StateEMGHistogram.Layout.Column = [27 38];
 
-            % Create EMGDataLabel
-            app.EMGDataLabel = uilabel(app.GridLayout);
-            app.EMGDataLabel.HorizontalAlignment = 'center';
-            app.EMGDataLabel.FontSize = 18;
-            app.EMGDataLabel.Layout.Row = 2;
-            app.EMGDataLabel.Layout.Column = [3 25];
-            app.EMGDataLabel.Text = 'EMG Data';
+            % Create SATSignalParameterExplorerLabel
+            app.SATSignalParameterExplorerLabel = uilabel(app.GridLayout);
+            app.SATSignalParameterExplorerLabel.HorizontalAlignment = 'center';
+            app.SATSignalParameterExplorerLabel.FontName = 'Cambria';
+            app.SATSignalParameterExplorerLabel.FontSize = 24;
+            app.SATSignalParameterExplorerLabel.FontWeight = 'bold';
+            app.SATSignalParameterExplorerLabel.FontAngle = 'italic';
+            app.SATSignalParameterExplorerLabel.Layout.Row = 1;
+            app.SATSignalParameterExplorerLabel.Layout.Column = [9 29];
+            app.SATSignalParameterExplorerLabel.Text = 'SAT - Signal Parameter Explorer';
 
-            % Create ImportEMGTrevorButton
-            app.ImportEMGTrevorButton = uibutton(app.GridLayout, 'push');
-            app.ImportEMGTrevorButton.ButtonPushedFcn = createCallbackFcn(app, @ImportEMGTrevorButtonPushed, true);
-            app.ImportEMGTrevorButton.Layout.Row = 3;
-            app.ImportEMGTrevorButton.Layout.Column = [2 6];
-            app.ImportEMGTrevorButton.Text = 'Import EMG Trevor';
+            % Create TimeSeriesDataLabel
+            app.TimeSeriesDataLabel = uilabel(app.GridLayout);
+            app.TimeSeriesDataLabel.HorizontalAlignment = 'center';
+            app.TimeSeriesDataLabel.FontName = 'Cambria';
+            app.TimeSeriesDataLabel.FontSize = 18;
+            app.TimeSeriesDataLabel.Layout.Row = 2;
+            app.TimeSeriesDataLabel.Layout.Column = [11 18];
+            app.TimeSeriesDataLabel.Text = 'Time Series Data';
+
+            % Create xtDataButton
+            app.xtDataButton = uibutton(app.GridLayout, 'push');
+            app.xtDataButton.ButtonPushedFcn = createCallbackFcn(app, @xtDataButtonPushed, true);
+            app.xtDataButton.Layout.Row = 3;
+            app.xtDataButton.Layout.Column = [2 6];
+            app.xtDataButton.Text = 'xtData';
 
             % Create CustomImportQuestion
             app.CustomImportQuestion = uilabel(app.GridLayout);
@@ -1729,27 +1748,28 @@ classdef app_exported < matlab.apps.AppBase
             app.CustomImportQuestion.Layout.Column = [14 24];
             app.CustomImportQuestion.Text = 'Is Times data on the first column of the CSV file?';
 
-            % Create EMGPanel
-            app.EMGPanel = uipanel(app.GridLayout);
-            app.EMGPanel.Title = 'EMG';
-            app.EMGPanel.Layout.Row = [3 10];
-            app.EMGPanel.Layout.Column = [27 38];
+            % Create TimeSeriesPanel
+            app.TimeSeriesPanel = uipanel(app.GridLayout);
+            app.TimeSeriesPanel.Title = 'Time Series';
+            app.TimeSeriesPanel.Layout.Row = [3 10];
+            app.TimeSeriesPanel.Layout.Column = [27 38];
 
-            % Create ImportEMGCustButton
-            app.ImportEMGCustButton = uibutton(app.GridLayout, 'push');
-            app.ImportEMGCustButton.ButtonPushedFcn = createCallbackFcn(app, @ImportEMGCustButtonPushed, true);
-            app.ImportEMGCustButton.WordWrap = 'on';
-            app.ImportEMGCustButton.Layout.Row = 4;
-            app.ImportEMGCustButton.Layout.Column = [2 6];
-            app.ImportEMGCustButton.Text = 'Import EMG Cust.';
+            % Create csvButton
+            app.csvButton = uibutton(app.GridLayout, 'push');
+            app.csvButton.ButtonPushedFcn = createCallbackFcn(app, @csvButtonPushed, true);
+            app.csvButton.WordWrap = 'on';
+            app.csvButton.Layout.Row = 4;
+            app.csvButton.Layout.Column = [2 6];
+            app.csvButton.Text = '.csv';
 
-            % Create ExportXTDCButton
-            app.ExportXTDCButton = uibutton(app.GridLayout, 'push');
-            app.ExportXTDCButton.ButtonPushedFcn = createCallbackFcn(app, @ExportXTDCButtonPushed, true);
-            app.ExportXTDCButton.Enable = 'off';
-            app.ExportXTDCButton.Layout.Row = 4;
-            app.ExportXTDCButton.Layout.Column = [8 12];
-            app.ExportXTDCButton.Text = 'Export XTDC';
+            % Create xtDataCellButton_2
+            app.xtDataCellButton_2 = uibutton(app.GridLayout, 'push');
+            app.xtDataCellButton_2.ButtonPushedFcn = createCallbackFcn(app, @xtDataCellButton_2Pushed, true);
+            app.xtDataCellButton_2.FontAngle = 'italic';
+            app.xtDataCellButton_2.Enable = 'off';
+            app.xtDataCellButton_2.Layout.Row = 4;
+            app.xtDataCellButton_2.Layout.Column = [8 12];
+            app.xtDataCellButton_2.Text = 'xtDataCell';
 
             % Create YesCheckBoxFrequencyColumn
             app.YesCheckBoxFrequencyColumn = uicheckbox(app.GridLayout);
@@ -1769,12 +1789,13 @@ classdef app_exported < matlab.apps.AppBase
             app.NoCheckBoxFrequencyColumn.Layout.Row = 4;
             app.NoCheckBoxFrequencyColumn.Layout.Column = [22 23];
 
-            % Create ImportXTDCButton
-            app.ImportXTDCButton = uibutton(app.GridLayout, 'push');
-            app.ImportXTDCButton.ButtonPushedFcn = createCallbackFcn(app, @ImportXTDCButtonPushed, true);
-            app.ImportXTDCButton.Layout.Row = 5;
-            app.ImportXTDCButton.Layout.Column = [2 6];
-            app.ImportXTDCButton.Text = 'Import XTDC';
+            % Create xtDataCellButton
+            app.xtDataCellButton = uibutton(app.GridLayout, 'push');
+            app.xtDataCellButton.ButtonPushedFcn = createCallbackFcn(app, @xtDataCellButtonPushed, true);
+            app.xtDataCellButton.FontAngle = 'italic';
+            app.xtDataCellButton.Layout.Row = 5;
+            app.xtDataCellButton.Layout.Column = [2 6];
+            app.xtDataCellButton.Text = 'xtDataCell';
 
             % Create FrequencyEditFieldLabel
             app.FrequencyEditFieldLabel = uilabel(app.GridLayout);
@@ -1814,7 +1835,7 @@ classdef app_exported < matlab.apps.AppBase
             app.OriginalEMGTrialsLabel.Enable = 'off';
             app.OriginalEMGTrialsLabel.Layout.Row = [8 11];
             app.OriginalEMGTrialsLabel.Layout.Column = [2 4];
-            app.OriginalEMGTrialsLabel.Text = {'Original EMG '; 'Trials'};
+            app.OriginalEMGTrialsLabel.Text = {'Original Time '; 'SeriesTrials'};
 
             % Create OriginalXTDCTrialsListBox
             app.OriginalXTDCTrialsListBox = uilistbox(app.GridLayout);
@@ -1832,7 +1853,7 @@ classdef app_exported < matlab.apps.AppBase
             app.OriginalEMGChannelsLabel.Enable = 'off';
             app.OriginalEMGChannelsLabel.Layout.Row = [8 11];
             app.OriginalEMGChannelsLabel.Layout.Column = [11 13];
-            app.OriginalEMGChannelsLabel.Text = {'Original EMG '; 'Channels'};
+            app.OriginalEMGChannelsLabel.Text = {'Original Time'; ' Series Channels'};
 
             % Create OriginalXTDCChannelsListBox
             app.OriginalXTDCChannelsListBox = uilistbox(app.GridLayout);
@@ -1844,85 +1865,88 @@ classdef app_exported < matlab.apps.AppBase
             app.OriginalXTDCChannelsListBox.Layout.Column = [14 18];
             app.OriginalXTDCChannelsListBox.Value = {};
 
-            % Create OriginalXTDCDataFieldButtonGroup
-            app.OriginalXTDCDataFieldButtonGroup = uibuttongroup(app.GridLayout);
-            app.OriginalXTDCDataFieldButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @OriginalXTDCDataFieldButtonGroupSelectionChanged, true);
-            app.OriginalXTDCDataFieldButtonGroup.Enable = 'off';
-            app.OriginalXTDCDataFieldButtonGroup.TitlePosition = 'centertop';
-            app.OriginalXTDCDataFieldButtonGroup.Title = 'Original XTDC Data Field';
-            app.OriginalXTDCDataFieldButtonGroup.Layout.Row = [8 11];
-            app.OriginalXTDCDataFieldButtonGroup.Layout.Column = [20 23];
+            % Create DataFieldButtonGroup
+            app.DataFieldButtonGroup = uibuttongroup(app.GridLayout);
+            app.DataFieldButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @DataFieldButtonGroupSelectionChanged, true);
+            app.DataFieldButtonGroup.Enable = 'off';
+            app.DataFieldButtonGroup.TitlePosition = 'centertop';
+            app.DataFieldButtonGroup.Title = 'Data Field';
+            app.DataFieldButtonGroup.Layout.Row = [8 11];
+            app.DataFieldButtonGroup.Layout.Column = [20 23];
 
             % Create OriginalXTDCRawButton
-            app.OriginalXTDCRawButton = uitogglebutton(app.OriginalXTDCDataFieldButtonGroup);
+            app.OriginalXTDCRawButton = uitogglebutton(app.DataFieldButtonGroup);
             app.OriginalXTDCRawButton.Enable = 'off';
             app.OriginalXTDCRawButton.Text = 'Raw';
             app.OriginalXTDCRawButton.Position = [15 56 75 22];
 
             % Create OriginalXTDCFilteredButton
-            app.OriginalXTDCFilteredButton = uitogglebutton(app.OriginalXTDCDataFieldButtonGroup);
+            app.OriginalXTDCFilteredButton = uitogglebutton(app.DataFieldButtonGroup);
             app.OriginalXTDCFilteredButton.Enable = 'off';
             app.OriginalXTDCFilteredButton.Text = 'Filtered';
             app.OriginalXTDCFilteredButton.Position = [15 21 75 22];
             app.OriginalXTDCFilteredButton.Value = true;
 
-            % Create SpikesRatePanel
-            app.SpikesRatePanel = uipanel(app.GridLayout);
-            app.SpikesRatePanel.Title = 'Spikes Rate';
-            app.SpikesRatePanel.Layout.Row = [11 16];
-            app.SpikesRatePanel.Layout.Column = [27 38];
+            % Create PointProcessRatePanel
+            app.PointProcessRatePanel = uipanel(app.GridLayout);
+            app.PointProcessRatePanel.Title = 'Point Process - Rate';
+            app.PointProcessRatePanel.Layout.Row = [11 16];
+            app.PointProcessRatePanel.Layout.Column = [27 38];
 
             % Create OriginalXTDCPlotButton
             app.OriginalXTDCPlotButton = uibutton(app.GridLayout, 'push');
             app.OriginalXTDCPlotButton.ButtonPushedFcn = createCallbackFcn(app, @OriginalXTDCPlotButtonPushed, true);
             app.OriginalXTDCPlotButton.Enable = 'off';
             app.OriginalXTDCPlotButton.Layout.Row = 12;
-            app.OriginalXTDCPlotButton.Layout.Column = [12 16];
-            app.OriginalXTDCPlotButton.Text = 'Original EMG Plot';
+            app.OriginalXTDCPlotButton.Layout.Column = [20 24];
+            app.OriginalXTDCPlotButton.Text = 'Update Plot';
 
-            % Create PPDataLabel
-            app.PPDataLabel = uilabel(app.GridLayout);
-            app.PPDataLabel.HorizontalAlignment = 'center';
-            app.PPDataLabel.FontSize = 18;
-            app.PPDataLabel.Layout.Row = 13;
-            app.PPDataLabel.Layout.Column = [3 25];
-            app.PPDataLabel.Text = 'PP Data';
+            % Create PointProcessDataLabel
+            app.PointProcessDataLabel = uilabel(app.GridLayout);
+            app.PointProcessDataLabel.HorizontalAlignment = 'center';
+            app.PointProcessDataLabel.FontName = 'Cambria';
+            app.PointProcessDataLabel.FontSize = 18;
+            app.PointProcessDataLabel.Layout.Row = 13;
+            app.PointProcessDataLabel.Layout.Column = [12 18];
+            app.PointProcessDataLabel.Text = 'Point Process Data';
 
-            % Create ImportPPTrevorButton
-            app.ImportPPTrevorButton = uibutton(app.GridLayout, 'push');
-            app.ImportPPTrevorButton.ButtonPushedFcn = createCallbackFcn(app, @ImportPPTrevorButtonPushed, true);
-            app.ImportPPTrevorButton.Layout.Row = 14;
-            app.ImportPPTrevorButton.Layout.Column = [2 6];
-            app.ImportPPTrevorButton.Text = 'Import PP Trevor';
+            % Create ppDataButton
+            app.ppDataButton = uibutton(app.GridLayout, 'push');
+            app.ppDataButton.ButtonPushedFcn = createCallbackFcn(app, @ppDataButtonPushed, true);
+            app.ppDataButton.Layout.Row = 14;
+            app.ppDataButton.Layout.Column = [2 6];
+            app.ppDataButton.Text = 'ppData';
 
-            % Create ImportPPCustButton
-            app.ImportPPCustButton = uibutton(app.GridLayout, 'push');
-            app.ImportPPCustButton.ButtonPushedFcn = createCallbackFcn(app, @ImportPPCustButtonPushed, true);
-            app.ImportPPCustButton.WordWrap = 'on';
-            app.ImportPPCustButton.Layout.Row = 15;
-            app.ImportPPCustButton.Layout.Column = [2 6];
-            app.ImportPPCustButton.Text = 'Import PP Cust.';
+            % Create csvButton_2
+            app.csvButton_2 = uibutton(app.GridLayout, 'push');
+            app.csvButton_2.ButtonPushedFcn = createCallbackFcn(app, @csvButton_2Pushed, true);
+            app.csvButton_2.WordWrap = 'on';
+            app.csvButton_2.Layout.Row = 15;
+            app.csvButton_2.Layout.Column = [2 6];
+            app.csvButton_2.Text = '.csv';
 
-            % Create ExportPPDCButton
-            app.ExportPPDCButton = uibutton(app.GridLayout, 'push');
-            app.ExportPPDCButton.ButtonPushedFcn = createCallbackFcn(app, @ExportPPDCButtonPushed, true);
-            app.ExportPPDCButton.Enable = 'off';
-            app.ExportPPDCButton.Layout.Row = 15;
-            app.ExportPPDCButton.Layout.Column = [8 12];
-            app.ExportPPDCButton.Text = 'Export PPDC';
+            % Create ppDataCellButton_2
+            app.ppDataCellButton_2 = uibutton(app.GridLayout, 'push');
+            app.ppDataCellButton_2.ButtonPushedFcn = createCallbackFcn(app, @ppDataCellButton_2Pushed, true);
+            app.ppDataCellButton_2.FontAngle = 'italic';
+            app.ppDataCellButton_2.Enable = 'off';
+            app.ppDataCellButton_2.Layout.Row = 15;
+            app.ppDataCellButton_2.Layout.Column = [8 12];
+            app.ppDataCellButton_2.Text = 'ppDataCell';
 
-            % Create ImportPPDCButton
-            app.ImportPPDCButton = uibutton(app.GridLayout, 'push');
-            app.ImportPPDCButton.ButtonPushedFcn = createCallbackFcn(app, @ImportPPDCButtonPushed, true);
-            app.ImportPPDCButton.Layout.Row = 16;
-            app.ImportPPDCButton.Layout.Column = [2 6];
-            app.ImportPPDCButton.Text = 'Import PPDC';
+            % Create ppDataCellButton
+            app.ppDataCellButton = uibutton(app.GridLayout, 'push');
+            app.ppDataCellButton.ButtonPushedFcn = createCallbackFcn(app, @ppDataCellButtonPushed, true);
+            app.ppDataCellButton.FontAngle = 'italic';
+            app.ppDataCellButton.Layout.Row = 16;
+            app.ppDataCellButton.Layout.Column = [2 6];
+            app.ppDataCellButton.Text = 'ppDataCell';
 
-            % Create ISIPanel
-            app.ISIPanel = uipanel(app.GridLayout);
-            app.ISIPanel.Title = 'ISI';
-            app.ISIPanel.Layout.Row = [17 22];
-            app.ISIPanel.Layout.Column = [27 38];
+            % Create PointProcessISIHistogramPanel
+            app.PointProcessISIHistogramPanel = uipanel(app.GridLayout);
+            app.PointProcessISIHistogramPanel.Title = 'Point Process - ISI Histogram';
+            app.PointProcessISIHistogramPanel.Layout.Row = [17 22];
+            app.PointProcessISIHistogramPanel.Layout.Column = [27 38];
 
             % Create PPTrialsLabel
             app.PPTrialsLabel = uilabel(app.GridLayout);
@@ -1930,17 +1954,17 @@ classdef app_exported < matlab.apps.AppBase
             app.PPTrialsLabel.Enable = 'off';
             app.PPTrialsLabel.Layout.Row = [18 21];
             app.PPTrialsLabel.Layout.Column = [2 4];
-            app.PPTrialsLabel.Text = {'PP '; 'Trials'};
+            app.PPTrialsLabel.Text = {'Point Process'; 'Trials'};
 
-            % Create PPTrialsListBox
-            app.PPTrialsListBox = uilistbox(app.GridLayout);
-            app.PPTrialsListBox.Items = {};
-            app.PPTrialsListBox.Multiselect = 'on';
-            app.PPTrialsListBox.ValueChangedFcn = createCallbackFcn(app, @PPTrialsListBoxValueChanged, true);
-            app.PPTrialsListBox.Enable = 'off';
-            app.PPTrialsListBox.Layout.Row = [18 21];
-            app.PPTrialsListBox.Layout.Column = [5 9];
-            app.PPTrialsListBox.Value = {};
+            % Create PointProcessTrialsListBox
+            app.PointProcessTrialsListBox = uilistbox(app.GridLayout);
+            app.PointProcessTrialsListBox.Items = {};
+            app.PointProcessTrialsListBox.Multiselect = 'on';
+            app.PointProcessTrialsListBox.ValueChangedFcn = createCallbackFcn(app, @PointProcessTrialsListBoxValueChanged, true);
+            app.PointProcessTrialsListBox.Enable = 'off';
+            app.PointProcessTrialsListBox.Layout.Row = [18 21];
+            app.PointProcessTrialsListBox.Layout.Column = [5 9];
+            app.PointProcessTrialsListBox.Value = {};
 
             % Create PPChannelsLabel_2
             app.PPChannelsLabel_2 = uilabel(app.GridLayout);
@@ -1948,25 +1972,25 @@ classdef app_exported < matlab.apps.AppBase
             app.PPChannelsLabel_2.Enable = 'off';
             app.PPChannelsLabel_2.Layout.Row = [18 21];
             app.PPChannelsLabel_2.Layout.Column = [11 13];
-            app.PPChannelsLabel_2.Text = {'PP '; 'Channels'};
+            app.PPChannelsLabel_2.Text = {'Point Process'; 'Channels'};
 
-            % Create PPChannelsListBox
-            app.PPChannelsListBox = uilistbox(app.GridLayout);
-            app.PPChannelsListBox.Items = {};
-            app.PPChannelsListBox.Multiselect = 'on';
-            app.PPChannelsListBox.ValueChangedFcn = createCallbackFcn(app, @PPChannelsListBoxValueChanged, true);
-            app.PPChannelsListBox.Enable = 'off';
-            app.PPChannelsListBox.Layout.Row = [18 21];
-            app.PPChannelsListBox.Layout.Column = [14 18];
-            app.PPChannelsListBox.Value = {};
+            % Create PointProcessChannelsListBox
+            app.PointProcessChannelsListBox = uilistbox(app.GridLayout);
+            app.PointProcessChannelsListBox.Items = {};
+            app.PointProcessChannelsListBox.Multiselect = 'on';
+            app.PointProcessChannelsListBox.ValueChangedFcn = createCallbackFcn(app, @PointProcessChannelsListBoxValueChanged, true);
+            app.PointProcessChannelsListBox.Enable = 'off';
+            app.PointProcessChannelsListBox.Layout.Row = [18 21];
+            app.PointProcessChannelsListBox.Layout.Column = [14 18];
+            app.PointProcessChannelsListBox.Value = {};
 
-            % Create PPButton
-            app.PPButton = uibutton(app.GridLayout, 'push');
-            app.PPButton.ButtonPushedFcn = createCallbackFcn(app, @PPPlotButtonPushed, true);
-            app.PPButton.Enable = 'off';
-            app.PPButton.Layout.Row = 19;
-            app.PPButton.Layout.Column = [21 25];
-            app.PPButton.Text = 'PP Button';
+            % Create UpdatePlotButton
+            app.UpdatePlotButton = uibutton(app.GridLayout, 'push');
+            app.UpdatePlotButton.ButtonPushedFcn = createCallbackFcn(app, @PPPlotButtonPushed, true);
+            app.UpdatePlotButton.Enable = 'off';
+            app.UpdatePlotButton.Layout.Row = 19;
+            app.UpdatePlotButton.Layout.Column = [21 25];
+            app.UpdatePlotButton.Text = 'Update Plot';
 
             % Create HTMLLineBreak
             app.HTMLLineBreak = uihtml(app.GridLayout);
@@ -1974,22 +1998,24 @@ classdef app_exported < matlab.apps.AppBase
             app.HTMLLineBreak.Layout.Row = 23;
             app.HTMLLineBreak.Layout.Column = [1 39];
 
-            % Create XTDCHistogramsLabel
-            app.XTDCHistogramsLabel = uilabel(app.GridLayout);
-            app.XTDCHistogramsLabel.HorizontalAlignment = 'center';
-            app.XTDCHistogramsLabel.FontSize = 18;
-            app.XTDCHistogramsLabel.FontWeight = 'bold';
-            app.XTDCHistogramsLabel.Layout.Row = 24;
-            app.XTDCHistogramsLabel.Layout.Column = [2 38];
-            app.XTDCHistogramsLabel.Text = 'XTDC Histograms';
+            % Create TimeSeriesStateDefinitionHistogramsLabel
+            app.TimeSeriesStateDefinitionHistogramsLabel = uilabel(app.GridLayout);
+            app.TimeSeriesStateDefinitionHistogramsLabel.HorizontalAlignment = 'center';
+            app.TimeSeriesStateDefinitionHistogramsLabel.FontSize = 18;
+            app.TimeSeriesStateDefinitionHistogramsLabel.FontWeight = 'bold';
+            app.TimeSeriesStateDefinitionHistogramsLabel.Layout.Row = 24;
+            app.TimeSeriesStateDefinitionHistogramsLabel.Layout.Column = [2 38];
+            app.TimeSeriesStateDefinitionHistogramsLabel.Text = 'Time Series State-Definition Histograms';
 
-            % Create XTDCLabel
-            app.XTDCLabel = uilabel(app.GridLayout);
-            app.XTDCLabel.HorizontalAlignment = 'center';
-            app.XTDCLabel.Enable = 'off';
-            app.XTDCLabel.Layout.Row = 26;
-            app.XTDCLabel.Layout.Column = [5 7];
-            app.XTDCLabel.Text = 'XTDC';
+            % Create xtDataCellParametersLabel
+            app.xtDataCellParametersLabel = uilabel(app.GridLayout);
+            app.xtDataCellParametersLabel.HorizontalAlignment = 'center';
+            app.xtDataCellParametersLabel.FontWeight = 'bold';
+            app.xtDataCellParametersLabel.FontAngle = 'italic';
+            app.xtDataCellParametersLabel.Enable = 'off';
+            app.xtDataCellParametersLabel.Layout.Row = 26;
+            app.xtDataCellParametersLabel.Layout.Column = [4 9];
+            app.xtDataCellParametersLabel.Text = 'xtDataCell Parameters';
 
             % Create DefaultLabelXTDC
             app.DefaultLabelXTDC = uilabel(app.GridLayout);
@@ -2005,7 +2031,7 @@ classdef app_exported < matlab.apps.AppBase
             app.EMGTrialsLabel.Enable = 'off';
             app.EMGTrialsLabel.Layout.Row = [26 29];
             app.EMGTrialsLabel.Layout.Column = [15 17];
-            app.EMGTrialsLabel.Text = {'EMG '; 'Trials'};
+            app.EMGTrialsLabel.Text = 'Trial ID';
 
             % Create XTDCTrialsListBox
             app.XTDCTrialsListBox = uilistbox(app.GridLayout);
@@ -2101,7 +2127,7 @@ classdef app_exported < matlab.apps.AppBase
             app.EMGChannelsLabel_2.Enable = 'off';
             app.EMGChannelsLabel_2.Layout.Row = [30 33];
             app.EMGChannelsLabel_2.Layout.Column = [15 17];
-            app.EMGChannelsLabel_2.Text = {'EMG '; 'Channels'};
+            app.EMGChannelsLabel_2.Text = 'Channel ID';
 
             % Create XTDCChannelsListBox
             app.XTDCChannelsListBox = uilistbox(app.GridLayout);
@@ -2184,23 +2210,24 @@ classdef app_exported < matlab.apps.AppBase
             app.DefaultLabelNoOfBins.Layout.Column = [11 13];
             app.DefaultLabelNoOfBins.Text = '-';
 
-            % Create XTDCDataFieldButtonGroup
-            app.XTDCDataFieldButtonGroup = uibuttongroup(app.GridLayout);
-            app.XTDCDataFieldButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @XTDCDataFieldButtonGroupSelectionChanged, true);
-            app.XTDCDataFieldButtonGroup.Enable = 'off';
-            app.XTDCDataFieldButtonGroup.Title = 'XTDC Data Field';
-            app.XTDCDataFieldButtonGroup.Layout.Row = [34 37];
-            app.XTDCDataFieldButtonGroup.Layout.Column = [18 21];
+            % Create PlotFieldButtonGroup
+            app.PlotFieldButtonGroup = uibuttongroup(app.GridLayout);
+            app.PlotFieldButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @PlotFieldButtonGroupSelectionChanged, true);
+            app.PlotFieldButtonGroup.Enable = 'off';
+            app.PlotFieldButtonGroup.TitlePosition = 'centertop';
+            app.PlotFieldButtonGroup.Title = 'Plot Field';
+            app.PlotFieldButtonGroup.Layout.Row = [34 37];
+            app.PlotFieldButtonGroup.Layout.Column = [18 21];
 
             % Create XTDCRawButton
-            app.XTDCRawButton = uitogglebutton(app.XTDCDataFieldButtonGroup);
+            app.XTDCRawButton = uitogglebutton(app.PlotFieldButtonGroup);
             app.XTDCRawButton.Enable = 'off';
             app.XTDCRawButton.Text = 'Raw';
             app.XTDCRawButton.Position = [1 58 100 22];
             app.XTDCRawButton.Value = true;
 
             % Create XTDCFilteredButton
-            app.XTDCFilteredButton = uitogglebutton(app.XTDCDataFieldButtonGroup);
+            app.XTDCFilteredButton = uitogglebutton(app.PlotFieldButtonGroup);
             app.XTDCFilteredButton.Enable = 'off';
             app.XTDCFilteredButton.Text = 'Filtered';
             app.XTDCFilteredButton.Position = [5 24 100 22];
@@ -2210,8 +2237,8 @@ classdef app_exported < matlab.apps.AppBase
             app.XTDCPlotHistograms.ButtonPushedFcn = createCallbackFcn(app, @EMGPlotButtonPushed, true);
             app.XTDCPlotHistograms.Enable = 'off';
             app.XTDCPlotHistograms.Layout.Row = 38;
-            app.XTDCPlotHistograms.Layout.Column = [17 22];
-            app.XTDCPlotHistograms.Text = 'EMG Button';
+            app.XTDCPlotHistograms.Layout.Column = [21 26];
+            app.XTDCPlotHistograms.Text = 'Update Plot';
 
             % Create HTMLLineBreak2
             app.HTMLLineBreak2 = uihtml(app.GridLayout);
@@ -2222,18 +2249,19 @@ classdef app_exported < matlab.apps.AppBase
             % Create SDOMultiMatLabel
             app.SDOMultiMatLabel = uilabel(app.GridLayout);
             app.SDOMultiMatLabel.HorizontalAlignment = 'center';
+            app.SDOMultiMatLabel.FontName = 'Cambria';
             app.SDOMultiMatLabel.FontSize = 18;
             app.SDOMultiMatLabel.FontWeight = 'bold';
             app.SDOMultiMatLabel.Layout.Row = 41;
             app.SDOMultiMatLabel.Layout.Column = [11 31];
-            app.SDOMultiMatLabel.Text = 'SDOMultiMat';
+            app.SDOMultiMatLabel.Text = 'SDOMultiMat ';
 
-            % Create PX0PX1Panel
-            app.PX0PX1Panel = uipanel(app.GridLayout);
-            app.PX0PX1Panel.Enable = 'off';
-            app.PX0PX1Panel.Title = 'PX0PX1';
-            app.PX0PX1Panel.Layout.Row = [42 45];
-            app.PX0PX1Panel.Layout.Column = [2 13];
+            % Create PX_0PX_1Panel
+            app.PX_0PX_1Panel = uipanel(app.GridLayout);
+            app.PX_0PX_1Panel.Enable = 'off';
+            app.PX_0PX_1Panel.Title = 'P(X_0)P(X_1)';
+            app.PX_0PX_1Panel.Layout.Row = [42 45];
+            app.PX_0PX_1Panel.Layout.Column = [2 13];
 
             % Create EMGChannelsLabel
             app.EMGChannelsLabel = uilabel(app.GridLayout);
@@ -2241,7 +2269,7 @@ classdef app_exported < matlab.apps.AppBase
             app.EMGChannelsLabel.Enable = 'off';
             app.EMGChannelsLabel.Layout.Row = [45 47];
             app.EMGChannelsLabel.Layout.Column = [17 19];
-            app.EMGChannelsLabel.Text = {'EMG '; 'Channels'};
+            app.EMGChannelsLabel.Text = {'X(t) '; 'Channels'};
 
             % Create EMGChannelsBeforeSMMListBox
             app.EMGChannelsBeforeSMMListBox = uilistbox(app.GridLayout);
@@ -2252,13 +2280,15 @@ classdef app_exported < matlab.apps.AppBase
             app.EMGChannelsBeforeSMMListBox.Layout.Column = [20 24];
             app.EMGChannelsBeforeSMMListBox.Value = {};
 
-            % Create SMMLabel
-            app.SMMLabel = uilabel(app.GridLayout);
-            app.SMMLabel.HorizontalAlignment = 'center';
-            app.SMMLabel.Enable = 'off';
-            app.SMMLabel.Layout.Row = 46;
-            app.SMMLabel.Layout.Column = [2 5];
-            app.SMMLabel.Text = 'SMM';
+            % Create sdoMultiMatParametersLabel
+            app.sdoMultiMatParametersLabel = uilabel(app.GridLayout);
+            app.sdoMultiMatParametersLabel.HorizontalAlignment = 'center';
+            app.sdoMultiMatParametersLabel.FontWeight = 'bold';
+            app.sdoMultiMatParametersLabel.FontAngle = 'italic';
+            app.sdoMultiMatParametersLabel.Enable = 'off';
+            app.sdoMultiMatParametersLabel.Layout.Row = 46;
+            app.sdoMultiMatParametersLabel.Layout.Column = [2 9];
+            app.sdoMultiMatParametersLabel.Text = 'sdoMultiMat Parameters';
 
             % Create DefaultLabelSMM
             app.DefaultLabelSMM = uilabel(app.GridLayout);
@@ -2292,21 +2322,21 @@ classdef app_exported < matlab.apps.AppBase
             app.DefaultLabelPX0.Layout.Column = [11 13];
             app.DefaultLabelPX0.Text = '-';
 
-            % Create XTChannelsDropDownLabel
-            app.XTChannelsDropDownLabel = uilabel(app.GridLayout);
-            app.XTChannelsDropDownLabel.HorizontalAlignment = 'center';
-            app.XTChannelsDropDownLabel.Enable = 'off';
-            app.XTChannelsDropDownLabel.Layout.Row = 47;
-            app.XTChannelsDropDownLabel.Layout.Column = [30 33];
-            app.XTChannelsDropDownLabel.Text = 'XT Channels';
+            % Create XtChannelsDropDownLabel
+            app.XtChannelsDropDownLabel = uilabel(app.GridLayout);
+            app.XtChannelsDropDownLabel.HorizontalAlignment = 'center';
+            app.XtChannelsDropDownLabel.Enable = 'off';
+            app.XtChannelsDropDownLabel.Layout.Row = 47;
+            app.XtChannelsDropDownLabel.Layout.Column = [30 33];
+            app.XtChannelsDropDownLabel.Text = 'X(t) Channels';
 
-            % Create XTChannelsDropDown
-            app.XTChannelsDropDown = uidropdown(app.GridLayout);
-            app.XTChannelsDropDown.Items = {''};
-            app.XTChannelsDropDown.Enable = 'off';
-            app.XTChannelsDropDown.Layout.Row = 47;
-            app.XTChannelsDropDown.Layout.Column = [34 37];
-            app.XTChannelsDropDown.Value = '';
+            % Create XtChannelsDropDown
+            app.XtChannelsDropDown = uidropdown(app.GridLayout);
+            app.XtChannelsDropDown.Items = {''};
+            app.XtChannelsDropDown.Enable = 'off';
+            app.XtChannelsDropDown.Layout.Row = 47;
+            app.XtChannelsDropDown.Layout.Column = [34 37];
+            app.XtChannelsDropDown.Value = '';
 
             % Create PX1DuraMsEditFieldLabel
             app.PX1DuraMsEditFieldLabel = uilabel(app.GridLayout);
@@ -2445,13 +2475,13 @@ classdef app_exported < matlab.apps.AppBase
             app.DefaultLabelFilterWidth.Layout.Column = [11 13];
             app.DefaultLabelFilterWidth.Text = '-';
 
-            % Create CreateSMMSelectedButton
-            app.CreateSMMSelectedButton = uibutton(app.GridLayout, 'push');
-            app.CreateSMMSelectedButton.ButtonPushedFcn = createCallbackFcn(app, @CreateSMMSelectedButtonPushed, true);
-            app.CreateSMMSelectedButton.Enable = 'off';
-            app.CreateSMMSelectedButton.Layout.Row = 51;
-            app.CreateSMMSelectedButton.Layout.Column = [18 23];
-            app.CreateSMMSelectedButton.Text = 'CreateSMM Selected';
+            % Create PerformSDOAnalysisButton_2
+            app.PerformSDOAnalysisButton_2 = uibutton(app.GridLayout, 'push');
+            app.PerformSDOAnalysisButton_2.ButtonPushedFcn = createCallbackFcn(app, @PerformSDOAnalysisButton_2Pushed, true);
+            app.PerformSDOAnalysisButton_2.Enable = 'off';
+            app.PerformSDOAnalysisButton_2.Layout.Row = 51;
+            app.PerformSDOAnalysisButton_2.Layout.Column = [15 20];
+            app.PerformSDOAnalysisButton_2.Text = 'Perform SDO Analysis';
 
             % Create FilterStdEditFieldLabel
             app.FilterStdEditFieldLabel = uilabel(app.GridLayout);
@@ -2477,29 +2507,29 @@ classdef app_exported < matlab.apps.AppBase
             app.DefaultLabelFilterStd.Layout.Column = [11 13];
             app.DefaultLabelFilterStd.Text = '-';
 
-            % Create CreateSMMAllButton
-            app.CreateSMMAllButton = uibutton(app.GridLayout, 'push');
-            app.CreateSMMAllButton.ButtonPushedFcn = createCallbackFcn(app, @CreateSMMAllButtonPushed, true);
-            app.CreateSMMAllButton.Enable = 'off';
-            app.CreateSMMAllButton.Layout.Row = 52;
-            app.CreateSMMAllButton.Layout.Column = [18 23];
-            app.CreateSMMAllButton.Text = 'CreateSMM All';
+            % Create PerformSDOAnalysisButton
+            app.PerformSDOAnalysisButton = uibutton(app.GridLayout, 'push');
+            app.PerformSDOAnalysisButton.ButtonPushedFcn = createCallbackFcn(app, @PerformSDOAnalysisButtonPushed, true);
+            app.PerformSDOAnalysisButton.Enable = 'off';
+            app.PerformSDOAnalysisButton.Layout.Row = 52;
+            app.PerformSDOAnalysisButton.Layout.Column = [15 20];
+            app.PerformSDOAnalysisButton.Text = 'Perform SDO Analysis';
 
-            % Create NoofEventsEditFieldLabel
-            app.NoofEventsEditFieldLabel = uilabel(app.GridLayout);
-            app.NoofEventsEditFieldLabel.HorizontalAlignment = 'center';
-            app.NoofEventsEditFieldLabel.Enable = 'off';
-            app.NoofEventsEditFieldLabel.Layout.Row = 53;
-            app.NoofEventsEditFieldLabel.Layout.Column = [2 5];
-            app.NoofEventsEditFieldLabel.Text = 'No of Events';
+            % Create ofEventsEditFieldLabel
+            app.ofEventsEditFieldLabel = uilabel(app.GridLayout);
+            app.ofEventsEditFieldLabel.HorizontalAlignment = 'center';
+            app.ofEventsEditFieldLabel.Enable = 'off';
+            app.ofEventsEditFieldLabel.Layout.Row = 53;
+            app.ofEventsEditFieldLabel.Layout.Column = [2 5];
+            app.ofEventsEditFieldLabel.Text = '# of Events';
 
-            % Create NoofEventsEditField
-            app.NoofEventsEditField = uieditfield(app.GridLayout, 'numeric');
-            app.NoofEventsEditField.Limits = [0 Inf];
-            app.NoofEventsEditField.Editable = 'off';
-            app.NoofEventsEditField.Enable = 'off';
-            app.NoofEventsEditField.Layout.Row = 53;
-            app.NoofEventsEditField.Layout.Column = [6 9];
+            % Create ofEventsEditField
+            app.ofEventsEditField = uieditfield(app.GridLayout, 'numeric');
+            app.ofEventsEditField.Limits = [0 Inf];
+            app.ofEventsEditField.Editable = 'off';
+            app.ofEventsEditField.Enable = 'off';
+            app.ofEventsEditField.Layout.Row = 53;
+            app.ofEventsEditField.Layout.Column = [6 9];
 
             % Create NoofEventsDropDown
             app.NoofEventsDropDown = uidropdown(app.GridLayout);
@@ -2512,18 +2542,13 @@ classdef app_exported < matlab.apps.AppBase
 
             % Create MatrixPanel
             app.MatrixPanel = uipanel(app.GridLayout);
-            app.MatrixPanel.Layout.Row = 54;
-            app.MatrixPanel.Layout.Column = [4 18];
+            app.MatrixPanel.Layout.Row = 55;
+            app.MatrixPanel.Layout.Column = [4 16];
 
             % Create StirpdPanel
             app.StirpdPanel = uipanel(app.GridLayout);
-            app.StirpdPanel.Layout.Row = 54;
+            app.StirpdPanel.Layout.Row = 55;
             app.StirpdPanel.Layout.Column = [22 36];
-
-            % Create DiffusionPanel
-            app.DiffusionPanel = uipanel(app.GridLayout);
-            app.DiffusionPanel.Layout.Row = 55;
-            app.DiffusionPanel.Layout.Column = [10 30];
 
             % Create XTrialXSegWarningLabel
             app.XTrialXSegWarningLabel = uilabel(app.GridLayout);
@@ -2536,6 +2561,123 @@ classdef app_exported < matlab.apps.AppBase
             app.XTrialXSegWarningLabel.Layout.Column = [2 13];
             app.XTrialXSegWarningLabel.Text = 'xTrailxSeg: Changing max/min will result in changing values for all the trials ';
 
+            % Create ImportTimeSeriesLabel
+            app.ImportTimeSeriesLabel = uilabel(app.GridLayout);
+            app.ImportTimeSeriesLabel.HorizontalAlignment = 'center';
+            app.ImportTimeSeriesLabel.FontWeight = 'bold';
+            app.ImportTimeSeriesLabel.Layout.Row = 2;
+            app.ImportTimeSeriesLabel.Layout.Column = [2 6];
+            app.ImportTimeSeriesLabel.Text = 'Import Time Series';
+
+            % Create ImportPointProcessLabel
+            app.ImportPointProcessLabel = uilabel(app.GridLayout);
+            app.ImportPointProcessLabel.HorizontalAlignment = 'center';
+            app.ImportPointProcessLabel.FontWeight = 'bold';
+            app.ImportPointProcessLabel.Layout.Row = 13;
+            app.ImportPointProcessLabel.Layout.Column = [2 6];
+            app.ImportPointProcessLabel.Text = 'Import Point Process';
+
+            % Create ExportLabel
+            app.ExportLabel = uilabel(app.GridLayout);
+            app.ExportLabel.HorizontalAlignment = 'center';
+            app.ExportLabel.FontWeight = 'bold';
+            app.ExportLabel.Layout.Row = 3;
+            app.ExportLabel.Layout.Column = [9 11];
+            app.ExportLabel.Text = 'Export';
+
+            % Create DiffusionPanel
+            app.DiffusionPanel = uipanel(app.GridLayout);
+            app.DiffusionPanel.Layout.Row = 56;
+            app.DiffusionPanel.Layout.Column = [10 30];
+
+            % Create ExportLabel_2
+            app.ExportLabel_2 = uilabel(app.GridLayout);
+            app.ExportLabel_2.HorizontalAlignment = 'center';
+            app.ExportLabel_2.FontWeight = 'bold';
+            app.ExportLabel_2.Layout.Row = 14;
+            app.ExportLabel_2.Layout.Column = [9 11];
+            app.ExportLabel_2.Text = 'Export';
+
+            % Create SelectedChannelsLabel
+            app.SelectedChannelsLabel = uilabel(app.GridLayout);
+            app.SelectedChannelsLabel.FontColor = [0 0.4471 0.7412];
+            app.SelectedChannelsLabel.Layout.Row = 51;
+            app.SelectedChannelsLabel.Layout.Column = [21 26];
+            app.SelectedChannelsLabel.Text = 'Selected Channels';
+
+            % Create AllChannelsLabel
+            app.AllChannelsLabel = uilabel(app.GridLayout);
+            app.AllChannelsLabel.FontColor = [0 0.4471 0.7412];
+            app.AllChannelsLabel.Layout.Row = 52;
+            app.AllChannelsLabel.Layout.Column = [21 24];
+            app.AllChannelsLabel.Text = 'All Channels';
+
+            % Create SelectoneormoretrialsandoneormorechannelstovisualizedataLabel
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel = uilabel(app.GridLayout);
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel.FontSize = 10;
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel.FontAngle = 'italic';
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel.Layout.Row = 7;
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel.Layout.Column = [7 18];
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel.Text = 'Select one or more trials and one or more channels to visualize data';
+
+            % Create SelectoneormoretrialsandoneormorechannelstovisualizedataLabel_2
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel_2 = uilabel(app.GridLayout);
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel_2.FontSize = 10;
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel_2.FontAngle = 'italic';
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel_2.Layout.Row = 17;
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel_2.Layout.Column = [7 18];
+            app.SelectoneormoretrialsandoneormorechannelstovisualizedataLabel_2.Text = 'Select one or more trials and one or more channels to visualize data';
+
+            % Create Label
+            app.Label = uilabel(app.GridLayout);
+            app.Label.FontSize = 11;
+            app.Label.FontAngle = 'italic';
+            app.Label.FontColor = [1 0 0];
+            app.Label.Layout.Row = [51 52];
+            app.Label.Layout.Column = [26 39];
+            app.Label.Text = {'WARNING: Peforming the full SDO Analysis here can be slow, '; 'and is not recommended. For best performance, Use this app '; 'to verify parameters and perform full analysis in MATLAB'};
+
+            % Create Label_2
+            app.Label_2 = uilabel(app.GridLayout);
+            app.Label_2.FontSize = 11;
+            app.Label_2.FontAngle = 'italic';
+            app.Label_2.Layout.Row = [36 37];
+            app.Label_2.Layout.Column = [2 15];
+            app.Label_2.Text = {'Here, the optimal quantization of time series signal amplitude to state is'; ' one which either generates an approximately-normal or flat distribution. '};
+
+            % Create Image
+            app.Image = uiimage(app.GridLayout);
+            app.Image.Layout.Row = [1 2];
+            app.Image.Layout.Column = [35 38];
+            app.Image.ImageSource = 'SAT_Logo.png';
+
+            % Create SDOMatrixLabel
+            app.SDOMatrixLabel = uilabel(app.GridLayout);
+            app.SDOMatrixLabel.HorizontalAlignment = 'center';
+            app.SDOMatrixLabel.FontWeight = 'bold';
+            app.SDOMatrixLabel.FontAngle = 'italic';
+            app.SDOMatrixLabel.Layout.Row = 54;
+            app.SDOMatrixLabel.Layout.Column = [9 11];
+            app.SDOMatrixLabel.Text = 'SDO Matrix';
+
+            % Create STIRPDLabel
+            app.STIRPDLabel = uilabel(app.GridLayout);
+            app.STIRPDLabel.HorizontalAlignment = 'center';
+            app.STIRPDLabel.FontWeight = 'bold';
+            app.STIRPDLabel.FontAngle = 'italic';
+            app.STIRPDLabel.Layout.Row = 54;
+            app.STIRPDLabel.Layout.Column = [28 30];
+            app.STIRPDLabel.Text = 'STIRPD';
+
+            % Create PlotSDOCombinationLabel
+            app.PlotSDOCombinationLabel = uilabel(app.GridLayout);
+            app.PlotSDOCombinationLabel.HorizontalAlignment = 'center';
+            app.PlotSDOCombinationLabel.FontWeight = 'bold';
+            app.PlotSDOCombinationLabel.FontAngle = 'italic';
+            app.PlotSDOCombinationLabel.Layout.Row = 46;
+            app.PlotSDOCombinationLabel.Layout.Column = [31 36];
+            app.PlotSDOCombinationLabel.Text = 'Plot SDO Combination';
+
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
         end
@@ -2545,7 +2687,7 @@ classdef app_exported < matlab.apps.AppBase
     methods (Access = public)
 
         % Construct app
-        function app = app_exported
+        function app = sdoParameterExplorer_exported
 
             % Create UIFigure and components
             createComponents(app)
