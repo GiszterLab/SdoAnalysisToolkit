@@ -1,3 +1,6 @@
+%% SAT - app_input :: 
+%% determinePpFileType
+
 % Name:         Phone Kyaw
 % Date:         09/19/2024
 % Description:  Return a pp_cell when a user inputs PP files
@@ -14,7 +17,24 @@
 %               A use can input concatenated pp file, however
 %               concatenated file must always be input as ONE only. ***
 
-function pp_cell = determinePPFileType ()
+%_______________________________________
+% Copyright (C) 2024 Phone Kyaw
+% Drexel University College of Medicine
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+function pp_cell = determinePpFileType ()
 arguments(Output)
     pp_cell (:,1) cell
 end
@@ -52,12 +72,12 @@ end
             % Take only the first and second column for pp_data
             % (cell2mat() won't work when there are missing values)
             pp_data = pp_data(:,1:2);
-            pp_cell = SAT.app_input.getPPDataFromConcatenatedFile(pp_data, char_index, pp_header_struct);
+            pp_cell = SAT.app_input.getPpDataFromConcatenatedFile(pp_data, char_index, pp_header_struct);
         else % Normal file
-            pp_cell = SAT.app_input.getPPDataFromDirectory(files);
+            pp_cell = SAT.app_input.getPpDataFromDirectory(files);
         end
     
     else % More than one file
-        pp_cell = SAT.app_input.getPPDataFromDirectory(files);
+        pp_cell = SAT.app_input.getPpDataFromDirectory(files);
     end
 end

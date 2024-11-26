@@ -1,3 +1,7 @@
+%% SAT - app_input :: 
+%% determineXtFileType
+
+
 % Name:         Phone Kyaw
 % Date:         09/19/2024
 % Description:  Return a xt_cell when a user inputs XT files
@@ -13,7 +17,24 @@
 %               A use can input concatenated XT file, however
 %               concatenated file must always be input as ONE only. ***
 
-function xt_cell = determineXTFileType()
+%_______________________________________
+% Copyright (C) 2024 Phone Kyaw
+% Drexel University College of Medicine
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+function xt_cell = determineXtFileType()
 arguments(Output)
     xt_cell (:,2) cell
 end
@@ -31,7 +52,7 @@ end
 
         % If there's no char/str row in file OR
         if isempty(char_index) 
-            xt_cell = SAT.app_input.getXTDataFromDirectory(files);
+            xt_cell = SAT.app_input.getXtDataFromDirectory(files);
             return
         % If there's no header at the top 
         elseif char_index(1) ~= 1
@@ -44,21 +65,21 @@ end
         end
 
         if any(diff(char_index) > 1) % Concatenated File
-            xt_header = SAT.app_input.helper.getXTHeader(xt_data, 3);
+            xt_header = SAT.app_input.helper.getXtHeader(xt_data, 3);
             % Filter the concatenated file
             % *** Right now, there's no need to call this function as there
             % are similar filtering code inside getXTDataFromConcatenated.m
             % ***
             % [xt_data, char_index] = SAT.app_input.helper.filterCharIndex (xt_data, char_index);
             % Call the get concatenated file function
-            xt_cell = SAT.app_input.getXTDataFromConcatenatedFile(xt_data, char_index, xt_header);
+            xt_cell = SAT.app_input.getXtDataFromConcatenatedFile(xt_data, char_index, xt_header);
 
         else % Normal one file
-            xt_cell = SAT.app_input.getXTDataFromDirectory(files);
+            xt_cell = SAT.app_input.getXtDataFromDirectory(files);
         end
 
     else % More than one file
-        xt_cell = SAT.app_input.getXTDataFromDirectory(files);
+        xt_cell = SAT.app_input.getXtDataFromDirectory(files);
     end
 end
 
