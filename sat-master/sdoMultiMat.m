@@ -25,6 +25,9 @@
 
 % 2.2.2024 - Upgrade to the V5 (asymmetric) estimation script, parallel compute
 
+% 1.3.2025 - Added option for background subtraction which can help better
+% disassociate spike-effects from background dynamics
+
 %// caution should be taken w/ inherited methods from the superclass; 
 classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
     properties
@@ -45,6 +48,8 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
         nSigValues      {mustBeInteger}= 1; 
         zScore          = false; 
         sigMat          = []; 
+        %_____
+        backgroundSubtraction = 0; % New, patch through
         %_____
         sdoMatCell      = {}; %// Reserved; 
         sdoStruct       = {}; 
@@ -70,7 +75,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 vars.condenseShuffles = 0; 
                 vars.method {mustBeMember(vars.method, {'original', 'asymmetric', 'optimized'})} = 'original';%'asymmetric'; 
                 vars.parallelCompute = 0;
-                vars.backgroundSubtraction = 0; % NOT yet fully implemented; default = 0; 
+                vars.backgroundSubtraction = 0; % default = 0; 
                 %useTrials = []; 
             end
             %___ Just run the SDO Pipeline for all combinations using common params
@@ -84,7 +89,6 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             end
 
             obj.fs = xtdc.fs; 
-
             SIG_FACTOR = xtdc.fs/1000; 
             
             %Maybe we eventually use fractions of neurons or trials, but
@@ -92,27 +96,28 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             obj.nEventsUsed = sum(ppdc.nTrialEvents, 2); 
     
             % // 12.8.2023 Update
-            if vars.backgroundSubtraction == 1
+            if (vars.backgroundSubtraction == 1) || (obj.backgroundSubtraction == 1)
                 % Experimental; 
-            obj.sdoStruct = SAT.compute.populateSDOArray4(xtdc, ppdc, ... 
-                'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
-                'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
-                'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
+                obj.sdoStruct = SAT.compute.populateSDOArray4(xtdc, ppdc, ... 
+                    'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
+                    'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
+                    'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
+                obj.backgroundSubtraction = 1; 
             else
-
-            try 
-            obj.sdoStruct = SAT.compute.populateSDOArray3(xtdc, ppdc, ... 
-                'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
-                'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
-                'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
-          %
-            catch
-                1; 
-                %in case I forget to update the public release
-            obj.sdoStruct = SAT.compute.populateSDOArray2(xtdc, ppdc, ... 
-                'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
-                'pxShift', obj.nShift, 'pxDelay', obj.zDelay); %, 'useTrials', useTrials); 
-            end
+                %try 
+                obj.sdoStruct = SAT.compute.populateSDOArray3(xtdc, ppdc, ... 
+                    'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
+                    'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
+                    'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
+              %
+                %catch
+                    %{
+                    %in case I forget to update the public release
+                obj.sdoStruct = SAT.compute.populateSDOArray2(xtdc, ppdc, ... 
+                    'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
+                    'pxShift', obj.nShift, 'pxDelay', obj.zDelay); %, 'useTrials', useTrials); 
+                end
+                    %}
             end
           %}
             %}
@@ -162,6 +167,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             end
             obj.sigMat = SAT.sdoUtils.findSigSdos(obj.sdoStruct, SIG_THRESH);
         end
+
         %// Extract an 'sdoMat' Class from multi-Mat; 
         function sdoM = extract(obj, XT_CH_NO, PP_CH_NO)
             % Return an 'sdoMat' structure from the 'sdoMultiMat'
@@ -208,7 +214,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 sdos = sdos{1};
             end
         end
-        %___ Optimization (ad-hoc)
+        %___ Optimization w/ Solver (ad-hoc)
         % Order 2 is faster; Order 4 is smoother
         function obj = optimize(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO, vars)
             arguments
