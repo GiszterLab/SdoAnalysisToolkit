@@ -56,6 +56,8 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell
         px0DuraMs      {mustBeNumeric} = 0; 
         px1DuraMs      {mustBeNumeric} = 0; 
         %__
+        backgroundSubtraction = 0; %New
+        %__
         nShuffles       {mustBeInteger} = 1000; 
         sigPVal         double = 0.05; 
         zScore          = false; 
@@ -281,7 +283,8 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell
             end
 
             HStruct = SAT.predict.getPredictionMatrices(obj, xtdc, ppdc, useXtChNo,usePpChNo,...
-                'type', MATTYPE); 
+                'type', MATTYPE, ...
+                'backgroundSubraction', obj.backgroundSubtraction); 
             
             nmCell = fieldnames(HStruct); 
             nFields = length(nmCell); 
