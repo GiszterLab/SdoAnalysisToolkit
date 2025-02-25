@@ -35,16 +35,10 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
         % nChannels
         % sensor
         % fs; 
+        % 
     properties
         %// List of values; 
-        %data        = []; 
-        %metadata    = []; 
-        %nTrials     {mustBeInteger} = 0; 
-        %nChannels   {mustBeInteger} = 0; 
-        %sensor      = []; 
-        %fs          double = 0; 
         trTimeLen   = []; 
-        %dataField   char = [];  
         dataSource  char = []; 
         % __ 
         nTrialEvents = 0; %counter for spikes/trial
@@ -98,6 +92,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             obj.metadata    = S(2,:); 
             obj.nTrials     = N_TRIALS; 
             obj.nChannels   = N_CHANNELS; 
+            obj.trTimeLen   = zeros(1, N_CHANNELS); 
         end
 
         %% Operation Methods 
@@ -138,6 +133,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                     obj.data{1,tr}(ch).fs               = obj.fs; 
                     try
                         obj.data{1,tr}(ch).(obj.dataField)  = dataHolder{1,tr}(ch).times; 
+                
+
                         obj.data{1,tr}(ch).nEvents          = dataHolder{1,tr}(ch).nEvents; 
                         obj.data{1,tr}(ch).envelope         = dataHolder{1,tr}(ch).envelope; 
                     catch
@@ -176,6 +173,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
 
         % Added 8.29.2024
         function obj = concat(obj, useTrials)
+            % Concatenate and flatten multiple trials; 
             arguments
                 obj
                 useTrials = 1:obj.nTrials;
@@ -204,6 +202,28 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             ppdc = subsample@dataCellSuperClass(obj, useTrials, useChannels); 
             ppdc.nTrialEvents = obj.nTrialEvents(useChannels, useTrials); 
             obj = ppdc;
+        end
+
+
+
+        function [obj] = combine(obj, dcList) %varargin)
+            arguments
+                obj
+                dcList % i.e. a [bracked] list 
+            end
+
+            % Pump to static; 
+            ppdcCells = cell(1, length(dcList)+1); 
+            ppdcCells{1} = obj; 
+            for c = 1:length(dcList)
+                ppdcCells{c+1} = dcList(c); 
+            end
+
+            out = ppDataCell.combinePpDataCells(ppdcCells);
+            
+            names = fieldnames(out); 
+            names = setdiff(names, 'dataSource'); %exclusion; 
+            obj.copyProperties(out, names);  % force override for some reason
         end
         
         %% EXTRACTION Methods
@@ -309,7 +329,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 vars.t0_nPoints {mustBeInteger} = 20; 
                 vars.t1_nPoints {mustBeInteger} = 20;
                 vars.fs         = obj.fs
-                vars.useField   {mustBeMember(vars.useField, {'times', 'shuffle'})} = 'times'; 
+                vars.dataField   {mustBeMember(vars.dataField, {'times', 'shuffle'})} = 'times'; 
             end
             
             N_USE_TRIALS    = length(useTrials); 
@@ -317,7 +337,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             %// Push out to the pxTools.getPerieventIndices.m script of the same name; 
             
             % Get {N_CHANNELs x N_TRIALs} Cell array of indices; 
-            spkData = obj.getRasterIndices(vars.fs, useTrials, useChannels, 'dataField', vars.useField); 
+            spkData = obj.getRasterIndices(vars.fs, useTrials, useChannels, 'dataField', vars.dataField); 
             %
             idx0_Cell = cell(N_USE_PP, N_USE_TRIALS); 
             idx1_Cell = cell(N_USE_PP, N_USE_TRIALS); 
@@ -566,10 +586,10 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             % __ Add pre-check here to exclude completely-empty channels
             try 
                 useRows = intersect(useRows, find(sum(obj.nTrialEvents, 2))); 
+                plot_spikeWaveforms(obj.data, useTrials, useRows, PLOT_ALL, 'useField', 'envelope');
             catch
-                1; 
+                return
             end
-            plot_spikeWaveforms(obj.data, useTrials, useRows, PLOT_ALL, 'useField', 'envelope');
         end
         function plotISI(obj, useTrials, useRows, method)
             arguments
@@ -642,8 +662,23 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 end
             end
         end
+        %___________________________________________
 
 
 
     end  
+    methods (Static)
+        function [dcCombine] = combinePpDataCells(dataCellCell)
+            nDC = length(dataCellCell); 
+            for c = 1:nDC
+                if ~isa(dataCellCell{c}, 'xtDataCell')
+                    disp("Error: Unlike DataCells provided")
+                    dcCombine = []; 
+                    return
+                end
+            end
+            dcCombine = dataCell.manipulate.combineDataCells(dataCellCell); 
+        end
+    end
+
 end
