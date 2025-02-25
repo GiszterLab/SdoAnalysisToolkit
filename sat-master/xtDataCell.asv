@@ -505,7 +505,31 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 obj
                 dcList % i.e. a [bracked] list 
             end
-
+            %{
+            arguments (Repeating)
+                varargin xtDataCell
+            end
+            %}
+            %{
+            % validate
+            for n = 1:(nargin-1)
+                if ~isa(varargin{n}, 'xtDataCell')
+                    disp(strcat("Error: arg", num2str(n), " is not an xtDataCell")); 
+                    return
+                end
+            end
+            %}
+            %{
+            xtdcCells = cell(1, nargin); 
+            for n = 1:nargin
+                if n == 1
+                    xtdcCells{1} = obj; 
+                else
+                    xtdcCells{n} = varargin{n-1}; 
+                end
+            end
+            %}
+           
             % Pump to static; 
             xtdcCells = cell(1, length(dcList)+1); 
             xtdcCells{1} = obj; 
@@ -515,9 +539,14 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
 
             out = xtDataCell.combineXtDataCells(xtdcCells);
             
-            names = fieldnames(out); 
-            names = setdiff(names, 'dataSource'); %exclusion; 
-            obj.copyProperties(out, names);  % force override for some reason
+
+
+            obj.data = out.data; 
+
+            %obj = xtDataCell.combineXtDataCells(xtdcCells); 
+            %obj = xtdc_cat; 
+            1; 
+
         end
 
         % __ Extract data from 'data' using indexed positions. 
