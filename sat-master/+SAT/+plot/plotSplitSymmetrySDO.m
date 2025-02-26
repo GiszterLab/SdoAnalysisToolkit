@@ -177,7 +177,15 @@ for c = 1:nCols
                 lineColor = [1,1,1]; %white 
         end
         colormap(ax(z,c), cMap); 
-        clim([minVal, maxVal]); 
+
+
+        if ~isMATLABReleaseOlderThan('R2022a')
+            % default
+            clim([minVal, maxVal]);
+        else
+            %depreciated MATLAB
+            caxis([minVal, maxVal]); 
+        end
         colorbar
         line( [0, N_BINS], [0, N_BINS], 'color', lineColor, 'lineStyle', '--', 'lineWidth', 1.5); 
         axis square
