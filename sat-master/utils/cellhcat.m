@@ -172,15 +172,21 @@ switch celltype
 end
 
 % __ Checkpoint__
+% TEMP; turn off; 
+%
 chkpt = all(round(sum(el,1)./sum(el>0,1)) == el2); 
 if ~chkpt == 1
     val = round(sum(el,1)./sum(el>0,1)); 
-    if ~all(val(~isnan(val)) == el2(~isnan(val)))
+    try 
+    if ~all( val(~isnan(val)) == el2(~isnan(val)) )
         %disp("Warning: Input Cell Array is not conformable to horzcat"); 
        % return
     end
+    catch
+        warning("cellhcat: mismatch in expected length and width"); 
+    end
 end
-
+%
 %% Concatenate Data based on Type
 
 switch celltype

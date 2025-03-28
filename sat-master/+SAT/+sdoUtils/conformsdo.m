@@ -36,6 +36,7 @@
 %   assumptions of linearity and superposition. 
 
 % 1.24.2024 - Added a catch for cases where diagonal magnitude > 1
+% 3.26.2025 - Added better handling for precision for small values
 
 % Copyright (C) 2023  Trevor S. Smith
 %  Drexel University College of Medicine
@@ -69,13 +70,6 @@ function [L] = conformsdo(sdoMat)
     end
     %} 
     %% First, we have to scale overall effects to theoretical max (2)
-    %{
-    allMagSum = sum(sum(abs(sdoMat))); 
-    if allMagSum > 2 
-        sclr = 2/allMagSum; 
-        sdoMat = sdoMat * sclr; 
-    end
-    %}
     
     nPages = size(sdoMat,3); 
 
@@ -83,88 +77,85 @@ function [L] = conformsdo(sdoMat)
 
 
     for z = 1:nPages
+        sMat = sdoMat(:,:,z); 
+        L = sdoMat(:,:,z); 
 
-    sMat = sdoMat(:,:,z); 
-    L = sdoMat(:,:,z); 
+        if SAT.sdoUtils.islinearsdo(L) 
+            return
+        end
 
-   
-    if SAT.sdoUtils.islinearsdo(L) 
-        return
-    end
+        sdoColMag = sum(abs(sMat),1); 
 
-    sdoColMag = sum(abs(sMat),1); 
+        %% Offset negatives on off-diagonal
+        % --> Scale positive components by negative magnitudes
+        %// Logical index, Off-diagnal = negative
+        LI_ODNeg = (sMat < 0); 
+        LI_ODNeg(LIE) = 0; 
 
-    %% Offset negatives on off-diagonal
-    % --> Scale positive components by negative magnitudes
-    %// Logical index, Off-diagnal = negative
-    LI_ODNeg = (sMat < 0); 
-    LI_ODNeg(LIE) = 0; 
+        mag_ODNeg = sum(abs(sMat).*LI_ODNeg,1); 
 
-    mag_ODNeg = sum(abs(sMat).*LI_ODNeg,1); 
+        scRow = sdoColMag./(sdoColMag-mag_ODNeg); 
+        scRow(isnan(scRow)) = 1; 
+        scMat = ones(N_STATES,1) * scRow; 
 
-    scRow = sdoColMag./(sdoColMag-mag_ODNeg); 
-    scRow(isnan(scRow)) = 1; 
-    scMat = ones(N_STATES,1) * scRow; 
+        % TS Patch for Precision-Error; 03.26.2025
+        scMat(isinf(scMat)) = 0; 
 
-    L = L.*scMat; %Scale L; 
-    L = L.*~LI_ODNeg; %set negative off-diagonal components to 0
+        L = L.*scMat; %Scale L; 
+        L = L.*~LI_ODNeg; %set negative off-diagonal components to 0
 
-    %% Remove positive elements on main diagonal
-    %// if pos elements on main diag, scale positive off-diagonal elements
-    %by offset of main diag; set diag to 0; 
-    
-    mainDiag        = diag(sMat)'; 
-    LI_ODPos        = ~LI_ODNeg; 
-    LI_ODPos(LIE)   = 0; 
-    
-    LI_MD       = (mainDiag>0); 
-    
-    %// either 1 or scalar multiplier; 
-    scRow2      = sdoColMag./(sdoColMag-(mainDiag.*LI_MD)); 
-    scMat2      = ones(N_STATES,1)*scRow2; 
-    scMat2(isnan(scMat2)) = 1; 
- 
-    scMat2(isinf(scMat2)) = 1; 
+        %% Remove positive elements on main diagonal
+        %// if pos elements on main diag, scale positive off-diagonal elements
+        %by offset of main diag; set diag to 0;  
 
-    newDiag = min(0, mainDiag); 
+        mainDiag        = diag(sMat)'; 
+        LI_ODPos        = ~LI_ODNeg; 
+        LI_ODPos(LIE)   = 0; 
 
-    L = L.*(scMat2.*LI_ODPos); 
-    
-    L(LIE) = newDiag; 
+        LI_MD       = (mainDiag>0); 
 
-    %% Sync back Columns to zero; 
-    % --> If mag positive, counter balance by adding negatives to diag
-    L2Diag = diag(L); 
+        %// either 1 or scalar multiplier; 
+        scRow2      = sdoColMag./(sdoColMag-(mainDiag.*LI_MD)); 
+        scMat2      = ones(N_STATES,1)*scRow2; 
+        scMat2(isnan(scMat2)) = 1; 
 
-    LColSum = sum(L); 
+        scMat2(isinf(scMat2)) = 1; 
 
-    LColSumPos = max(0, LColSum);
+        newDiag = min(0, mainDiag); 
 
-    L(LIE) = L2Diag - LColSumPos'; 
+        L = L.*(scMat2.*LI_ODPos); 
 
-    % Posthoc (temp patch)
-    L = normpdfcol2zero(L); 
+        L(LIE) = newDiag; 
 
-    %% Scale sdo magnitude to original 
+        %% Sync back Columns to zero; 
+        % --> If mag positive, counter balance by adding negatives to diag
+        L2Diag = diag(L); 
 
-    LColMag = sum(abs(L),1); 
+        LColSum = sum(L); 
 
-    dMag = sdoColMag./LColMag; 
-    dMag(isnan(dMag)) = 1; 
-    dMag(isinf(dMag)) = 0; 
+        LColSumPos = max(0, LColSum);
 
-    L = L*diag(dMag); 
-    %dMagArr = ones(N_STATES,1)*dMag; 
+        L(LIE) = L2Diag - LColSumPos'; 
 
-    %L = L.*dMagArr; 
+        L = normpdfcol2zero(L); 
 
-    %% Ensure no element in column has greater than 1 mag
+        %% Scale sdo magnitude to original 
 
-    % take the larger of 1 or magnitude; find reciprocal; multiply; 
-    invColMag = 1./max(max(abs(L),1), [], 1);  
-    L = L*diag(invColMag); 
-    %
-    L_arr(:,:,z) = L; 
+        LColMag = sum(abs(L),1); 
+
+        dMag = sdoColMag./LColMag; 
+        dMag(isnan(dMag)) = 1; 
+        dMag(isinf(dMag)) = 0; 
+
+        L = L*diag(dMag); 
+
+        %% Ensure no element in column has greater than 1 mag
+
+        % take the larger of 1 or magnitude; find reciprocal; multiply; 
+        invColMag = 1./max(max(abs(L),1), [], 1);  
+        L = L*diag(invColMag); 
+        %
+        L_arr(:,:,z) = L; 
     end
 
     L = L_arr; 

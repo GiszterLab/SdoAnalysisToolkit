@@ -307,7 +307,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             % of form [Components] = [Weight]*[xtData], where xtData is a
             % 'nChannels' by 'nObservations' array
           
-            nm_cell = cell(1, obj.nChannels); 
+            %nm_cell = cell(1, obj.nChannels); 
             switch METHOD
                 % -- Temporary; ts-ICA has trialwise optimization -- 
                 case {'ica'}
@@ -494,10 +494,26 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             if ~obj.sampledData 
                 disp("No Data sampled in xtDataCell"); 
                 return
-            end   
+            end
+            N_USE_TRIALS = length(useTrials); 
+            timedat = cell(1, N_USE_TRIALS); 
+            for tri = 1:N_USE_TRIALS
+                tr = useTrials(tri); 
+                timedat{tri} = obj.data{1,tr}(1).times; 
+            end
             obj = subsample@dataCellSuperClass(obj, useTrials, useChannels); 
             obj.channelAmpMax = obj.channelAmpMax(useChannels, useTrials); 
             obj.channelAmpMin = obj.channelAmpMin(useChannels, useTrials); 
+            % Fix call for missing times; 
+            
+            % Subsampling; 
+            yarr = obj.weightMatrix(useChannels,:); 
+            obj.weightMatrix = yarr(:,useChannels); % square subsample
+            %
+            % Ensure we contain times; 
+            for tri = 1:N_USE_TRIALS
+                obj.data{1,tri}(1).times = timedat{tri}; 
+            end
         end
 
         function [obj] = combine(obj, dcList) %varargin)
