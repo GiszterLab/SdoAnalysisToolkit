@@ -212,6 +212,10 @@ for m = 1:N_XT_CHANNELS
         %
         cat_xv0     = cellhcat(obs_xv0); 
         cat_xv1     = cellhcat(obs_xv1);  
+        if isempty(cat_xv0) || isempty(cat_xv1)
+            sdo(m).stirpd{u} = zeros(N_BINS, N_PX0_PTS+N_PX1_PTS); 
+            continue; 
+        end
         sdo(m).stirpd{u} = pxTools.getStirpd(cat_xv0, cat_xv1, N_BINS); 
     end
 end

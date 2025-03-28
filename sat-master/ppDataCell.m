@@ -226,6 +226,36 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             obj.copyProperties(out, names);  % force override for some reason
         end
         
+        % Used for thresholding imperfect data; 
+        function obj = setMinimumISI(obj, minISI)
+            arguments
+                obj 
+                minISI {mustBeNumeric} = 0.001; % 1 ms; 
+            end
+            counter = 0; 
+            for tr = 1:obj.nTrials
+                for n = 1:obj.nChannels
+                    % per trial, if we need
+                    times =  [obj.data{1,tr}(n).times]; 
+                    dt = diff(times); 
+                    %
+                    useLI = [true dt>minISI]; % Note padding; 
+                    % __ WRITEOUT___
+                    obj.data{1,tr}(n).times = times(useLI); 
+                    obj.data{1,tr}(n).envelope = obj.data{1,tr}(n).envelope(useLI,:); 
+                    if ~isempty(obj.data{1,tr}(n).shuffle)
+                        obj.data{1,tr}(n).shuffle = obj.data{1,tr}(n).shuffle(useLI,:); % not sure if this orientation is correct; 
+                    end
+                    obj.data{1,tr}(n).nEvents = nnz(useLI); 
+                    %
+                    obj.nTrialEvents(n,tr) = nnz(useLI); 
+                    %
+                    counter = counter + nnz(~useLI); 
+                end
+            end
+            disp(strcat("Removed ", num2str(counter), " short timestamps"));  
+        end
+        
         %% EXTRACTION Methods
         function binXtCell = getBinaryImpulses(obj, SAMPLE_HZ, useTrials, useChannels, vars)
             arguments 
@@ -356,8 +386,65 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
         end       
         %_____________________________________________________
+        % || X-Correlogram for inferring spike lags || 
 
+        function [xCrlgm] = getCorrelogram(obj, vars)
+        arguments
+            obj
+            vars.useChannels    = 1:obj.nChannels
+            vars.useTrials      = 1:obj.nTrials; 
+            vars.leadDura       = 0.20; 
+            vars.lagDura        = 0.20; 
+            vars.dt             = 0.005; % Seconds; 
+            vars.norm           = 1; 
+            vars.plot = 0; 
+        end
 
+        nUseChannels = length(vars.useChannels); 
+        xpsth_cell  = cell(nUseChannels); 
+
+        for ri = 1:nUseChannels
+            rr = vars.useChannels(ri); 
+            for qi = 1:nUseChannels
+                qq = vars.useChannels(qi); 
+                %
+                if ri == qi
+                    % This should just a normal autocorrelogram; 
+                    AUTO = 1; 
+                else
+                    AUTO = 0; 
+                end
+                %/ spiketimes here are unique and ordinal; 
+                ref_st = obj.getConcatEventTimes(vars.useTrials, rr); 
+                que_st = obj.getConcatEventTimes(vars.useTrials, qq); 
+                ref_st = ref_st{1}; %strip
+                que_st = que_st{1}; %strip
+
+                xhist = dataCell.calculate.spikeCorrelogram(ref_st, que_st, ...
+                    'dt', vars.dt, ...
+                    'leadDura', vars.leadDura, ...
+                    'lagDura', vars.lagDura, ...
+                    'autoISI', AUTO, ...
+                    'norm',   vars.norm); 
+                xpsth_cell{ri,qi} = xhist; 
+            end
+        end
+        
+        if nUseChannels == 1 
+            xCrlgm = xhist; 
+        else
+            xCrlgm = xpsth_cell; 
+        end
+
+        if vars.plot
+            ppDataCell.plotCorrelogram(xCrlgm, ...
+                'leadDura', vars.leadDura, 'lagDura', vars.lagDura, ...
+                'dt', vars.dt); 
+        end
+        
+        end
+        %_____________________________________________________
+        
         %// Set the maximal time length to each trial
         function obj = setMaxTrTime(obj, trTimeLen)
             if length(trTimeLen) == 1
@@ -433,15 +520,14 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
             %}
             obj.fs = newFs; 
-
             obj.nTrialEvents = [obj.nTrialEvents; ppdc.nTrialEvents]; 
-            obj.trTimeLen = max(obj.trTimeLen, ppdc.trTimeLen);
-            obj.sensor    = [obj.sensor, ppdc.sensor]; 
+            obj.trTimeLen   = max(obj.trTimeLen, ppdc.trTimeLen);
+            obj.sensor      = [obj.sensor, ppdc.sensor]; 
+            obj.nChannels   = obj.nChannels + ppdc.nChannels;  
             %obj.eventType = [obj.eventType, ppdc.eventType]; 
             %obj.nEventTypes = length(obj.eventType); 
 
         end
-
 
         %% Extraction Methods 
 
@@ -600,6 +686,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
             plot_spikeISI(obj.data, useTrials, useRows, 'useField', obj.dataField, 'type', method); 
         end
+        
         %__ Plot all
         function plot(obj, useTrials, useRows, PLOT_ALL)
             arguments
@@ -678,6 +765,36 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 end
             end
             dcCombine = dataCell.manipulate.combineDataCells(dataCellCell); 
+        end
+        % 
+        function f = plotCorrelogram(xCrlgm, vars)
+            arguments
+                xCrlgm % data; either cell or vector; 
+                vars.leadDura = []; 
+                vars.lagDura = []; 
+                vars.dt = []; 
+            end
+            
+            if ~iscell(xCrlgm)
+                xCrlgm = {xCrlgm}; %wrap; 
+            end
+            if isempty(vars.leadDura) || isempty(vars.lagDura)
+                % if not specified, assume equal-width
+                %nPts = length(xCrlgrm); 
+                tVect = [1:length(xCrlgm)] - length(xCrlGrm)/2; 
+            else
+                tVect = [-vars.leadDura:vars.dt:vars.lagDura]; 
+            end
+            nComps = length(xCrlgm); 
+            %
+            f = figure; 
+            tiledlayout(nComps, nComps); 
+            for r = 1:nComps
+                for c = 1:nComps 
+                    nexttile; 
+                    area(tVect, xCrlgm{r,c}); 
+                end
+            end
         end
     end
 

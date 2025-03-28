@@ -4,7 +4,7 @@
 % inpulse response (FIR) function 
 %
 % INPUTS: 
-%   timestamps  = (1xN) array of event times (in Sec)
+%   timestamps  = (1xN) array of event times (in Sec, >0)
 %   SIG_HZ      = Int. Sample frequency of output signal.  
 %   T_MAX       = Doubles. Maximum time value to cast signal to. 
 %   filterType = {'sg', '-hg', 'expd', 'tb'}. Which type of filter

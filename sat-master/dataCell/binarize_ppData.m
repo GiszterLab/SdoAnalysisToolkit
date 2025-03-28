@@ -54,7 +54,8 @@ for ch = 1:N_CHANNELS
     ts = eventTimes{ch}; 
     cnfrm_ts = round(ts*RASTER_HZ); %conformed spiketimes == indices
     LI = (cnfrm_ts >=1) & (cnfrm_ts <= binArrLen);
-    cnfrm_ts = cnfrm_ts(LI);     
+    cnfrm_ts = cnfrm_ts(LI); 
+    LI = LI(LI); %for homogeneity; % 3.25.2025
     if isempty(cnfrm_ts)
         continue; 
     end
