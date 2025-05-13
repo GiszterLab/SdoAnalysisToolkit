@@ -5,7 +5,8 @@
 % INPUTS
 %   WID (Integer) - Number of states/positions adjacent to mean to estimate
 %       the kernel over
-%   STD (Integer) - The standard deviation of the gaussian
+%   STD (Integer) - The standard deviation of the gaussian 
+%           (nPts per StandardDev)
 % OUTPUT
 %   kn - Kernel for filtering, sum normalized to 1. 
 

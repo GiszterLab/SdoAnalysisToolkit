@@ -196,10 +196,16 @@ for m = 1:N_XT_CHANNELS
     for u = 1:N_PP_CHANNELS
         obs_xv0     = xtdc.getValuesAtIndices(obs_idx0(u,:), 'useChannels', m, "dataField","stateSignal", 'useTrials', vars.useTrials);  
         obs_xv1     = xtdc.getValuesAtIndices(obs_idx1(u,:), 'usechannels', m, "dataField","stateSignal", 'useTrials', vars.useTrials); 
-        %
+        %    
         cat_xv0     = cellhcat(obs_xv0); 
-        cat_xv1     = cellhcat(obs_xv1);  
-        sdo(m).stirpd{u} = pxTools.getStirpd(cat_xv0, cat_xv1, N_BINS); 
+        cat_xv1     = cellhcat(obs_xv1); 
+        if ~isempty(cat_xv0)   
+            sdo(m).stirpd{u} = pxTools.getStirpd(cat_xv0, cat_xv1, N_BINS); 
+        else
+            % for missing spikes; 
+            sdo(m).stirpd{u} = zeros(N_PX0_PTS+N_PX1_PTS, N_BINS);  
+        end
+        
     end
 end
 toc

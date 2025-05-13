@@ -63,5 +63,44 @@ classdef primaryData < handle
                 end
             end
         end
+        %_______ Reordering ________
+        function obj = reorder(obj, trialOrder, channelOrder)
+            arguments
+               obj
+               trialOrder = []; 
+               channelOrder = []; 
+            end
+            if isempty(trialOrder)
+                trialOrder = 1:obj.nTrials; 
+            end
+            if isempty(channelOrder)
+                channelOrder = 1:obj.nChannels; 
+            end
+            % Easiest way to do this is probably to just reorder and recast
+            % the data
+            nTr = length(trialOrder); 
+            nCh = length(channelOrder); 
+            
+            CLASS = class(obj); 
+            switch CLASS
+                case 'ppDataCell'
+                    dh = dataCell.constructors.getPpDataHolder(nTr,nCh); 
+                case 'xtDataCell'
+                    dh = dataCell.constructors.getXtDataHolder(nTr,nCh);
+            end
+            
+            d_dat = obj.data(1,trialOrder); 
+            m_dat = obj.metadata(1,trialOrder);
+            for tri = 1:nTr
+                d_dat{1,tri} = d_dat{1,tri}(channelOrder);
+                %m_dat{1,tri} = m_dat{1,tri}(channelOrder);
+            end
+            dh(1,:) = d_dat; 
+            dh(2,:) = m_dat; 
+            
+            obj.import(dh);
+            1; 
+            
+        end
     end
 end
