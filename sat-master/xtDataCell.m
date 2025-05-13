@@ -365,23 +365,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
             obj.sensor = nm_cell; 
 
-
         end
-
-        %{
-        function obj = applyWeightVectorTransform(obj, W, level)
-            % // DEPRECIATED NOMECLATURE
-            arguments
-                obj
-                W = obj.weightMatrix; 
-                level {mustBeNumericOrLogical} = 1; 
-            end
-            
-            disp("Depreciated Nomeclature. Use 'applyLinearTransform' Instead"); 
-            obj = applyLinearTranform(obj, W, level); 
-
-        end
-        %}
         
         %% Auxillary Operation
         function obj = importTensor(obj, ten, vars)
@@ -586,6 +570,54 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
            
         end
+        
+        function obj = merge(obj, xtdc, vars)
+            arguments
+                obj 
+                xtdc xtDataCell
+                vars.pad = 'nan'; 
+            end
+            % _____
+            
+            if ~(obj.nTrials == xtdc.nTrials)
+                disp("xtDataCells do not have compatible sizes"); 
+            end
+            if ~(obj.fs == xtdc.fs)
+                xtdc.resample(obj.fs); 
+                1;
+            end
+            
+           
+            
+            for tr = 1:obj.nTrials
+                if ~(obj.trTimeLen(tr) == xtdc.trTimeLen(tr))
+                    tMax = max(obj.trTimeLen(tr), xtdc.trTimeLen(tr)); 
+                    nPts = tMax*obj.fs+1; 
+                    if (length(obj.data{1,tr}(1).envelope) == nPts)
+                        for ch = 1:obj.nTrials
+                            %TODO: Finish this loop
+                            1; 
+                        end
+                    end  
+                end
+                obj.data{1,tr} = [obj.data{1,tr}, xtdc.data{1,tr}]; 
+                try
+                    obj.metadata{1,tr} = [obj.metadata{1,tr} xtdc.metadata{1,tr}]; 
+                catch
+                    1; 
+                end
+            end
+            obj.channelAmpMax = [obj.channelAmpMax; xtdc.channelAmpMax]; 
+            obj.channelAmpMin = [obj.channelAmpMin; xtdc.channelAmpMin];
+            mat = zeros(obj.nChannels+xtdc.nChannels);
+            mat(1:obj.nChannels,1:obj.nChannels) = obj.weightMatrix; 
+            mat(obj.nChannels+1:end, obj.nChannels+1:end) = xtdc.weightMatrix;
+            obj.weightMatrix = mat; 
+            obj.nChannels = obj.nChannels+xtdc.nChannels;
+            obj.sensor = [obj.sensor; xtdc.sensor]; 
+            
+        end
+                
 
         %% __ Write xtdata to a CSV file
         % __>> Allow for a tidy data format. 
@@ -737,5 +769,14 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             dcCombine = dataCell.manipulate.combineDataCells(dataCellCell); 
         end
 
+    end
+end
+
+%% Auxillary Functions
+% These are functions ONLY to be called within the validation of this
+% class, but are not accessible outside of this class
+function validateBounds(x, lowerBound, upperBound)
+    if any(x < lowerBound) || any(x > upperBound)
+        error('Each element must be between %d and %d.', lowerBound, upperBound);
     end
 end

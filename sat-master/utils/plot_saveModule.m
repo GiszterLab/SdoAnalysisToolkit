@@ -51,9 +51,23 @@ if ~exist('f', 'var')
     f = gcf; 
 end
 
-if isempty(fDIM)
+SET_AUTO = isempty(fDIM); 
+%{
+if isempty(fDIM) 
     fDIM = [0, 0, 1920, 1200]; 
 end
+%}
+
+
+if isempty(SAVE_DIR)
+    SAVE_DIR = uigetdir([],"Select a Folder to save images to");
+end
+
+name = fullfile(SAVE_DIR, strcat(fName, ".", SAVE_FMT)); 
+
+if SET_AUTO
+   figure('units','normalized','outerposition',[0 0 1 1])
+else
 
 if all(fDIM == 0)
     RESIZE = 0; 
@@ -61,11 +75,6 @@ else
     RESIZE = 1; 
 end
 
-if isempty(SAVE_DIR)
-    SAVE_DIR = uigetdir([],"Select a Folder to save images to");
-end
-
-name = fullfile(SAVE_DIR, strcat(fName, ".", SAVE_FMT)); 
 if RESIZE
     try
         set(f, 'Position', fDIM); 
@@ -77,12 +86,16 @@ if RESIZE
         set(f, 'Position', fDIM); 
     end
 end
-    
+
+end
+
 switch SAVE_FMT
     %// 'painters' format used to maximize editable capabilities in
     %inkscape
     case 'png'
         print(f, name, '-dpng'); 
+    case 'pdf'
+        print(f, name, '-dpdf', '-bestfit');   
     case 'svg'
         print(f, '-painters', name, '-dsvg');
     case 'fig'

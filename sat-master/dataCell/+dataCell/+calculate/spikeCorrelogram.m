@@ -6,7 +6,7 @@
 %
 % INPUTS
 %   - ref_st    - [1xN] vector; Reference spike train (time or indices)
-%   - que_st    - [1xM] vector; Queryt spike train 
+%   - que_st    - [1xM] vector; Query spike train 
 % NAME-VALUE PAIRS:
 %   - 'dt'      - Time resolution for histograms (Sec). Default - 0.005
 %   - 'leadDura'- Time Duration before spiketime to draw correlogram over
@@ -14,6 +14,14 @@
 %   - 'lagDura' - Time Duration after spiketime to draw correlgram over
 %       (Sec). Default = 0.2 NOTE: Positive; 
 %   - 'norm'    - Whether to normalize histograms (hist/nspikes*dt)
+% OUTPUTS: 
+%   -  hh:  [1 x nPoints] Histogram corresponding to spike correlation
+%   - sampPct   [double] [0, inf). Number of spikes used for building
+%       histogram/number of spikes in que_st). If sampPct < 1, only a
+%       portion of spikes are contained in the binned interval (usual). If
+%       sampPct > 1, some spikes are double-counted. This can be used as a
+%       scalar for normalizing spike percentages. 
+%
 %_____________________________________________
 % Trevor Smith, 2025
 % This program is free software: you can redistribute it and/or modify
@@ -59,7 +67,7 @@ end
 tRng = (-vars.leadDura-1/2*vars.dt): vars.dt: (vars.lagDura+1/2*vars.dt); 
 tVect = (-vars.leadDura: vars.dt: vars.lagDura); % for plotting; 
 
-if LOW_MEMORY == 0
+if ~LOW_MEMORY
     x_arr = ref_st'-que_st; %difference in time between each reference spiketime and each query spike time; 
 
     % Now just mask for values +/- of target range; 
@@ -69,7 +77,11 @@ if LOW_MEMORY == 0
     %
     deltas = x_arr(maskArr); % 1D hist; 
     %
-    sampPct = sum(any(x_arr))/nSpikes_que; 
+    if nSpikes_que > 0
+        sampPct = nnz(maskArr)/nSpikes_que;
+    else
+        sampPct = 0; 
+    end
     hh = histcounts(deltas, tRng); 
 else
     binWid = ceil(MAX_ARR/nSpikes_que); 

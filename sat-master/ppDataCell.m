@@ -324,8 +324,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
         function idxArr = getRasterIndices(obj, SAMPLE_HZ, useTrials, useChannels, vars)
             % Return an {N_CHANNELS x N_TRIALS} cell of indices
             %
-            % sample_hz, useTrials, useChannels, 'dataField' {'times',
-            % 'shuffle'}
             arguments
                 obj
                 SAMPLE_HZ   {mustBeNumeric} = obj.fs;  
@@ -498,7 +496,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             % ___ 
 
             if ~(obj.nTrials == ppdc.nTrials)
-                disp("EventDataCells do not have compatible sizes"); 
+                disp("ppDataCells do not have compatible sizes"); 
                 return
             end
 
@@ -524,9 +522,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             obj.trTimeLen   = max(obj.trTimeLen, ppdc.trTimeLen);
             obj.sensor      = [obj.sensor, ppdc.sensor]; 
             obj.nChannels   = obj.nChannels + ppdc.nChannels;  
-            %obj.eventType = [obj.eventType, ppdc.eventType]; 
-            %obj.nEventTypes = length(obj.eventType); 
-
         end
 
         %% Extraction Methods 
@@ -682,7 +677,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 obj
                 useTrials   {mustBeNumeric} = 1:obj.nTrials; 
                 useRows     {mustBeNumeric} = 1:obj.nChannels; 
-                method {mustBeMember(method, {'linear', 'log'})} = 'linear'; 
+                method      {mustBeMember(method, {'linear', 'log'})} = 'linear'; 
             end
             plot_spikeISI(obj.data, useTrials, useRows, 'useField', obj.dataField, 'type', method); 
         end
@@ -692,18 +687,9 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             arguments
                 obj
                 useTrials {mustBeNumeric} = 1:obj.nTrials; 
-                useRows  {mustBeNumeric} = 1:obj.nChannels; 
+                useRows   {mustBeNumeric} = 1:obj.nChannels; 
                 PLOT_ALL  = 0; 
             end   
-
-            %{
-            try 
-                useChannels = intersect(useChannels, find(sum(obj.nTrialEvents, 2))); 
-            catch
-                1;
-            end
-            %}
-
             plotSpikes(obj, useTrials, useRows, PLOT_ALL); 
             plotWaves( obj, useTrials, useRows, PLOT_ALL); 
         end
@@ -781,9 +767,9 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             if isempty(vars.leadDura) || isempty(vars.lagDura)
                 % if not specified, assume equal-width
                 %nPts = length(xCrlgrm); 
-                tVect = [1:length(xCrlgm)] - length(xCrlGrm)/2; 
+                tVect = (1:length(xCrlgm)) - length(xCrlGrm)/2; 
             else
-                tVect = [-vars.leadDura:vars.dt:vars.lagDura]; 
+                tVect = (-vars.leadDura:vars.dt:vars.lagDura); 
             end
             nComps = length(xCrlgm); 
             %
