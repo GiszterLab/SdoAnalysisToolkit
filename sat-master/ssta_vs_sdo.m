@@ -1,5 +1,14 @@
 %% ssta_vs_SDO
 %
+% || NOTE || 
+% This code is designed to produce a visual demonstration of the utility
+% of the SDO method by describing the state-dependency of certain STA
+% effects. It is NOT meant to be used as an exploration of the different
+% parameter methods (look at SDO Parameter explorer), nor does it
+% demonstrate the best way to use the SDO Analysis Toolkit. 
+% 
+% The ONLY thing it does is extract intervals of signal around spike. 
+%
 % Show the spike-triggered average, mean-split, and state-dependent
 % spike-triggered averages to demonstrate how averaging results in a
 % less-accurate prediction of future signal behavior. 
@@ -32,27 +41,17 @@
 
 %% HEADER VARS
 %USE_TRIALS  = 1:22; 
-%XT_CH_NO    = 8; 
-%PP_CH_NO    = 12; 
-%XT_CH_NO = 1;
-%PP_CH_NO = 1; 
-XT_CH_NO = 6; 
-PP_CH_NO = 4; 
+XT_CH_NO = 8; % Time series channel index
+PP_CH_NO = 11; % Spike data channel index
 % __ 
-N_T0_PTS = 40; 
-
-%N_T0_PTS    = 60; %prespike n points 
-%N_T1_PTS    = 100; 
-N_T1_PTS    = 40; %postspike n points
-N_STATES    = 40; 
+N_T0_PTS    = 40; % Z > 0 ||  %prespike interval, in points 
+N_T1_PTS    = 40; %Z>0 ||  %postspike interval in points
+%
+N_STATES    = 20; % Z > 1; 
 MAX_MODE    = 'xTrialxSeg'; 
-%MAP_METHOD  = 'log'; 
-%MAP_METHOD  = 'logsigned'; 
 MAP_METHOD  = 'linearsigned'; %[log,linear,logsigned,linearsigned]
-%MAP_METHOD  = 'linear'; 
 %___
-%DATA_FIELD  = 'envelope';
-DATA_FIELD = 'raw'; 
+DATA_FIELD = 'envelope'; % {'envelope','raw'}; 
 
 COMPOSITE   = 1; %[0/1] %/whether to assemble figures into subplot
 LEVEL = 0; 
@@ -128,8 +127,6 @@ baselineThresh = rms(zArr(:))*1.25;
 at01 = [at0; at1]; 
 
 useSpikes = any(abs(at01) > baselineThresh); 
-
-1; 
 
 
 %mean values of amplitude around spike 
@@ -313,7 +310,7 @@ pxTools.plot.px([mean(px0Shuff(:,LI_Shfhi),2), mean(px1Shuff(:,LI_Shfhi),2)], 'c
 title("Background Mean-Split p(x) (Upper)");
 
 %% Varspace Cleanup
-%{
+%
 clear at0 at0Cell at0Shuff at0ShuffCell at1 at1Cell at1Shuff at1ShuffCell cutoff
 clear DATA_FIELD fdir1 fdir2 ffile1 ffile2 fnew fpath_pp fpath_xt getCounts i LI_Shfhi
 clear LI_Shflo LI_x0hi LI_x0lo MAP_METHOD MAX_MODE maxTime N_STATES N_T0_PTS
