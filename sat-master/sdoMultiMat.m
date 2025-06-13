@@ -175,6 +175,10 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 obj
                 SIG_THRESH {mustBeInteger} = obj.nSigValues; 
             end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
             obj.sigMat = SAT.sdoUtils.findSigSdos(obj.sdoStruct, SIG_THRESH);
         end
 
@@ -207,6 +211,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 useXtChannels = 1; 
                 usePpChannels = 1; 
             end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            
             N_USE_XT = length(useXtChannels); 
             N_USE_PP = length(usePpChannels); 
             nBins = length(obj.sdoStruct(1).bkgrndSDO); %non-optimal call; 
@@ -220,8 +229,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 end
             end
             if N_USE_XT == 1
-                % unwrap
-                sdos = sdos{1};
+                sdos = sdos{1};% unwrap
             end
         end
         %___ Optimization w/ Solver (ad-hoc)
@@ -252,6 +260,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 vars.testSignificance = 1; 
             end
 
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            
             % __ This is the efficient 'internal' based prediction using
             % classes; 
             
@@ -307,6 +320,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             % stored in the sdoMultiMat Class. 
             
             % // Get pre and post-spike distributions/classes from data
+            
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
             
             nUsePpChannels = length(USE_PP_CH);
             nUseXtChannels = length(USE_XT_CH); 
@@ -369,6 +387,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 usePpChannels = 1; 
                 background = 0; 
             end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            
             N_USE_XT = length(useXtChannels); 
             N_USE_PP = length(usePpChannels); 
 
@@ -404,6 +427,10 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 usePpChannels = 1; 
                 vars.matField  {mustBeMember(vars.matField, {'sdos', 'sdosJoint', 'drift', 'bkgrndSDO'})} = 'sdos'; 
                 vars.norm      {mustBeNumericOrLogical} = 0;  
+            end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
             end
             N_USE_XT = length(useXtChannels); 
             N_USE_PP = length(usePpChannels); 
@@ -468,6 +495,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 options.filter          = 1; 
 
             end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            
             n_xt = length(XT_CH_NO); 
             n_pp = length(PP_CH_NO); 
             for m = 1:n_xt 
@@ -490,6 +522,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 useXtChannels = 1; 
                 usePpChannels = 1; 
             end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            
             N_USE_XT = length(useXtChannels); 
             N_USE_PP = length(usePpChannels); 
 

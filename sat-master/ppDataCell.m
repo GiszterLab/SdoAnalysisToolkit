@@ -656,6 +656,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             yticks(-N_USE_CHANNELS+1:0); 
             yticklabels(flip(obj.sensor(useChannels))); 
             xlabel("Time (S)");     
+            title("Plotted Event Times"); 
         end
         function plotWaves(obj, useTrials, useRows, PLOT_ALL)
             arguments
