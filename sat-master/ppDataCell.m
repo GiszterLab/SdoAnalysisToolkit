@@ -134,8 +134,11 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                     try
                         obj.data{1,tr}(ch).(obj.dataField)  = dataHolder{1,tr}(ch).times; 
                 
-
-                        obj.data{1,tr}(ch).nEvents          = dataHolder{1,tr}(ch).nEvents; 
+                        if isempty(dataHolder{1,tr}(ch).nEvents) && ~(isempty(dataHolder{1,tr}(ch).times))
+                            obj.data{1,tr}(ch).nEvents          = length(obj.data{1,tr}(ch).(obj.dataField)); 
+                        else
+                            obj.data{1,tr}(ch).nEvents          = dataHolder{1,tr}(ch).nEvents; 
+                        end
                         obj.data{1,tr}(ch).envelope         = dataHolder{1,tr}(ch).envelope; 
                     catch
                         %// depreciated naming
@@ -395,7 +398,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             vars.lagDura        = 0.20; 
             vars.dt             = 0.005; % Seconds; 
             vars.norm           = 1; 
-            vars.plot = 0; 
+            vars.plot           = 0; 
         end
 
         nUseChannels = length(vars.useChannels); 
