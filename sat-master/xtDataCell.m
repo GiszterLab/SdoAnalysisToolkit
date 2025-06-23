@@ -643,6 +643,10 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             DATAFIELD = vars.datafield; 
             N_PLOT_TRIALS = length(useTrials); 
             N_PLOT_ROWS = length(useChannels); 
+            if ~isfield(obj.data{1,useTrials(1)}, DATAFIELD)
+                disp(strcat(DATAFIELD, " is not a valid fieldname.")); 
+            end
+            
             if N_PLOT_TRIALS > 1
                 dataCellArr = cellstructhcat(obj.data(1,useTrials), DATAFIELD); 
             else
