@@ -309,7 +309,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 vars.t0_nPoints {mustBeInteger} = 20; 
                 vars.t1_nPoints {mustBeInteger} = 20;
                 vars.fs         = obj.fs
-                vars.useField   {mustBeMember(vars.useField, {'times', 'shuffle'})} = 'times'; 
+                vars.dataField   {mustBeMember(vars.dataField, {'times', 'shuffle'})} = 'times'; 
             end
             
             N_USE_TRIALS    = length(useTrials); 
@@ -317,7 +317,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             %// Push out to the pxTools.getPerieventIndices.m script of the same name; 
             
             % Get {N_CHANNELs x N_TRIALs} Cell array of indices; 
-            spkData = obj.getRasterIndices(vars.fs, useTrials, useChannels, 'dataField', vars.useField); 
+            spkData = obj.getRasterIndices(vars.fs, useTrials, useChannels, 'dataField', vars.dataField); 
             %
             idx0_Cell = cell(N_USE_PP, N_USE_TRIALS); 
             idx1_Cell = cell(N_USE_PP, N_USE_TRIALS); 

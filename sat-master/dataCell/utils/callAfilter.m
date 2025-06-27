@@ -157,7 +157,7 @@ switch type
         sig = SUPPORT_VAR; 
         b = getgausskernel(N_POINTS/2, sig); 
         fSignal = ffxt(b, 1, signal); 
-        
+
     case 'trimov'
         %// Triangular-Weighted Moving Average
         b0 = 1/N_POINTS:1/N_POINTS:1; 

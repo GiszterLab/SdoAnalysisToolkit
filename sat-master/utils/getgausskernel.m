@@ -3,9 +3,10 @@
 % points
 %
 % INPUTS
-%   WID (Integer) - Number of states/positions adjacent to mean to estimate
-%       the kernel over
-%   STD (Integer) - The standard deviation of the gaussian
+%   WID (Integer) - Number of positions adjacent to mean to estimate
+%       the kernel over (Total width of kernel = 2*WID+1)
+%   STD (Integer) - The standard deviation of the gaussian; Effectively,
+%       how many points constitute 1 STD for the Gaussian
 % OUTPUT
 %   kn - Kernel for filtering, sum normalized to 1. 
 

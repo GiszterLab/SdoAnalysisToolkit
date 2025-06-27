@@ -22,6 +22,15 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 function [px_t0, px_t1] = get_pxt_core(x0_rows,x1_rows, N_STATES, PX_FSM_WID, PX_FSM_STD, CALC_X1) 
+arguments
+    x0_rows
+    x1_rows
+    N_STATES
+    PX_FSM_WID = 0
+    PX_FSM_STD = 0
+    CALC_X1 = 1; 
+end
+
 
 N_PX0_POINTS = size(x0_rows,2); 
 N_PX1_POINTS = size(x1_rows,2); 

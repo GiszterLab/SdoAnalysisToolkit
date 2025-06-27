@@ -206,15 +206,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             xtData = getTensor(obj); 
             xtData2 = xtData; 
             for tr = 1:obj.nTrials 
-                %{
-                for m = 1:obj.nChannels
-                    % __ callAFilter 
-                    %// callAFilter filters on [1xN] Doubles OR [NxM]
-                    xt  = squeeze(xtData(m,:,tr)); 
-                    fxt = callAfilter(xt, FILTERTYPE, obj.fs,  'nPoints', N_POINTS, 'auxVar', F_VAR); 
-                    xtData2(m,:,tr) = fxt; 
-                end
-                %}
                 % --> upgraded callAfilter
                 xt = squeeze(xtData(:,:,tr)); 
                 fxt = callAfilter(xt,FILTERTYPE, obj.fs, 'nPoints', N_POINTS, 'auxVar', F_VAR); 
@@ -375,6 +366,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
 
         end
 
+        %{
         function obj = applyWeightVectorTransform(obj, W, level)
             % // DEPRECIATED NOMECLATURE
             arguments
@@ -387,6 +379,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             obj = applyLinearTranform(obj, W, level); 
 
         end
+        %}
         
         %% Auxillary Operation
         function obj = importTensor(obj, ten, vars)
