@@ -136,6 +136,14 @@
   </span>
 </a>
 </li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../functions/overview.html">
+<span class="md-ellipsis">
+    Code Library
+    
+  </span>
+</a>
+</li>
 </ul>
 </nav>
 </div>
@@ -177,6 +185,59 @@
       (Selected) Methods :
     </span>
 </a>
+<nav aria-label="(Selected) Methods :" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#import-xtdata">
+<span class="md-ellipsis">
+      .import (xtData)
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#resample-desired_hz-datafield">
+<span class="md-ellipsis">
+      .resample ( DESIRED_HZ, DATAFIELD)
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#bsxop-xtdatacell-funchandle">
+<span class="md-ellipsis">
+      .bsxop ( xtDataCell , funcHandle)
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#plot-usetrials-usechannels-offset-datafield">
+<span class="md-ellipsis">
+      .plot (useTrials, useChannels, OFFSET, DATAFIELD):
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#gettensor-usechannels-usetrials">
+<span class="md-ellipsis">
+      .getTensor (useChannels, useTrials)
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#importtensor-ten">
+<span class="md-ellipsis">
+      .importTensor (ten):
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#discretize">
+<span class="md-ellipsis">
+      .discretize :
+    </span>
+</a>
+</li>
+</ul>
+</nav>
 </li>
 </ul>
 </nav>
@@ -208,8 +269,10 @@
     }</div>
 <h2 id="properties">Properties:</h2>
 <ul>
-<li><code>.data</code> </li>
+<li><code>.data</code> <ul>
 <li>{1 x N_TRIALS} cell containing trialwise timeseries data. See  <code>SAT.xtDataHolder_new.m</code> Populated by  <code>.import</code>  method. </li>
+</ul>
+</li>
 <li><code>.metadata</code> <ul>
 <li>{1 x N_TRIALS} cell containing trialwise meta data. See  <code>SAT.xtDataHolder_new.m</code> </li>
 </ul>
@@ -224,52 +287,70 @@
 <li>Populated by  .import  method. </li>
 </ul>
 </li>
-<li><code>.sensor</code> </li>
+<li><code>.sensor</code> <ul>
 <li>{1 x N_CHANNELS} cell containing strings of channel names. </li>
-<li><code>.fs</code> </li>
+</ul>
+</li>
+<li><code>.fs</code> <ul>
 <li>Sample frequency of timeseries data. </li>
 <li>Populated by  <code>.import</code>  method. </li>
 <li>Modified by  <code>.resample</code>  method. </li>
-<li><code>.trTimeLen</code> </li>
-<li>[1 x N_TRIALS] doubles array, corresponding to the length of each trial in <code>.data</code>. <ul>
+</ul>
+</li>
+<li><code>.trTimeLen</code> <ul>
+<li>[1 x N_TRIALS] doubles array, corresponding to the length of each trial in <code>.data</code>. </li>
 <li>Populated by  <code>.import</code>  method. </li>
 </ul>
 </li>
-<li><code>.dataField</code> </li>
+<li><code>.dataField</code> <ul>
 <li>[string]. Corresponds to fieldname in  .data  which contains time series data. </li>
 <li>Populated by  <code>.import</code>  method. </li>
-<li><code>.channelAmpMax</code>  : </li>
-<li>[N_CHANNELS x N_TRIALS] doubles array, corresponding to maximum observed value. </li>
-<li>Populated by  <code>.import</code>  method. </li>
-<li><code>.channelAmpMin</code> </li>
-<li>[N_CHANNELS x N_TRIALS] doubles array, corresponding to minimum observed value. </li>
-<li>Populated by  .import  method. </li>
-<li><code>.mapMethod</code> </li>
-<li>{‘linear’, ‘log’, ‘linearsigned’, ‘logsigned’}. Method for defining state. See <code>SAT.computeSDO.m</code> </li>
-<li>Default = ‘log’ </li>
-<li><code>.maxMode</code> <ul>
-<li>{‘pTrial’, ‘xTrialxSeg’}. Method for determining trial min/max. See  <code>SAT.computeSDO.m</code> </li>
 </ul>
 </li>
+<li><code>.channelAmpMax</code>  : <ul>
+<li>[N_CHANNELS x N_TRIALS] doubles array, corresponding to maximum observed value. </li>
+</ul>
+</li>
+<li>Populated by  <code>.import</code>  method. </li>
+<li><code>.channelAmpMin</code> <ul>
+<li>[N_CHANNELS x N_TRIALS] doubles array, corresponding to minimum observed value. </li>
+</ul>
+</li>
+<li>Populated by  .import  method. </li>
+<li><code>.mapMethod</code> <ul>
+<li>{‘linear’, ‘log’, ‘linearsigned’, ‘logsigned’}. Method for defining state. See <code>SAT.computeSDO.m</code> </li>
+<li>Default = ‘log’ </li>
+</ul>
+</li>
+<li><code>.maxMode</code> <ul>
+<li>{‘pTrial’, ‘xTrialxSeg’}. Method for determining trial min/max. See  <code>SAT.computeSDO.m</code> </li>
 <li>Default = ‘xTrialxSeg’ </li>
-<li><code>.nBins</code> </li>
+</ul>
+</li>
+<li><code>.nBins</code> <ul>
 <li>[Integer]. Number of states to define between min/max amplitude. </li>
 <li>Default = 20 </li>
 </ul>
+</li>
+</ul>
 <h2 id="selected-methods">(Selected) Methods  :</h2>
+<hr/>
 <ul>
 <li>
-<p><code>.import</code> (xtData)
-    <div class="highlight"><pre><span></span><code>xtdc.import(xtData)
-</code></pre></div></p>
+<h3 id="import-xtdata"><code>.import</code> (xtData)</h3>
+<div class="highlight"><pre><span></span><code>xtdc.import(xtData)
+</code></pre></div>
 <ul>
 <li>Imports  xtData  , as generated by  SAT.xtDataHolder_new.m </li>
 </ul>
 </li>
+</ul>
+<hr/>
+<ul>
 <li>
-<p><code>.resample</code>  ( DESIRED_HZ, DATAFIELD)
-    <div class="highlight"><pre><span></span><code>xtdc.resample(1000, 'envelope')
-</code></pre></div></p>
+<h3 id="resample-desired_hz-datafield"><code>.resample</code>  ( DESIRED_HZ, DATAFIELD)</h3>
+<div class="highlight"><pre><span></span><code>xtdc.resample(1000, 'envelope')
+</code></pre></div>
 <ul>
 <li>Resample time series data in data. <code>DATAFIELD</code> to a given frequency (DESIRED_HZ) </li>
 <li>Defaults  : <ul>
@@ -279,20 +360,26 @@
 </li>
 </ul>
 </li>
+</ul>
+<hr/>
+<ul>
 <li>
-<p><code>.bsxop</code>  (  xtDataCell  , funcHandle) 
-    <div class="highlight"><pre><span></span><code>xtdc.bsxop([], @abs())
+<h3 id="bsxop-xtdatacell-funchandle"><code>.bsxop</code>  (  xtDataCell  , funcHandle)</h3>
+<div class="highlight"><pre><span></span><code>xtdc.bsxop([], @abs())
 # Perform data rectification
-</code></pre></div></p>
+</code></pre></div>
 <ul>
 <li>Perform bitwise operations between two  xtDataCells  of the same size (i.e., sum, multiply) </li>
 <li><code>funcHandle</code>  is a standard MATLAB function handle.</li>
 </ul>
 </li>
+</ul>
+<hr/>
+<ul>
 <li>
-<p><code>.plot</code>  (useTrials, useChannels, OFFSET, DATAFIELD): 
-    <div class="highlight"><pre><span></span><code>xtdc.plot();
-</code></pre></div></p>
+<h3 id="plot-usetrials-usechannels-offset-datafield"><code>.plot</code>  (useTrials, useChannels, OFFSET, DATAFIELD):</h3>
+<div class="highlight"><pre><span></span><code>xtdc.plot();
+</code></pre></div>
 <ul>
 <li>Co-plot the appended time series data (or subset). Segregate traces by  OFFSET  or autodefine. </li>
 <li>Defaults: <ul>
@@ -304,10 +391,13 @@
 <li>DATAFIELD  = obj.dataField </li>
 </ul>
 </li>
+</ul>
+<hr/>
+<ul>
 <li>
-<p><code>.getTensor</code>  (useChannels, useTrials) 
-    <div class="highlight"><pre><span></span><code>xten = xtdc.getTensor(); 
-</code></pre></div></p>
+<h3 id="gettensor-usechannels-usetrials"><code>.getTensor</code>  (useChannels, useTrials)</h3>
+<div class="highlight"><pre><span></span><code>xten = xtdc.getTensor(); 
+</code></pre></div>
 <ul>
 <li>Extracts a 3D data array (or subset of) from the .  data  field as a </li>
 <li>(N_USED_CHANNELS, xtDataLen,N_USED_TRIALS) doubles tensor </li>
@@ -318,16 +408,22 @@
 </li>
 </ul>
 </li>
+</ul>
+<hr/>
+<ul>
 <li>
-<p><code>.importTensor</code>  (ten): 
-    <div class="highlight"><pre><span></span><code>xtdc.importTensor(ten)
-</code></pre></div></p>
+<h3 id="importtensor-ten"><code>.importTensor</code>  (ten):</h3>
+<div class="highlight"><pre><span></span><code>xtdc.importTensor(ten)
+</code></pre></div>
 <ul>
 <li>Imports a 3D data tensor (ten) to the  .data  field, in the same format as the  <code>.getTensor</code>  method. </li>
 </ul>
 </li>
+</ul>
+<hr/>
+<ul>
 <li>
-<p><code>.discretize</code>  : </p>
+<h3 id="discretize"><code>.discretize</code>  :</h3>
 <ul>
 <li>Assign state mapping to the xtData using set parameters.
 <div class="highlight"><pre><span></span><code>xtdc.discretize();

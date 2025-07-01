@@ -29,6 +29,12 @@ _A class for containing an SDO matrix, background distribution, and null-shuffle
 
 _A class for calculating and containg all of the SDO matrices, including descriptions of the background, null shuffles, and hypothesis testing_
 
+---
+## Support Classes
+### [predictionError.m](m_predictionError.md)
+_A support class containing the measured predicted errors between an observed and predicted stochastic realization. Includes plotting methods for visualizing errors_
+
+
 ## Object-Oriented Programming (OOP) Overview
 
 
@@ -56,7 +62,7 @@ false;
 A = A.Method
 performedMethod(A, 'Method')
 true; 
-~~~~
+~~~
 
 _Class Method ```Method``` has operated on nonHandleClass instance ```A```, but because the output was not captured to a new variable, the underlying instance was not updated._
 

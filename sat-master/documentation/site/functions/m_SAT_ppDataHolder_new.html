@@ -7,7 +7,7 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="../assets/images/favicon.png" rel="icon"/>
 <meta content="mkdocs-1.6.1, mkdocs-material-9.6.14" name="generator"/>
-<title>pxtDataCell.m - SDO Analysis Toolkit</title>
+<title>SAT.ppDataHolder() - SDO Analysis Toolkit</title>
 <link href="../assets/stylesheets/main.342714a4.min.css" rel="stylesheet"/>
 <link href="../assets/stylesheets/palette.06af60db.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -20,7 +20,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#pxtdatacellm">
+<a class="md-skip" href="#satppdataholder">
           Skip to content
         </a>
 </div>
@@ -44,7 +44,7 @@
 <div class="md-header__topic" data-md-component="header-topic">
 <span class="md-ellipsis">
             
-              pxtDataCell.m
+              SAT.ppDataHolder()
             
           </span>
 </div>
@@ -129,7 +129,7 @@
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="overview.html">
+<a class="md-nav__link" href="../classes/overview.html">
 <span class="md-ellipsis">
     Custom Classes
     
@@ -137,7 +137,7 @@
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../functions/overview.html">
+<a class="md-nav__link" href="overview.html">
 <span class="md-ellipsis">
     Code Library
     
@@ -159,13 +159,6 @@
     </label>
 <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#utility">
-<span class="md-ellipsis">
-      Utility:
-    </span>
-</a>
-</li>
-<li class="md-nav__item">
 <a class="md-nav__link" href="#overview">
 <span class="md-ellipsis">
       Overview:
@@ -173,23 +166,55 @@
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#constructor">
+<a class="md-nav__link" href="#usages">
 <span class="md-ellipsis">
-      Constructor
+      Usages:
+    </span>
+</a>
+<nav aria-label="Usages:" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#inputs">
+<span class="md-ellipsis">
+      Inputs
     </span>
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#properties">
+<a class="md-nav__link" href="#output">
 <span class="md-ellipsis">
-      Properties:
+      Output:
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#utility">
+<span class="md-ellipsis">
+      Utility:
     </span>
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#selected-methods">
+<a class="md-nav__link" href="#prerequisites">
 <span class="md-ellipsis">
-      (Selected) Methods :
+      Prerequisites :
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#example-code">
+<span class="md-ellipsis">
+      Example Code
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#important-notes">
+<span class="md-ellipsis">
+      IMPORTANT NOTES :
     </span>
 </a>
 </li>
@@ -200,251 +225,112 @@
 </div>
 <div class="md-content" data-md-component="content">
 <article class="md-content__inner md-typeset">
-<h1 id="pxtdatacellm"><em>pxtDataCell.m</em></h1>
-<h2 id="utility">Utility:</h2>
-<p>Custom  Handle  class to Import, manipulate,  and subsample sampled probability distributions.</p>
+<h1 id="satppdataholder">SAT.ppDataHolder()</h1>
+<h2 id="overview">Overview:</h2>
+<p><em>A data structure to permit population with ppData</em></p>
+<ul>
+<li>ppDataHolder  A {2 x N_TRIALS} Cell array containing point-process  observations collected during recording trials. </li>
+<li>Each trial is represented as a column of the cell array. SDO Analysis assumes a level of stationarity to the signal; that different trials differ in time, but not in principle signal behavior. </li>
+</ul>
+<div class="mermaid">
+flowchart TD
+
+%% Define styles - CONSERVED!
+classDef dataObj fill: #EACE79,stroke:#333,stroke-width:2px; 
+classDef codeObj fill: #90B963,stroke:#333,stroke-width:2px;
+classDef classObj fill: #B1E2E9,stroke:#333,stroke-width:2px;
+classDef paramObj fill: #D6766F,stroke:#333,stroke-width:2px
+
+A[N_TRIALS]
+B[N_PP_CHANNELS]
+C["SAT.ppDataHolder_new.m()"]
+D[ppdh]
+
+A--param--&gt;C
+B--param--&gt;C
+C--makes--&gt;D
+
+%% Assign classes to Nodes
+class D dataObj;
+class C codeObj;
+class 00 classObj;
+class A,B, paramObj;
+</div>
+<h2 id="usages">Usages:</h2>
+<blockquote>
+<p>ppdh = SAT.ppDataHolder_new(N_TRIALS, N_PP_CHANNELS)</p>
+</blockquote>
+<h3 id="inputs">Inputs</h3>
+<ul>
+<li><code>N_TRIALS</code> <ul>
+<li>[Int]. Number of Trials in the dataset/ trials to use. </li>
+</ul>
+</li>
+<li><code>N_PP_CHANNELS</code><ul>
+<li>[Int]. Number of Channels in the dataset/ channels to use. </li>
+</ul>
+</li>
+</ul>
+<h3 id="output">Output:</h3>
+<ul>
+<li><code>ppdh</code><ul>
+<li>{2, N_TRIALS} cell array. </li>
+<li><strong>ppdh{1,N}</strong> contains a (1,N_PP_CHANNELS) structure to populate with primary data. Structure contains the following fields: <ul>
+<li><code>.sensor</code>  : A string or character unique identifier corresponding to this channel's point-process data </li>
+<li><code>.times</code>  : A [1,K] (Row) Vector containing the event  times for the given point-process. These time points should be in the same units and relative start time as the data in the xtData channel against which it will be compared with the SDO.</li>
+<li><code>.waves</code>  : A [K,M] Array of [1,M] waveforms associated with spiking events.</li>
+<li><code>.nEvents</code>  : A (1,1) integer count of the number of elements  in  <code>.times</code>.  If not populated here, will be populated during import.</li>
+<li><code>.fs</code> : (1,1) Numeric. Sample frequency for the spiking channels. </li>
+<li><code>.shuffle</code>: [L,N] array of L shuffled spike times of the observed spike train of N spikes. Can be left empty. </li>
+</ul>
+</li>
+<li><strong>ppdh{2,N}</strong> contains a structure with metadata to populate. This data will be passively appended to the  sdo  structure later, to  keep track of associated pre-processing parameters associated with SDO generation. It is a structure composed of the following fields: <ul>
+<li><code>.trialNumber</code>: [Integer]: A simple index of trial number  by position. This value is not directly utilized by the  computeSDO  code, and may be overridden. </li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<ul>
-<li>This class is partially deprecated for end-user applications, as it can be a bit tricky to set all the parameters, and ensure consistency in sampling. It is used mostly within functions. </li>
-<li>It is recommended to use <em>sdoMultiMat</em> or <em>sdoMat</em> to generate SDOs, and to extract <em>pxtDataCells</em> through <code>.get</code> methods instead of directly instantiating this class. </li>
-</ul>
+<p>The number of channels in the dataset must not change in number or order across channels. Channels can contain no data (in the case of ppDataCell), but the channels should still be present. </p>
 </div>
-<h2 id="overview">Overview:</h2>
-<div class="mermaid">classDiagram
-    class pxtDataCell {
-        +data
-        +metadata
-        +nTrials
-        +nChannels
-        +sensor
-        -discretizedData
-        +import()
-        +plot()
-        +filter()
-        +getValuesAtIndices()
-        +subsample()
-        +getTensor()
-        +importTensor()
-        +resetEnvelope()
-    }</div>
-<h2 id="constructor">Constructor</h2>
-<p><em>Call within MATLAB</em>
-<div class="highlight"><pre><span></span><code>pxt = pxtDataCell(); 
-</code></pre></div></p>
-<h2 id="properties">Properties:</h2>
-<ul>
-<li>
-<p><code>.xtName</code> </p>
-<ul>
-<li>xtDataCell.dataField </li>
-<li>Populated by  .import </li>
-</ul>
-</li>
-<li>
-<p><code>.ppName</code> </p>
-</li>
-<li>ppDataCell.dataField </li>
-<li>
-<p>Populated by  .import </p>
-</li>
-<li>
-<p><code>.xtChName</code> </p>
-<ul>
-<li>xtDataCell channel name of imported data. </li>
-<li>Populated by  .import </li>
-</ul>
-</li>
-<li>
-<p><code>.ppChName</code> </p>
-<ul>
-<li>ppDataCell channel name of imported data.  </li>
-<li>Populated by  .import </li>
-</ul>
-</li>
-<li>
-<p><code>.pxtNames</code> </p>
-<ul>
-<li>{1x nPxtTypes} cell of of  char  . Corresponds to type  of prediction.     </li>
-<li>Populated by  <code>`.import</code> </li>
-</ul>
-</li>
-<li>
-<p>Populated by <code>.comparePxt</code> </p>
-</li>
-<li>
-<p><code>.nPxtTypes</code> </p>
-<ul>
-<li>[int]. Number of dataTypes/predictions contained within the  pxtDataCell.   </li>
-</ul>
-</li>
-<li>
-<p><code>.nEvents</code> </p>
-<ul>
-<li>[int]. Number of events around which distributions are drawn. </li>
-</ul>
-</li>
-<li>
-<p><code>.nShuffles</code> </p>
-<ul>
-<li>[int]. Number of shuffles generated in  pxt. </li>
-<li>Populated by  <code>.import</code>  from  <code>ppDataCell.</code></li>
-</ul>
-</li>
-<li>
-<p><code>.xtProperties</code> </p>
-<ul>
-<li>Metadata of  <a href="m_xtDataCell.html">xtDataCell</a> </li>
-</ul>
-</li>
-<li>
-<p><code>.ppProperties</code> </p>
-<ul>
-<li>Metadata of  <a href="m_ppDataCell.html">ppDataCell</a> </li>
-</ul>
-</li>
-<li>
-<p><code>.duraMs</code> </p>
-<ul>
-<li>[double]. Duration of interval over which to derive event-wise distributions. </li>
-<li>If  .duraMs  &lt; 0, then sample this interval PRIOR to  event. </li>
-<li>If .  duraMs  &gt; 0, then sample this interval AFTER to  event. </li>
-<li>Default = +10 </li>
-</ul>
-</li>
-<li>
-<p><code>.nShift</code> </p>
-<ul>
-<li>Shift in the the start time for pre/post spike interval. See  SAT.computeSDO.m </li>
-<li>Default = 1; </li>
-</ul>
-</li>
-<li>
-<p><code>.zDelay</code> </p>
-<ul>
-<li>Interval between pre/post spike interval. See  SAT.computeSDO.m </li>
-<li>Default = 0; </li>
-</ul>
-</li>
-<li>
-<p><code>.filterWid</code> </p>
-<ul>
-<li>Width of the smoothing filter, in states. See  SAT.computeSDO.m </li>
-<li>Default = 0; </li>
-</ul>
-</li>
-<li>
-<p><code>.filterStd</code> </p>
-<ul>
-<li>Standard deviation of the smoothing filter, in states. See  <code>SAT.computeSDO.m</code> </li>
-</ul>
-</li>
-<li>
-<p>Default = 0; </p>
-</li>
-<li>
-<p><code>.nStates</code> </p>
-<ul>
-<li>Number of states used to rasterize signal. </li>
-<li>Populated by .import  from <a href="m_xtDataCell.html">xtDataCell</a>. </li>
-</ul>
-</li>
-<li>
-<p><code>.fs</code> </p>
-</li>
-<li>Sample frequency of timeseries data. </li>
-<li>Populated by  <code>.import</code>  method. </li>
-<li>
-<p>Modified by  <code>.resample</code>  method.   </p>
-</li>
-<li>
-<p><code>.stateMapping</code> </p>
-<ul>
-<li>[1 x N_STATES+1] corresponding to the edges of the state bins. </li>
-<li>Populated by <code>.import</code>  from  <a href="m_xtDataCell.html">xtDataCell</a>. </li>
-</ul>
-</li>
-<li>
-<p><code>.backgroundPx</code> </p>
-<ul>
-<li>[N_STATES x 1] Probability distribution; average P(x) </li>
-<li>Populated by  <code>.import</code> </li>
-</ul>
-</li>
-<li>
-<p><code>.backgroundMkv</code> </p>
-<ul>
-<li>[N_STATES x N_STATES] Markov Matrix, corresponding to background transitions (over <code>.duraMs</code>). </li>
-<li>Populated by  <code>.import</code></li>
-</ul>
-</li>
-<li>
-<p><code>.markovMatrix</code> </p>
-<ul>
-<li>[N_STATES x N_STATES] Markov Matrix, corresponding to transitions over adjacent states. </li>
-<li>Populated by  <code>.import</code></li>
-</ul>
-</li>
-<li>
-<p><code>.data</code> </p>
-<ul>
-<li>{1 x nPxtTypes} cell containing [N_STATES x N_EVENTS] doubles cell, containing trialwise probability data. </li>
-</ul>
-</li>
-<li>
-<p><code>.stateAssignment</code> </p>
-<ul>
-<li>{‘max’, ‘mean’, ‘median’} - Description of assigning single state to a distribution. </li>
-</ul>
-</li>
-<li>
-<p>Default = ‘max’ </p>
-</li>
-<li>
-<p><code>.errorStruct</code> </p>
-<ul>
-<li>Error structure, containing the distance between a reference <strong>pxtDataCell</strong> and second <strong>pxtDataCell</strong>. </li>
-<li>Populated by <code>.comparePxt</code></li>
-</ul>
-</li>
-</ul>
-<h2 id="selected-methods">(Selected) Methods  :</h2>
-<ul>
-<li>
-<p><code>.import</code> (<a href="m_xtDataCell.html">xtDataCell</a>, <a href="m_ppDataCell.html">ppDataCell</a>, XT_CH_NO, PP_CH_NO)
-    <div class="highlight"><pre><span></span><code>pxt.import(xtdc, ppdc, 6, 4); 
+<h2 id="utility">Utility:</h2>
+<pre><code>- Generates an empty  ppData  structure, a data holder  for point process data. 
+- User data must be bungled to fit this format.
+</code></pre>
+<h2 id="prerequisites">Prerequisites :</h2>
+<pre><code>- None
+</code></pre>
+<h2 id="example-code">Example Code</h2>
+<div class="highlight"><pre><span></span><code>&gt;&gt; numberTrials = 20; 
+&gt;&gt; numberNeurons = 10; 
 
-% Sample probability distributions from xtdc and ppdc, for channel #6 from xtdc, and channel #4 from ppdc. 
-</code></pre></div></p>
+ppdh = SAT.ppDataHolder_new(numberTrials, numberNeurons); 
+
+for tr = 1:numberTrials
+    for nn = 1:numberNeurons
+        %// populate ppData;
+        neuronName = strcat(‘neuron’, num2str(n));
+        ppdh{1,tr}(n).sensor    = neuronName;
+        ppdh{1,tr}(n).time      = ourSpikeData{n};
+        ppdh{1,tr}(n).counts    = length(ppData{1,tr}(n).time);
+    end
+end
+</code></pre></div>
+<h2 id="important-notes">IMPORTANT NOTES  :</h2>
+<ul>
+<li>
+<p>ppDataHolder  is a homogeneous structure. During data population, the row index for each trial should be consistent across the entire data cell. (e.g. ‘Neuron 3’ on row 3 in trial 1 should also be on row 3 of trial 10).</p>
 </li>
 <li>
-<p><code>.bsxop</code>  (  pxtDataCell  , funcHandle) 
-    <div class="highlight"><pre><span></span><code>xtdc.bsxop([], @abs())
-# Perform data rectification
-</code></pre></div></p>
-<ul>
-<li>Perform bitwise operations between two  xtDataCells  of the same size (i.e., sum, multiply) </li>
-<li><code>funcHandle</code>  is a standard MATLAB function handle.</li>
-</ul>
+<p>Events which do not occur during a trial should still be given a field (and ‘time’ field left empty) to thus maintain this homogenous data structure. </p>
 </li>
 <li>
-<p><code>.comparePxt</code>(pxtDataCell)</p>
-<ul>
-<li>Measure the distance between this <em>pxtDataCell</em> and a second <em>pxtDataCell</em></li>
-<li>Populates the <code>.errorStruct</code> field.  </li>
-</ul>
+<p>Additional fields may be incorporated into the first row of  ppData  (primary data) array, however, these will not  be used for SDO analysis, nor passed to the  sdo  structure. </p>
 </li>
 <li>
-<p><code>.plot</code>()</p>
-<ul>
-<li>Plots the the probability data, as collected over time, using the <em>imagesc</em> MATLAB plotter. </li>
-</ul>
-</li>
-<li>
-<p><code>.plotError</code>()</p>
-<ul>
-<li>Plots the <code>.errorStruct</code> field, if present. </li>
-</ul>
+<p>Additional fields may be incorporated into the second row of  ppData  (metadata) array. These fields  will be passively passed to the  sdo  structure. This permits  an investigator to pass trial-wise notes, annotation, and data pre-processing parameters into the  sdo  structure for later comparison or review. </p>
 </li>
 </ul>
 </article>
