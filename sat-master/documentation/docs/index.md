@@ -1,10 +1,13 @@
 # _sdoAnalysisToolkit_ [1.5]
 
+![MATLAB](https://img.shields.io/badge/language-MATLAB-orange)
+
 _A code package for performing Stochastic Dynamic Operator (SDO) Analysis_
 
 _Standard Operating Procedures_
 
 Last Updated May 6th, 2023.
+
 
 ## Table of Contents
 * [Installing the Toolkit](./installation/overview.md)
@@ -13,16 +16,10 @@ Last Updated May 6th, 2023.
 
 * [Using Custom Data Classes](./classes/overview.md)
 
-``` mermaid
-
-flowchart LR
-
-A[A]--does-->B[B];
-
-```
-
 
 ## License Information: 
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 This code is provided under the GPL3.0 License. 
 

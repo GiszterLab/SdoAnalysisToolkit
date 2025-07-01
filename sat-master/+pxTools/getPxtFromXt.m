@@ -173,5 +173,4 @@ if nargout == 2
     ind_x1  = []; 
 end
 
-1; 
 end

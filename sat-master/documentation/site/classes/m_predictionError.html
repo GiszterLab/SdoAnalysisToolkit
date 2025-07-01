@@ -7,7 +7,7 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="../assets/images/favicon.png" rel="icon"/>
 <meta content="mkdocs-1.6.1, mkdocs-material-9.6.14" name="generator"/>
-<title>pxtDataCell.m - SDO Analysis Toolkit</title>
+<title>predictionError.m - SDO Analysis Toolkit</title>
 <link href="../assets/stylesheets/main.342714a4.min.css" rel="stylesheet"/>
 <link href="../assets/stylesheets/palette.06af60db.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -20,7 +20,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#pxtdatacellm">
+<a class="md-skip" href="#predictionerrorm">
           Skip to content
         </a>
 </div>
@@ -44,7 +44,7 @@
 <div class="md-header__topic" data-md-component="header-topic">
 <span class="md-ellipsis">
             
-              pxtDataCell.m
+              predictionError.m
             
           </span>
 </div>
@@ -200,19 +200,16 @@
 </div>
 <div class="md-content" data-md-component="content">
 <article class="md-content__inner md-typeset">
-<h1 id="pxtdatacellm"><em>pxtDataCell.m</em></h1>
+<h1 id="predictionerrorm"><em>predictionError.m</em></h1>
 <h2 id="utility">Utility:</h2>
-<p>Custom  Handle  class to Import, manipulate,  and subsample sampled probability distributions.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<ul>
-<li>This class is partially deprecated for end-user applications, as it can be a bit tricky to set all the parameters, and ensure consistency in sampling. It is used mostly within functions. </li>
-<li>It is recommended to use <em>sdoMultiMat</em> or <em>sdoMat</em> to generate SDOs, and to extract <em>pxtDataCells</em> through <code>.get</code> methods instead of directly instantiating this class. </li>
-</ul>
+<p>Output class for returning and plotting the prediction error from an SDO and its originating data. </p>
+<div class="admonition bug todo">
+<p class="admonition-title">Bug</p>
+<p>Finish building this</p>
 </div>
 <h2 id="overview">Overview:</h2>
 <div class="mermaid">classDiagram
-    class pxtDataCell {
+    class sdoMat {
         +data
         +metadata
         +nTrials
@@ -230,15 +227,17 @@
     }</div>
 <h2 id="constructor">Constructor</h2>
 <p><em>Call within MATLAB</em>
-<div class="highlight"><pre><span></span><code>pxt = pxtDataCell(); 
+<div class="highlight"><pre><span></span><code>sdoM = sdoMat(); 
 </code></pre></div></p>
+<p>!!! bug TODO: 
+       - Upgrade this section with metadata classes on xtDataCell, ppDataCell --&gt; pxtDataCell; import metadata from pxtDataCell. </p>
 <h2 id="properties">Properties:</h2>
 <ul>
 <li>
 <p><code>.xtName</code> </p>
 <ul>
 <li>xtDataCell.dataField </li>
-<li>Populated by  .import </li>
+<li>Populated by  <code>.import</code> </li>
 </ul>
 </li>
 <li>
@@ -246,20 +245,20 @@
 </li>
 <li>ppDataCell.dataField </li>
 <li>
-<p>Populated by  .import </p>
+<p>Populated by  <code>.import</code> </p>
 </li>
 <li>
-<p><code>.xtChName</code> </p>
+<p><code>.xtChName</code></p>
 <ul>
 <li>xtDataCell channel name of imported data. </li>
-<li>Populated by  .import </li>
+<li>Populated by  <code>.import</code> </li>
 </ul>
 </li>
 <li>
 <p><code>.ppChName</code> </p>
 <ul>
 <li>ppDataCell channel name of imported data.  </li>
-<li>Populated by  .import </li>
+<li>Populated by  <code>.import</code> </li>
 </ul>
 </li>
 <li>
@@ -267,15 +266,13 @@
 <ul>
 <li>{1x nPxtTypes} cell of of  char  . Corresponds to type  of prediction.     </li>
 <li>Populated by  <code>`.import</code> </li>
+<li>Populated by <code>.comparePxt</code> </li>
 </ul>
-</li>
-<li>
-<p>Populated by <code>.comparePxt</code> </p>
 </li>
 <li>
 <p><code>.nPxtTypes</code> </p>
 <ul>
-<li>[int]. Number of dataTypes/predictions contained within the  pxtDataCell.   </li>
+<li>[int]. Number of dataTypes/predictions contained within the  <a href="m_pxtDataCell.html">pxtDataCell</a>.   </li>
 </ul>
 </li>
 <li>
@@ -288,7 +285,7 @@
 <p><code>.nShuffles</code> </p>
 <ul>
 <li>[int]. Number of shuffles generated in  pxt. </li>
-<li>Populated by  <code>.import</code>  from  <code>ppDataCell.</code></li>
+<li>Populated by  <code>.import</code>  from  <a href="m_ppDataCell.html">ppDataCell</a></li>
 </ul>
 </li>
 <li>
@@ -304,12 +301,18 @@
 </ul>
 </li>
 <li>
-<p><code>.duraMs</code> </p>
+<p><code>.px0_duraMs</code> </p>
 <ul>
 <li>[double]. Duration of interval over which to derive event-wise distributions. </li>
-<li>If  .duraMs  &lt; 0, then sample this interval PRIOR to  event. </li>
-<li>If .  duraMs  &gt; 0, then sample this interval AFTER to  event. </li>
-<li>Default = +10 </li>
+<li>If .duraMs  &lt; 0, then sample this interval PRIOR to  event. </li>
+<li>If .duraMs  &gt; 0, then sample this interval AFTER to  event. </li>
+</ul>
+</li>
+<li>
+<p><code>.px1_duraMs</code> </p>
+<ul>
+<li>[double]. Duration of interval over which to derive event-wise distributions.</li>
+<li>If .duraMs  &lt; 0, then sample this interval PRIOR to  event.-  If .duraMs  &gt; 0, then sample this interval AFTER to  event. </li>
 </ul>
 </li>
 <li>
@@ -322,8 +325,15 @@
 <li>
 <p><code>.zDelay</code> </p>
 <ul>
-<li>Interval between pre/post spike interval. See  SAT.computeSDO.m </li>
+<li>Interval between pre/post spike interval. See <code>SAT.computeSDO.m</code> </li>
 <li>Default = 0; </li>
+</ul>
+</li>
+<li>
+<p><code>.sdo</code></p>
+<ul>
+<li>[N_STATES,N_STATES] SDO (differential) matrix corresponding to the combination of xtDataCell channel and ppDataCell channel. </li>
+<li>Populated by <code>.import</code> </li>
 </ul>
 </li>
 <li>
@@ -337,10 +347,8 @@
 <p><code>.filterStd</code> </p>
 <ul>
 <li>Standard deviation of the smoothing filter, in states. See  <code>SAT.computeSDO.m</code> </li>
+<li>Default = 0; </li>
 </ul>
-</li>
-<li>
-<p>Default = 0; </p>
 </li>
 <li>
 <p><code>.nStates</code> </p>
@@ -386,64 +394,38 @@
 </ul>
 </li>
 <li>
-<p><code>.data</code> </p>
+<p><code>.markovType</code></p>
 <ul>
-<li>{1 x nPxtTypes} cell containing [N_STATES x N_EVENTS] doubles cell, containing trialwise probability data. </li>
+<li>{'px0', 'px1'}</li>
+<li>Whether to use the Markov Matrix from the prespike (px0) or postspike (px`) <a href="m_pxtDataCell.html">pxtDataCell</a> during import. </li>
 </ul>
 </li>
 <li>
-<p><code>.stateAssignment</code> </p>
+<p><code>.transitionMat</code></p>
 <ul>
-<li>{‘max’, ‘mean’, ‘median’} - Description of assigning single state to a distribution. </li>
-</ul>
-</li>
-<li>
-<p>Default = ‘max’ </p>
-</li>
-<li>
-<p><code>.errorStruct</code> </p>
-<ul>
-<li>Error structure, containing the distance between a reference <strong>pxtDataCell</strong> and second <strong>pxtDataCell</strong>. </li>
-<li>Populated by <code>.comparePxt</code></li>
+<li>Populated by <code>.matkeTransitionMatrices</code></li>
+<li>Comprises a version of the SDO for use in forward prediction (normalized). </li>
 </ul>
 </li>
 </ul>
 <h2 id="selected-methods">(Selected) Methods  :</h2>
 <ul>
-<li>
-<p><code>.import</code> (<a href="m_xtDataCell.html">xtDataCell</a>, <a href="m_ppDataCell.html">ppDataCell</a>, XT_CH_NO, PP_CH_NO)
-    <div class="highlight"><pre><span></span><code>pxt.import(xtdc, ppdc, 6, 4); 
+<li><code>.import</code> (<a href="m_pxtDataCell.html">pxtDataCell</a>, <a href="m_pxtDataCell.html">pxtDataCell</a>); 
+    <div class="highlight"><pre><span></span><code>sdoM.import(pxt0, pxt1)
 
-% Sample probability distributions from xtdc and ppdc, for channel #6 from xtdc, and channel #4 from ppdc. 
-</code></pre></div></p>
-</li>
-<li>
-<p><code>.bsxop</code>  (  pxtDataCell  , funcHandle) 
-    <div class="highlight"><pre><span></span><code>xtdc.bsxop([], @abs())
-# Perform data rectification
-</code></pre></div></p>
-<ul>
-<li>Perform bitwise operations between two  xtDataCells  of the same size (i.e., sum, multiply) </li>
-<li><code>funcHandle</code>  is a standard MATLAB function handle.</li>
+% Calculate the SDO measured between the observed probability distributions in pxt0 and the transitions (post-spike) to pxt1.
+</code></pre></div></li>
 </ul>
-</li>
-<li>
-<p><code>.comparePxt</code>(pxtDataCell)</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <ul>
-<li>Measure the distance between this <em>pxtDataCell</em> and a second <em>pxtDataCell</em></li>
-<li>Populates the <code>.errorStruct</code> field.  </li>
+<li>Here, <em>pxt0</em> and <em>pxt1</em> must be <a href="m_pxtDataCell.html">pxtDataCell</a> classes with the same number of events, number of state, and state definition. </li>
+<li>This is most easily handled by first making <em>pxt0</em> making a copy as <em>pxt1</em>, then modifying the relevant parameters.</li>
 </ul>
-</li>
-<li>
-<p><code>.plot</code>()</p>
+</div>
 <ul>
+<li><code>.plot</code>()<ul>
 <li>Plots the the probability data, as collected over time, using the <em>imagesc</em> MATLAB plotter. </li>
-</ul>
-</li>
-<li>
-<p><code>.plotError</code>()</p>
-<ul>
-<li>Plots the <code>.errorStruct</code> field, if present. </li>
 </ul>
 </li>
 </ul>
