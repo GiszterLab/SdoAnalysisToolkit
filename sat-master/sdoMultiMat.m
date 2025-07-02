@@ -104,7 +104,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                     'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
                     'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
                 %}
-                
+
                 1; %TEMPORARY
                 %
                 obj.sdoStruct = SAT.compute.populateSDOArray4(xtdc, ppdc, ... 

@@ -104,6 +104,8 @@ if sz0x == 1 && (sz0y>1)
     cl = cl';
     [sz0y, sz0x] = size(cl);
 end
+
+Nx_Base = []; 
 if (sz0x == 1) || (sz0y == 1 )
     %// output as a doubles array
     celltype = ['Nx1_' handl]; 
@@ -113,10 +115,12 @@ if (sz0x == 1) || (sz0y == 1 )
     cl = cl(cl_IX); 
     % update;
     [sz0y, sz0x] = size(cl); 
+    Nx_Base = 'Nx1'; 
     
 else
     %// output as a cell array
     celltype = ['NxK_' handl]; 
+    Nx_Base = 'NxK'; 
 end
 
 %-- Num Rows [Expected consistent] 
@@ -127,8 +131,10 @@ ew = cellfun(@size, cl, repelem( {2}, sz0y, sz0x) ); %'expected width'
 el = reshape(el, sz0y, sz0x); 
 ew = reshape(ew, sz0y, sz0x); 
 
-switch celltype
-    case {'Nx1_double', 'Nx1_cell', 'Nx1_logical', 'Nx1_char'}
+switch Nx_Base
+%switch celltype
+    case 'Nx1'
+    %case {'Nx1_double', 'Nx1_int16', 'Nx1_cell', 'Nx1_logical', 'Nx1_char'}
         el2 = max(mode(mode(el)),1); %double-dimension median; expected consistent       
         if ~all(el(el>0) == el(find(el>0,1)))
             %// mismatch in expectation; 
@@ -144,7 +150,8 @@ switch celltype
             el = reshape(el, sz0y, sz0x); 
             ew = reshape(ew, sz0y, sz0x); 
         end
-    case {'NxK_double', 'NxK_logical', 'NxK_cell'}
+    case 'NxK'
+        %case {'NxK_double', 'NxK_logical', 'NxK_cell'}
         %// back-patch from cellvcat
         LI = (el>0) & ~isnan(el); 
         el2 = zeros(sz0y,1); 

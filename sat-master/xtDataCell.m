@@ -366,6 +366,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             obj.sensor = nm_cell; 
 
         end
+        %}
         
         %% Auxillary Operation
         function obj = importTensor(obj, ten, vars)
