@@ -4,7 +4,7 @@
 %
 % INPUT
 %   L = 'Linear Operator' to test
-% OUPUT
+% OUTPUT
 %   flag = Boolean [0/1]
 %       0 - L fails to suffice assumptions
 %       1 - L satisfices assumptions of linear operators
@@ -77,54 +77,6 @@ for z = 1:sz_3
             REASON(z)=4; 
         end
 end
-%{
-else
-    flag = 1; 
-    REASON = 0; 
-    tol = 1e-12; %default tol
-    
-    % // Overall Mag excessive
-    %{
-    if sum(sum(abs(L))) > 2
-        flag = 0; 
-        return
-    end
-    %}
-    
-    %// Nonzero cols
-    if any(abs(sum(L,1))>tol)
-        flag = 0; 
-        REASON = 1; 
-        return
-    end
-        
-    % // Main Diagonal Positive
-    if any(diag(L)>0)
-        flag = 0; 
-        REASON = 2; 
-        return
-    end
-    
-    % // Off-Diagonal Negative
-    if (nnz(triu(L,1) < 0) > 0) %upper triangle
-        flag = 0; 
-        REASON = 3; 
-        return
-    end
-    if (nnz(tril(L,-1) < 0) > 0) %lower triangle
-        flag = 0; 
-        REASON = 3; 
-        return
-    end
-    
-    %// Element Magnitude; 
-    % ||Dpx|| > 1
-    if any(abs(L)>1, 'all')
-        flag = 0; 
-        REASON=4; 
-    end
-end
-%}
 
 if nargout == 1
     REASON = []; 

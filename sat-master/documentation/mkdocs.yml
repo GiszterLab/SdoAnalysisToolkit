@@ -7,15 +7,17 @@ theme:
     - scheme: default
       primary: black
       accent: red
-     # Secondary Mode? 
-    - scheme: iceberg
-      primary: white #indigo
-      accent: red
-      # Primary mode?
-
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
+     # Secondary Mode? 
+    - scheme: slate
+      primary: white #indigo
+      accent: red
+      # Primary mode?
+      toggle:
+       icon: material/brightness-7
+       name: switch to dark mode
   font:
     text: rockwell #Roboto
     code: courier #Roboto Mono
@@ -26,7 +28,12 @@ plugins:
 - search
 - mermaid2
 
+extra_css:
+  - stylesheets/custom.css
 
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
 # Whatever type of fancy decorators we want for the markdown rendering
 markdown_extensions:
