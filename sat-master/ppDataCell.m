@@ -62,15 +62,13 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
             % Find first trial w/ data
             ix_tr = find(sum(obj.nTrialEvents,1)>1,1);
-            %ix_tr = find(any(obj.nTrialEvents),1); 
             ix_n = find(obj.nTrialEvents(:,ix_tr),1);
-            %ix_n = find(any(obj.nTrialEvents(:,1:ix_tr),1)); 
             if isempty(ix_tr)
                 LI = false; 
                 return
             end
             if ~isfield(obj.data{1,ix_tr}, 'shuffle')
-                % used for compatability
+                % used for compatibility
                 LI = false; 
                 return
             end
