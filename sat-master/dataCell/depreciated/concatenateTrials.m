@@ -137,7 +137,7 @@ function obj = concatenateTrials(obj, useTrials)
                     stCell{1,tr} = miniData{1,tr}(ch).times + tOff(tr); 
                 end
                 miniStruct{1,1}(ch).times = cellhcat(stCell); 
-            end
+            end        
             %___________________
             dataH = dataCell.constructors.getPpDataHolder(nNewTrials, obj.nChannels); 
             obj2 = ppDataCell; 

@@ -55,15 +55,12 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
         function LI = get.sampledData(obj)
             LI = obj.data.sampledData; 
         end
-        %-------------------------------
         function nTrials = get.nTrials(obj)
             nTrials = obj.data.nTrials; 
         end
-        %-------------------------------
         function nChannels = get.nChannels(obj)
             nChannels = obj.data.nChannels; 
         end
-        %-----------------------------
         function sensor = get.sensor(obj)
             sensor = obj.data.sensor; 
         end
@@ -87,7 +84,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
             end
             %
             obj.data.import(dataHolder, inputname(2)); 
-            obj.data.dataType = 'xtData';
             obj.data.dataField = FIELDNAME;
             %
             obj.stateMap.getChannelAmp(obj.data); 
@@ -121,7 +117,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
 
         % __ FILTER 
         % // Not preferred here (ideally  upstream), but allows JIT operations
-        function obj = filter(obj, FILTERTYPE, N_POINTS, F_VAR,vars)
+        function obj = filter(obj, FILTERTYPE, N_POINTS, F_VAR)
             arguments
                 obj
                 FILTERTYPE {mustBeMember(FILTERTYPE, {'notch', ...
@@ -131,11 +127,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
                     'butter', 'emgButter'})}
                 N_POINTS
                 F_VAR = 1; %auxillary variable for ffilt
-                vars.datafield = 'raw'; % to filter
             end
-            
-            obj.data.filter(FILTERTYPE, N_POINTS, F_VAR, 'dataField', vars.datafield); 
-            %{
             if ~obj.sampledData 
                 disp("No Data sampled in xtDataCell"); 
                 return
@@ -149,11 +141,9 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
                 xtData2(:,:,tr) = fxt(:,1:size(xt,2)); 
             end
             obj.importTensor(xtData2); 
-            %}
         end
 
         % Added 8.29.2024
-        % -->> I should migrate this to vcat?
         function obj = concat(obj, useTrials)
             arguments
                 obj
@@ -166,7 +156,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
            %// Quick way to reset the 'envelope' field in the xtdc by
            %re-populating with the 'raw' field; 
            xt_raw = obj.getTensor(1:obj.nChannels,1:obj.nTrials, "DATAFIELD",'raw'); 
-           obj.data.importTensor(xt_raw); 
+           obj.importTensor(xt_raw); 
         end
 
         % __ BIT-WISE FUNCTION OPERATION (Between or within class)
@@ -215,13 +205,17 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
             % __ Array Operation
             xtTenNet = bsxfun(functionHandle, xtTen1, xtTen2); 
             obj.importTensor(xtTenNet); 
-            obj.stateMapping.getChannelAmp; 
+            obj.setChannelRange; 
         end
         
         % __ explicit method for setting min/max channel amplitude.
         % Possibly temporary, as we don't know if it would make more sense
         % to make this dynamic or not
-        %{
+        
+        function obj = setChannelRange(obj)   
+            obj.stateMapping.getChannelAmp; 
+        end
+
         function obj = setWeightMatrix(obj, METHOD)
             arguments
                 obj
@@ -234,17 +228,19 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
                 otherwise %{'pca, 'max', std'}
                     xt = getTensor; 
             end
-            %
+            
             obj.linearTransform.calculateWeightMatrix(xt,METHOD); 
+           
         end
-        %}
-        %{
+
         function obj = applyLinearTranform(obj)
+            arguments
+                obj 
+            end
             % // uses the linear transformation matrix to apply a method
             obj.linearTransform.applyLinearTransform(obj.data); 
 
         end
-        %}
         %}
         
         %% Auxillary Operation
@@ -271,8 +267,9 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
                 'useTrials', vars.useTrials, ...
                 'datafield', vars.datafield, ... 
                 'conform_method', vars.conform_method);
-            %
-            obj.stateMapping.getChannelAmp;     
+            
+            obj.stateMapping.getChannelAmp; 
+            
         end
         
         %% DATA Extraction Methods
@@ -285,12 +282,13 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
                 vars.datafield      char = obj.data.dataField;
                 vars.conform_method char {mustBeMember(vars.conform_method, {'pad', 'nanpad', 'trim'})} = 'pad'; 
             end
-            %
+            
             ten = obj.data.getTensor(obj, useChannels, useTrials, ...
                 'datafield', vars.datafield, 'conform_method', vars.conform_method); 
         end
 
         function obj = subsample(obj, useTrials, useChannels)
+            %// public implementation of superclass method
             arguments
                 obj
                 useTrials           double = 1:obj.data.nTrials; 
@@ -305,33 +303,25 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
             obj.linearTransform.subsample(useChannels); 
 
         end
-        %-----------------------------------------%
-        function [obj] = hcat(obj, dcList) 
-             arguments
-                obj
-                dcList % i.e. a {bracketed cell}
-            end
-            if ismember(class(dcList), 'xtDataCell')
-                dcList = {dcList}; 
-            end
-             for c = 1:length(dcList)
-                dc = dcList{c}; 
-                obj.data.hcat(dc.data); 
-             end
-        end
-        %-----------------------------------------%
-        function [obj] = vcat(obj, dcList) %varargin)
+
+        function [obj] = combine(obj, dcList) %varargin)
             arguments
                 obj
-                dcList % i.e. a {bracketed cell}
+                dcList % i.e. a [bracked] list 
             end
-            if ismember(class(dcList), 'xtDataCell')
-                dcList = {dcList}; 
-            end
+
+            % Pump to static; 
+            xtdcCells = cell(1, length(dcList)+1); 
+            xtdcCells{1} = obj; 
             for c = 1:length(dcList)
-                dc = dcList{c}; 
-                obj.data.vcat(dc.data); 
+                xtdcCells{c+1} = dcList(c); 
             end
+
+            out = xtDataCell.combineXtDataCells(xtdcCells);
+            
+            names = fieldnames(out); 
+            names = setdiff(names, 'dataSource'); %exclusion; 
+            obj.copyProperties(out, names);  % force override for some reason
         end
 
         % __ Extract data from 'data' using indexed positions. 
@@ -343,17 +333,52 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
                 vars.useTrials  = 1:obj.nTrials; %[]; 
                 vars.dataField {mustBeMember(vars.dataField, {'envelope', 'raw', 'offset', 'stateSignal', 'times'})} = obj.dataField; 
             end
-            %--> Pass out; This may be redundant
-            values = obj.data.getValuesAtIndices(indices, ...
-                'useChannels', vars.useChannels, 'useTrials', vars.useTrials, ...
-                'dataField', vars.dataField); 
+            % __ Pre-parse
+            if ~iscell(indices)
+                % Evaluate time points across ALL trials?? 
+                indices = repelem({indices}, 1, length(vars.useTrials));  
+            end
+            if isempty(vars.useChannels)
+                vars.useChannels = 1:obj.nChannels; 
+            end
+            if isempty(indices)
+                %// pass to 'getTensor' instead
+                values = obj.getTensor(vars.useChannels, vars.useTrials); 
+                return
+            end
+            %____________
+            % {1 x N} indices can refer to either TRIAL indices, or CHANNEL indices...
+            % we will need to refer between the two.
+            
+            N_USE_TRIALS    = length(vars.useTrials); 
+            N_USE_XT_CH     = length(vars.useChannels);
+            
+            % Ideally, we want to get the output as a {N_CHANNELS x N_TRIALS} cell of
+            % lookup values 
+            
+            values = cell(N_USE_XT_CH, N_USE_TRIALS);
+            for tri = 1:N_USE_TRIALS
+                tr = vars.useTrials(tri); 
+                if isempty(indices{tri})
+                    continue
+                end
+                for chi = 1:N_USE_XT_CH
+                    ch = vars.useChannels(chi); 
+                    % __ Iterative Lookup
+                    values{chi,tri} = obj.data{1,tr}(ch).(vars.dataField)(indices{tri}); 
+                    if (size(indices{tri},1) >1) && (size(values{chi,tri},1) == 1)
+                        % deal with transposed columns
+                        values{chi,tri} = values{chi,tri}'; 
+                    end
+                end
+            end
            
         end
         
         % NOTE: This used to be called 'merge'
         % --> We're calling it 'hcat' as its a bit more descriptive of
         % what's going on. 
-        %{
+        
         function obj = merge(obj, xtdc, vars)
             arguments
                 obj 
@@ -398,7 +423,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
             obj.sensor = [obj.sensor; xtdc.sensor]; 
             
         end
-         %}       
+                
 
         %% __ Write xtdata to a CSV file
         % __>> Allow for a tidy data format. 
@@ -423,5 +448,71 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
         end
 
     end
+    methods (Static)
+        % __ Generally used plotter between channels w/ a common offset; 
+        function plot_with_offset(dataArr, OFFSET)
+            arguments
+                dataArr
+                OFFSET double = []; 
+            end
+            N_PLOT_ROWS = size(dataArr, 1); 
 
+            %// Estimate the ideal offset for co-plotting
+            if isempty(OFFSET)      
+                maxVal = max(max(abs(diff(dataArr,1)))); 
+                offset = 0.5*maxVal; 
+            else
+                offset = OFFSET; 
+            end
+
+            figure; 
+            
+            xMin = inf; 
+            xMax = -inf; 
+            for m = 1:N_PLOT_ROWS
+                xt = dataArr(m,:)-(m-1)*offset; 
+                xMax = max(xMax, min(max(xt), offset) ); %up to +1 offset; 
+                xMin = min(xMin, max(min(xt), -(m)*offset) );
+                if all(isnan(xt))
+                    %/ 'missing/nan' values
+                    plot(-(m-1)*offset*ones(size(xt)), 'LineStyle',':'); 
+                end
+                plot(xt); 
+                hold on; 
+            end
+            if m == 1
+                %__ single channels get full bandwidth
+                xMax = max(xt); 
+                xMin = min(xt); 
+            end
+            % __ Patch 6.8.24
+
+            yvect = -(N_PLOT_ROWS-1)*offset:offset:0; 
+            yticks(yvect); 
+
+            % __ 
+
+            %// Rewindow axes to center on data 
+            axis([-inf, inf,xMin, xMax]); 
+            ylabel(strcat("Channel Offset = ", num2str(offset))); 
+            title("Co-Plotted X(t) Data")
+        end
+        % ___ Implementation of the 'combine' function; 
+        % For sanity, we will pass in a {1, nDataCells} cell rather than
+        % maintain varargin; 
+        
+        
+        function [dcCombine] = combineXtDataCells(dataCellCell)
+            nDC = length(dataCellCell); 
+            for c = 1:nDC
+                if ~isa(dataCellCell{c}, 'xtDataCell')
+                    disp("Error: Unlike DataCells provided")
+                    dcCombine = []; 
+                    return
+                end
+            end
+            dcCombine = dataCell.manipulate.combineDataCells(dataCellCell); 
+        end
+
+    end
 end

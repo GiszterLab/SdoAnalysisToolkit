@@ -1,0 +1,21 @@
+%% dataCell.intervalSampler
+% 
+% Support Class for drawing intervals from time events
+%
+% Useful for defining intervals
+%
+% called by  pxtDataCell
+
+% This is going to be the new method for defining the sampling properties
+% from data; used to draw distributions, as necessary. 
+
+classdef intervalSampler
+    properties
+        n_shift
+        
+        
+    end
+    methods
+        
+    end
+end
