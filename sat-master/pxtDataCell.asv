@@ -8,8 +8,7 @@
 % NOTE: In V2, this class has been largely gutted with the composition
 % classes; it exists now largely as an instance of recorded code. 
 
-% --> Need to allow to xtData and ppData to "not" exist, and to spin off
-% pxtData from 
+% --> Need to allow to xtData and ppData to "not" exist, and
 
 % --> I think it makes sense to make this something of a basal class, with
 % the multiplexing from multiple Matrices handled by a different class. 

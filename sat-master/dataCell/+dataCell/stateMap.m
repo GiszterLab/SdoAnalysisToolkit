@@ -27,6 +27,7 @@ classdef stateMap < handle & matlab.mixin.Copyable
         channelAmpMin
         %
         allowClipping = 0; 
+        % ___>> Also should allow the inverse from this; assign xt from pxt
     end
     
     properties (Hidden, Dependent)
@@ -169,6 +170,13 @@ classdef stateMap < handle & matlab.mixin.Copyable
                     data.data{1,tr}(ch).signalLevels = obj.stateMapping(:,ch,tr);
                 end
             end
+            
+        end
+        %---------------------------------------------------------------
+        % Pared alternative for use on raw data; 
+        function data_out = discretizeSignalRaw(obj, data, useMapCh, useMapTr)
+            
+            data_out = discretize(data, obj.stateMapping(:,useMapCh, useMapTr)); 
             
         end
             

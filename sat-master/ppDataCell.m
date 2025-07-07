@@ -35,13 +35,17 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
         % __ Shuffling Parameters; 
     end
     properties (Dependent)
-        shuffledSpikes 
         % // These are piped from composed classes; 
         nTrialEvents 
         nChannels
         nTrials
         sensor
     end
+    % These are just shortcut aliases
+    properties (Hidden, Dependent)
+        shuffledData    
+    end
+    
     %
     methods
         %% Dependencies
@@ -72,7 +76,9 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
            end
         end        
         %-------------------------------
-        function LI = get.shuffledSpikes(obj)
+        function LI = get.shuffledData(obj)
+            LI = obj.shuffler.shuffledData; 
+            %{
             if ~obj.sampledData
                 LI = false;
                 return
@@ -94,6 +100,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
             else
                 LI = true; 
             end
+            %}
         end
 
         %% __ CONSTRUCTOR
@@ -120,7 +127,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
         % Added 8.29.2024
         % Concatenate and flatten multiple trials; 
         function obj = concat(obj, useTrials)
-           
             arguments
                 obj
                 useTrials = 1:obj.nTrials;
@@ -205,6 +211,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
         end
         
         %% EXTRACTION Methods
+        %{
         function binXtCell = getBinaryImpulses(obj, SAMPLE_HZ, useTrials, useChannels, vars)
             arguments 
                 obj
@@ -228,6 +235,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
                 binXtCell{tr} = binarize_ppData(trEventTimes, SAMPLE_HZ, obj.trTimeLen(tr), vars.rateCode); 
             end
         end
+        %}
         
         %// Concat event times (w/ proper offset); 
         function catTimes = getConcatEventTimes(obj, useTrials, useChannels) 
@@ -268,6 +276,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
 
         % This should be implemented as part of the shuffler methods.
         % --> pxt drawer
+        % --> There's not a good reason to actually implement this here; 
+        %{
         function [idx0_Cell, idx1_Cell] = getPerieventIndices(obj, useTrials, useChannels, vars)
             arguments
                 obj
@@ -303,7 +313,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
                     idx1_Cell(:,tri) = ix1'; 
                 end
             end
-        end       
+        end     
+        %}
         %_____________________________________________________
         % || X-Correlogram for inferring spike lags || 
 
@@ -454,6 +465,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
         %% Extraction Methods 
 
         %// Extract subsets of the dataCell containing points within a given range.  
+        % --> Probably should put this in the primaryData method, if we
+        % still want it. 
         function timeStamps = getBinnedTimestamps(obj, tStart, tStop, useChannels, useTrials)
             arguments
                 obj
@@ -492,50 +505,22 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
         end
 
         %% Conversion Methods; 
-        function xtDC = getXtDataCell(obj, SAMPLE_HZ, vars)
+        function xtdc = getXtDataCell(obj, SAMPLE_HZ, vars)
             % // Method to convert the observed point process data into some
             % an xtDataCell; 
             arguments
                 obj
                 SAMPLE_HZ {mustBeNumeric} = obj.fs;  
-                vars.rateCode = 0; 
+                vars.rateCode = 1; % this isn't a filter; but a bin-count;  
             end
-            xtDC = xtDataCell();
-            xtDC.data = obj.data(); 
+            xtdc = xtDataCell();
+            xtData = obj.data.convertDataType('xtData', 'fs', SAMPLE_HZ); 
             
-            %// Copy-Over Primary data; 
-            %___
-            %{
-            xtDC.data       = obj.data; 
-            xtDC.metadata   = obj.metadata; 
-            xtDC.nTrials    = obj.nTrials; 
-            xtDC.nChannels  = obj.nChannels; 
-            xtDC.sensor     = obj.sensor; 
-            xtDC.trTimeLen  = obj.trTimeLen; 
-            %}
-            
-            % Need an independent 'set' method to overrride get methods.
-            
-            xtDC.data.fs         = SAMPLE_HZ; 
-            xtDC.data.dataField  = 'envelope'; %obj.dataField; 
-            %____
-            binXtCell = getBinaryImpulses(obj, SAMPLE_HZ, 'rateCode', vars.rateCode); %, useTrials, useChannels)
-            S = dataCell.constructors.getXtDataHolder(xtDC.nTrials, xtDC.nChannels); 
-            for tr = 1:xtDC.nTrials
-                timeArr = 0:1/xtDC.fs: (xtDC.trTimeLen(tr)- 1/xtDC.fs); 
-                %___
-                for ch = 1:xtDC.nChannels
-                    if ch == 1
-                        S{1,tr}(ch).times = timeArr;
-                    end
-                    S{1,tr}(ch).sensor  = xtDC.sensor{ch}; 
-                    S{1,tr}(ch).fs      = xtDC.fs; 
-                    S{1,tr}(ch).raw = binXtCell{tr}(ch,:); 
-                    S{1,tr}(ch).(xtDC.dataField) = binXtCell{tr}(ch,:); 
-                end
+            if ~(vars.rateCode == 0)
+                %TODO: Call a filter on this here; 
             end
-            xtDC.import(S); 
-
+            xtdc.data = xtData; % No need to call import directly; 
+            
         end
         
         %% PLOTTER METHODS

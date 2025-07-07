@@ -5,7 +5,7 @@
 %
 % INPUTS: 
 % 'eventTimes': {N x1 } cell. If N > 1, use each cell element as a
-%   new row in the resulting binArr. If passed as a vector, treate as a cell
+%   new row in the resulting binArr. If passed as a vector, treat as a cell
 %
 % Differential behavior based on ARR_LENGTH data type. If integer, treat
 % ARR_LENGTH as a total length index (i.e. the length of binArr). If a

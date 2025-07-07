@@ -15,6 +15,7 @@
 % indices
 % = 't1_nPoints' = Number of time points to include in the 'post' event
 % indices
+% - 'maxLen'= Upper bound on the allowed indices of the shuffle.
 % OUTPUTS
 %   - idx_t0 = {1,N_PP_CH} cell of [t0_nPoints x N_OBS x N_SHUFFLE]; if st is a double,
 %       this is a doubles array

@@ -1,5 +1,5 @@
 %% xtDataCell Class (OOP) - V2
-% Class for manipulating X(t) and interconverting. 
+% Public class for manipulating X(t) and interconverting. 
 % Designed for use within the SDO Analysis Toolkit
 
 % xtDataCell class used here to contain/operate on time series type data; 
@@ -135,21 +135,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
             end
             
             obj.data.filter(FILTERTYPE, N_POINTS, F_VAR, 'dataField', vars.datafield); 
-            %{
-            if ~obj.sampledData 
-                disp("No Data sampled in xtDataCell"); 
-                return
-            end
-            xtData = getTensor(obj); 
-            xtData2 = xtData; 
-            for tr = 1:obj.nTrials 
-                % --> upgraded callAfilter
-                xt = squeeze(xtData(:,:,tr)); 
-                fxt = callAfilter(xt,FILTERTYPE, obj.fs, 'nPoints', N_POINTS, 'auxVar', F_VAR); 
-                xtData2(:,:,tr) = fxt(:,1:size(xt,2)); 
-            end
-            obj.importTensor(xtData2); 
-            %}
         end
 
         % Added 8.29.2024
@@ -400,13 +385,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
         end
          %}       
 
-        %% __ Write xtdata to a CSV file
-        % __>> Allow for a tidy data format. 
-        %{
-        function write2csv()
-                writematrix
-        end
-        %}
+
         %% ___ Plotter/ Visualization Methods; 
         function plot(obj, useTrials, useChannels, OFFSET, vars)
             arguments

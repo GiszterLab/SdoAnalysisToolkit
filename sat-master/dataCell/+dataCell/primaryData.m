@@ -38,6 +38,8 @@ classdef primaryData < handle & matlab.mixin.Copyable
         dataType    {mustBeMember(dataType, {'xtData', 'ppData', 'pxtData', 'None'})} = 'None'; 
         dataSource  = []; 
         dataField   = []; 
+        trTimeStart = []; 
+        trTimeStop  = []; 
         trTimeLen   = []; % Populate this during import; 
     end
     properties (Dependent) % public; 
@@ -150,9 +152,11 @@ classdef primaryData < handle & matlab.mixin.Copyable
                 obj.metadata = dataHolder(2,:); 
             end
             obj.dataSource = dataSource;
-            %
-            obj.trTimeLen = zeros(1, obj.nTrials); 
+            % TODO: Clean this up a bit; make trTimeLen dependent
+            obj.trTimeStart = zeros(1, obj.nTrials); 
+            obj.trTimeLen   = zeros(1, obj.nTrials); 
             obj.calc_trTimeLen; 
+            obj.trTimeStop  = obj.trTimeStart + obj.trTimeLen; 
         end
         %%-------------Calc trTimeLen---------
         function obj = calc_trTimeLen(obj)
@@ -231,6 +235,44 @@ classdef primaryData < handle & matlab.mixin.Copyable
             end
         end
         %------------------------------------------------------
+        function [obj_out] = getDataInRange(obj, tRange, useChannels, useTrials)
+            arguments
+               obj
+               tRange (1,2) % [t0, t1]
+               useChannels  = 1:obj.nChannels; 
+               useTrials    = 1:obj.nTrials; 
+            end
+            nUseTrials      = length(useTrials); 
+            nUseChannels    = length(useChannels); 
+            obj_out = obj.copy(); 
+            datCell = obj.data(1, useTrials); 
+            for tr = 1:nUseTrials
+                datCell{1,tr} = datCell{1,tr}(useChannnels); 
+                for ch = 1:nUseChannels
+                    switch obj.dataType
+                        case 'ppData'
+                            times = datCell{1,tr}(ch).times; 
+                        case 'xtData'
+                            times = obj.data{1,tr}(1).times; 
+                    end
+                    idx = (times>=tRange(1)) && (times<tRange(2));
+                    % !! This is a bit fragile !!
+                    switch obj.dataType
+                        case 'ppData'
+                            datCell{1,tr}(ch).times = times(idx); 
+                            datCell{1,tr}(ch).nEvents = nnz(idx);
+                        case 'xtData'
+                            datCell{1,tr}(1).times = times(idx); 
+                    end
+                    datCell{1,tr}(ch).envelope = datCell{1,tr}(ch).envelope(idx); 
+                end
+            end
+            obj_out.data = datCell; 
+            % Idea here would be to subsample data within trials 
+            obj_out.trTimeLen = tRange(2); 
+        end
+        
+        %------------------------------------------------------
         % TODO: Disable this for PPDC(?)
         function obj = resample(obj, DESIRED_HZ, DATAFIELD) 
             arguments
@@ -258,6 +300,49 @@ classdef primaryData < handle & matlab.mixin.Copyable
             obj.fs = DESIRED_HZ; 
             
         end
+        %% Conversion Methods 
+        % TODO: Expand; Perhaps breakout different 'data' with subclasses?
+        function obj_out = convertDataType(obj, newDataType, vars)
+            arguments
+                obj
+                newDataType {mustBeMember(newDataType, {'ppData', 'xtData'})}
+                vars.fs         = obj.fs; 
+                vars.rateCode   = 0; % non-destructive accumulation
+            end
+            obj_out = obj.copy; 
+            switch obj.dataType
+                case 'ppData'
+                    switch newDataType
+                        case 'xtData'
+                            st = obj.getData(); 
+                            for tr = 1 :obj.nTrials
+                                binData = binarize_ppData(st(:,tr), vars.fs, obj.trTimeLen(tr), vars.rateCode); 
+                                % -- 
+                                for ch = 1:obj.nChannels
+                                    obj_out.data{1,tr}(ch).times    = []; 
+                                    obj_out.data{1,tr}(ch).raw      = binData(ch,:); 
+                                    obj_out.data{1,tr}(ch).envelope = binData(ch,:); 
+                                    obj_out.data{1,tr}(ch).fs       = vars.fs; 
+                                end
+                                obj_out.data{1,tr}(1).times = 0:1/vars.fs:obj.trTimeLen(tr)-1/vars.fs;
+                            end
+                            obj_out.dataType = 'xtData'; 
+                            obj_out.dataField = 'envelope'; 
+                    end
+                    %--------------------------------------
+            end
+            
+            
+        end
+        %--------------------- Utilities---------------------
+        % -- > Takes a cell or string/char
+        % --> Convert this into a mix-in?
+        function CH_IDX = getChannelIndex(obj, NAME)
+            [CH_IDX] = find(ismember(cellfun(@char, obj.sensor, ...
+                'uniformOutput',0), cellfun(@char, NAME, 'uniformOutput',0))); 
+        end
+        
+        %%
         % --------------------- vcat--------------------------
         % Old "merge" method; 
         % --> vertical concat in the context of datacell5
@@ -439,9 +524,7 @@ classdef primaryData < handle & matlab.mixin.Copyable
                 tempCatCell = cellvcat(tempCatCell); 
             end
             data = tempCatCell; 
-            
         end
-        
         
         %------------------------------------------------------
         % This can stay here for now, but will probably want to migrate out
@@ -476,7 +559,7 @@ classdef primaryData < handle & matlab.mixin.Copyable
             end
 
             dataArr = cellvcat(dataCellArr(useChannels,:)); 
-            xtDataCell.plot_with_offset(dataArr, OFFSET); 
+            dataCell.plot_with_offset(dataArr, OFFSET); 
             %
             if ~isempty(OFFSET)
                 offset = OFFSET; 

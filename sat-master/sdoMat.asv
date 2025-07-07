@@ -13,7 +13,7 @@
 % 'sdoMultiMat' class
 
 % --> Batch properties class / handler
-%       --> background subtraction, algorithm, gpu, etc
+%       --> background subtraction, algorithm, gpu, e
 % --> SDO vs. Markov Switcher handler/class
 
 % --> I NEED a way to save a reduced form of the SDO, which is

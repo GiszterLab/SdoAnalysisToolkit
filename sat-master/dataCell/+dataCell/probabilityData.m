@@ -1,4 +1,4 @@
-
+%% probability Data 
 % Handling for probability data/Samplings
 
 % common uses for the pxtDataCell, sdoMat, any use of the stirpd estimation
