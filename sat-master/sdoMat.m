@@ -19,6 +19,8 @@
 % --> I NEED a way to save a reduced form of the SDO, which is
 % class-resilent. {XML + CSV? }
 
+% --> Best runs may be a composition of these structures; 
+
 %_______________________________________
 % Copyright (C) 2023 Trevor S. Smith
 % Drexel University College of Medicine
@@ -38,199 +40,390 @@
 %__________________________________________
 
 classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCell.dependencies.primaryData
-   
     properties (Access = public)
         % >> In the rebuild, I think it makes most sense to rip fields as
         % components of the imported data
-        
         xtData          dataCell.primaryData; 
         ppData          dataCell.primaryData;
-        %--------------------------------
-        px0Params       dataCell.intervalSampler; 
-        px1Params       dataCell.intervalSampler; 
-        % 
+        %---------------------------------
         eventShuffle    dataCell.shuffler;
         stateMapping    dataCell.stateMap;
-        
-        %{
         %--------------------------------
-        xtName          char = []; 
-        ppName          char = [];
-        xtChName        char = [];
-        ppChName        char = []; 
-        % ___ 
-        pxtNames        = {}; %
-        nPxtTypes       {mustBeInteger} = 0; 
-        nStates         {mustBeInteger} = 20; 
-        nEvents         {mustBeInteger} = 0; 
-        %fs              {mustBeNumeric} = 0; 
-        % __ Meta data
-        xtProperties    = []; 
-        ppProperties    = []; 
-        pxProperties    = []; 
-        params          = []; %dummy; 
-        % __ Derived params
-        stateMapping    = zeros(1,21)
-        px0DuraMs      {mustBeNumeric} = 0; 
-        px1DuraMs      {mustBeNumeric} = 0; 
-        %__
-        backgroundSubtraction = 0; %New
-        %__
-        nShuffles       {mustBeInteger} = 1000; 
-        sigPVal         double = 0.05; 
-        zScore          = false; 
-        % __ data matrices
-        sdo             = zeros(20); 
-        sdoJoint        = zeros(20); 
-        sdoBkgrnd       = zeros(20); 
-        sdoBkgrndJoint  = zeros(20);
-        shuffles        = {}; 
-        stats           = {}; 
-        markovMatrix    = zeros(20); 
-        %
-        stirpd          = zeros(20, 40); %N_STATES x [N_T0 + N_T1 points]
-        % __ Transition matrices
-        %}
-        transitionMat       = {}; 
-        transitionMatType   (1,:) char {mustBeMember(transitionMatType,{'M','L'})} = 'L';
-        markovType          (1,3) char {mustBeMember(markovType,{'px0','px1'})} = 'px0'; 
-        
+        % // pull in interval data //
+        x0Data          dataCell.intervalSampler; 
+        x1Data          dataCell.intervalSampler; 
+        %-------------------------------
+        % // convert intervals to px //
+        px0Data         dataCell.pxAssigner;
+        px1Data         dataCell.pxAssigner;
+        %--------------------------------------
+        % || core Mix-in || 
+        sdo         SAT.sdoComputer; % I can multiStack this, if I want ...
+        % N_XT, N_PP
     end
+    properties (Dependent)
+        fs
+        nTrials
+        nXtChannels 
+        nPpChannels
+        xtSensor
+        ppSensor
+    end
+    properties (Dependent, Hidden)
+        definedState
+        shuffledPpData
+        importedXtData
+        importedPpData
+        computedSdo
+    end
+    %{
     properties (Access = protected)
         generatedTransitionMatrices = false; 
         generatedExactBackground = false;  
     end
+    %}
     methods
-        %% Import (from 'sdoStruct')
-        function obj = import(obj, elem, VAR_1, VAR_2)
-           %// Future-proofing method; 
-           if isstruct(elem)
-               obj = obj.importSdoStruct(obj, elem, VAR_1, VAR_2); 
-           end
-           if isa(elem, 'pxtDataCell')
-               obj = obj.computeSdo(elem, VAR_1); 
-           end
+        function obj = sdoMat(N_XT, N_PP, Type)
+            arguments
+                N_XT = 1; 
+                N_PP = 1; 
+                Type {mustBeMember(Type, {'unit', 'background', 'shuffle'})} = 'unit'; 
+            end
+            % There's a LOT of stuff to construct. 
+            obj.eventShuffle    = dataCell.shuffler(); 
+            obj.stateMapping    = dataCell.stateMap; 
+            obj.x0Data          = dataCell.intervalSampler; 
+            obj.x0Data.dura_ms  = -(obj.x0Data.dura_ms); % For now; 
+            obj.x1Data          = dataCell.intervalSampler; 
+            %
+            obj.px0Data         = dataCell.pxAssigner; 
+            obj.px1Data         = dataCell.pxAssigner; 
+            obj.sdo             = repelem(SAT.sdoComputer(Type), N_XT, N_PP); 
+            % __ >> this may be reorganized; 
         end
-
-        % __ Import from mass/multicompare struct 
-        function obj = importSdoStruct(obj, sdoStruct, XT_CH_NO, PP_CH_NO)
+        %-------------
+        function fs = get.fs(obj)
+            if ~isempty(obj.xtData)
+                fs = obj.xtData.fs; 
+            else
+                fs = 0; 
+            end
+        end
+        %-------------
+        function n = get.nTrials(obj)
+            n = obj.xtData.nTrials; 
+        end
+        %--------------
+        function n = get.nXtChannels(obj)
+            n = obj.xtData.nChannels; 
+        end
+        %-------------
+        function n = get.nPpChannels(obj)
+            n = obj.ppData.nChannels; 
+        end
+        %---------------------
+        function LI = get.definedState(obj)
+            LI = obj.stateMapping.definedState; 
+        end
+        %--------------------
+        function sensor = get.xtSensor(obj)
+            sensor = obj.xtData.sensor(); 
+        end
+        function sensor = get.ppSensor(obj)
+            sensor = obj.ppData.sensor(); 
+        end
+        %----
+        function LI = get.importedXtData(obj)
+            if isempty(obj.xtData)
+                LI = false; 
+            else
+                LI = obj.xtData.sampledData;
+            end
+        end
+        % ----
+        function LI = get.importedPpData(obj)
+            if isempty(obj.ppData)
+                LI = false;
+            else
+                LI = obj.ppData.sampledData; 
+            end
+        end
+        %------
+        function LI = get.shuffledPpData(obj)
+            if isempty(obj.eventShuffle)
+                LI = false; 
+            else
+                LI = obj.eventShuffle.shuffledData; 
+            end
+        end
+        %--------
+        function LI = get.computedSdo(obj)
+            LI = obj.sdo.computedSdo; 
+        end
+        %-------
+        
+        
+        %---------------------------------
+        %% Import (from 'sdoStruct')
+        function obj = import(obj, VAR_1, VAR_2, VAR_3, VAR_4)
+            % TODO: Redux : we don't 'actually' want to tag on 'xtData' and
+            % 'ppData', but intervals defined from them; 
+            %
+            %% Usage: 
+            % sdoMat.import(xtdc, ppdc, XT_CH_NO, PP_CH_NO); % for multi
+            % sdoMat.import(xtdc, XT_CH_NO); 
+            % sdoMat.import(ppdc, PP_CH_NO); 
+            % sdoMat.import(xtdc, ppdc); % for single; 
+            % sdoMat.import(pxdc, pxdc); % for pxtDataCells; 
+            % sdoMat.import(px0, px1); for dataCell.pxAssigners
+            if ~exist('VAR_1', 'var')
+                return
+            end
+            % RIP FIELDS: 
+            switch class(VAR_1)
+                case 'xtDataCell'
+                    %---------
+                    if ~exist('VAR_2', 'var')
+                        obj.xtData          = VAR_1.data; 
+                        if VAR_1.definedState
+                            obj.stateMapping    = VAR_1.stateMap; 
+                        end
+                        return; 
+                    end
+                    %-----------
+                    if isnumeric(VAR_2)
+                        obj.xtData = VAR_1.data.subsample(1:VAR_1.nTrials, VAR_2); % take a channel; 
+                        return
+                    end
+                    %-----------
+                    if exist('VAR_3', 'var') % xtdc, ppdc, chNO, chNO
+                        obj.xtData  = VAR_1.data.subsample(1:VAR_1.nTrials, VAR_3); % take a channel; 
+                        if VAR_1.definedState
+                            obj.stateMapping    = VAR_1.stateMap; 
+                            obj.stateMapping.subsample(1:VAR_1.nTrials, VAR_3); 
+                        end
+                        if exist('VAR_4', 'var')
+                            obj.ppData = VAR_2.data.subsample(1:VAR_1.nTrials, VAR_4); %take a channel;
+                        else
+                            obj.ppData = VAR_2.data; 
+                        end
+                        if VAR_2.shuffledData
+                            obj.eventShuffle = VAR_2.shuffler; 
+                        end
+                        return
+                    else % xtdc, ppdc, 
+                        obj.xtData = VAR_1.data; 
+                        obj.ppData = VAR_2.data; 
+                        if VAR_1.definedState
+                            obj.stateMapping    = VAR_1.stateMap; 
+                        end
+                        if VAR_2.shuffledData
+                            obj.eventShuffle = VAR_2.shuffler; 
+                        end
+                    end
+                    return
+                %----------------------------------------------------
+                case 'dataCell.primaryData'
+                    if exist('VAR_2', 'var')
+                        obj.xtData = VAR_1; 
+                        obj.ppData = VAR_2; 
+                    else
+                        obj.(VAR_1.dataType) = VAR_1; 
+                    end
+                case 'dataCell.pxtDataCell'
+                    obj.x0Data  = VAR_1.interval; 
+                    obj.px0Data = VAR_1.pxAssignment; 
+                    if exist('VAR_2', 'var')
+                        obj.x1Data  = VAR_2.interval;
+                        obj.px1Data = VAR_2.pxAssignment; 
+                    end
+                case 'dataCell.pxAssigner'
+                    obj.px0Data = VAR_1; 
+                    if exist('VAR_2', 'var')
+                        obj.px1Data = VAR_2; 
+                    end
+            end
+        end
+        %------------------------------------------------------------------
+        % // these are a series of temporary functions; 
+        % --> I think I can put the shuffle/backgrounds at this step; 
+        function obj = drawIntervals(obj, vars)
             arguments
                 obj
-                sdoStruct
-                XT_CH_NO {mustBeInteger} = 1; 
-                PP_CH_NO {mustBeInteger} = 1;
+                vars.useEvents {mustBeMember(vars.useEvents, {'times', 'shuffle'})} = 'times';
             end
-            %// import from standard sdo multicompare Struct; 
-            obj.xtChName        = sdoStruct(XT_CH_NO).signalType; 
-            obj.ppChName        = sdoStruct(XT_CH_NO).neuronNames{PP_CH_NO};
-            obj.pxtNames        = {'sdo'}; 
-            obj.nPxtTypes       = 1; 
-            %obj.nEvents         = 0; 
-            obj.xtProperties    = sdoStruct(XT_CH_NO).params.xt; 
-            obj.ppProperties    = sdoStruct(XT_CH_NO).params.pp; 
-            obj.pxProperties    = sdoStruct(XT_CH_NO).params.px;
-            obj.stateMapping    = sdoStruct(XT_CH_NO).levels; 
-            obj.nStates         = length(sdoStruct(XT_CH_NO).levels) - 1; 
-            obj.px0DuraMs      = sdoStruct(XT_CH_NO).params.px.px0DurationMs; 
-            obj.px1DuraMs      = sdoStruct(XT_CH_NO).params.px.px1DurationMs; 
-            obj.nShuffles       = size(sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff, 3); 
-            obj.sdo             = sdoStruct(XT_CH_NO).sdos{PP_CH_NO}; 
-            obj.sdoJoint        = sdoStruct(XT_CH_NO).sdosJoint{PP_CH_NO}; 
-            obj.sdoBkgrnd       = sdoStruct(XT_CH_NO).bkgrndSDO; 
-            obj.sdoBkgrndJoint  = sdoStruct(XT_CH_NO).bkgrndJointSDO; 
-            obj.shuffles        = sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}; 
-            obj.stats           = sdoStruct(XT_CH_NO).stats{PP_CH_NO}; 
-            obj.markovMatrix    = eye(obj.nStates); %This is just a DUMMY!
-            try
-                %// For depreciated
-                obj.params      = sdoStruct(XT_CH_NO).params; 
+            % __ Load from the onboard memory_
+            if ~(obj.importedPpData)
+                disp("ppData must be imported first");
+                return
             end
-            try
-                obj.stirpd      = sdoStruct(XT_CH_NO).stirpd{PP_CH_NO}; 
-                obj.nEvents     = sdoStruct(XT_CH_NO).stats{PP_CH_NO}.nEvents; 
+            obj.x0Data.getIntervalIndices(obj.ppData, 'dataField', vars.useEvents); 
+            obj.x1Data.getIntervalIndices(obj.ppData, 'dataField', vars.useEvents);
+        end
+        function obj = sampleIntervals(obj)
+            %___ Load from onboard memory_
+            if ~(obj.importedXtData)
+                disp("xtData must be imported first"       );
+                return
             end
-
-            %__
-            obj.generatedExactBackground = true;  
+            obj.x0Data.samplePrimaryData(obj.xtData);
+            obj.x1Data.samplePrimaryData(obj.xtData);
+        end
+        function obj = drawDistributions(obj)
+            obj.px0Data.assignPx(obj.stateMapping, obj.x0Data); 
+            obj.px1Data.assignPx(obj.stateMapping, obj.x1Data); 
         end
         
-        function obj = computeSdo(obj, pxt_0, pxt_1, vars)
-            % Direct computation of the SDO; 
-            % -->> Preferable to use the sdoMultiMat instead
+        function obj = compute(obj, vars)
             arguments
                 obj
-                pxt_0 pxtDataCell
-                pxt_1 pxtDataCell
-                vars.method {mustBeMember(vars.method, {'original', 'asymmetric', 'optimized'})} = 'original'; %'asymmetric'; 
+                vars.useEvents {mustBeMember(vars.useEvents, {'times', 'shuffle'})} = 'times'; 
             end
-            %// one-off generation from pxtDataCell classes (All necessary
-            %params are upstream)
-            if pxt_0.nPxtTypes > 1
-                MULTICOMP = 1; 
-                px1_data    = pxt_1.data{1}; 
-                px0_data    = pxt_0.data{1};
-            else
-                MULTICOMP = 0; 
-                px1_data = pxt_1.data; 
-                px0_data = pxt_0.data; 
-            end
-            N_SHUFF  = pxt_0.nShuffles; 
-            N_STATES = pxt_0.nStates;  
             
-            %% ___ P(x,t0 - P(x,t1) SDO Calculations
-
-            switch vars.method
-                case 'original'
-                    [dArr, jArr]        = SAT.compute.sdo3(px0_data, px1_data); 
-                    [sdoSS, sdoJointSS] = SAT.compute.sdo3(pxt_0.shuffData, pxt_1.shuffData); 
-                case 'asymmetric'
-                    [dArr, jArr]        = SAT.compute.sdo5(px0_data, px1_data); 
-                    [sdoSS, sdoJointSS] = SAT.compute.sdo5(pxt_0.shuffData, pxt_1.shuffData); 
-                case 'optimized'
-                    [dArr, jArr]        = SAT.compute.sdo7(px0_data, px1_data); 
-                    [sdoSS, sdoJointSS] = SAT.compute.sdo7(pxt_0.shuffData, pxt_1.shuffData); 
-            end
-
-
-            %___ %// Quadruple-Mean Transition => ~ Average Background
-            bckMkv      = (pxt_0.backgroundMkv + pxt_1.backgroundMkv).^1/2;
-            bckJoint    = diag(pxt_0.backgroundPx)*bckMkv; 
-            bckSDO      = bckJoint - diag(pxt_0.backgroundPx); 
+            % TODO: Better handling of shuffles in the time data; -->
+            % Avoids downstream handling. 
             
-            % __ WRITEOUT
-            obj = copyProperties(obj, pxt_0, {'fs', 'xtName', 'ppName', ...
-                'xtChName', 'ppChName','nEvents', 'xtProperties', ...
-                'ppProperties', 'stateMapping'}); 
-            %% Write out; 
-            obj.pxtNames        = {pxt_0.pxtNames, pxt_1.pxtNames}; 
-            obj.px1DuraMs       = abs(pxt_1.duraMs); 
-            obj.px0DuraMs       = abs(pxt_0.duraMs);
-            obj.nStates         = N_STATES; 
-            obj.sdo             = dArr; 
-            obj.sdoJoint        = jArr; 
-            obj.sdoBkgrnd       = bckSDO; 
-            obj.sdoBkgrndJoint  = bckJoint; 
-            %___
-            obj.shuffles.SDOShuff       = sdoSS; 
-            obj.shuffles.SDOJointShuff  = sdoJointSS; 
-            % ___ (TEMPORARY) Append Params as expected (Somewhat redundant) 
-            obj.pxProperties.smoothingFilterWidth   = pxt_0.filterWid; 
-            obj.pxProperties.smoothingFilterStd     = pxt_0.filterStd; 
-            netDelay = (pxt_1.zDelay-pxt_0.zDelay)+1; %temp
-            obj.pxProperties.zDelay = netDelay; 
-            obj.pxProperties.nShift = 0; %TODO: Correct this
-            obj.pxProperties.px0DurationMs = obj.px0DuraMs; 
-            obj.pxProperties.px1DurationMs = obj.px1DuraMs; 
-
-            switch obj.markovType
-                case 'px0'
-                    obj.markovMatrix = pxt_0.markovMatrix; 
-                case 'px1'
-                    obj.markovMatrix = pxt_1.markovMatrix; 
+            if ~obj.definedState
+                % State needs to be defined first; 
+                obj.stateMapping.getChannelAmp(obj.xtData); 
+                obj.stateMapping.buildStateMap();
             end
-            obj.stirpd = [pxt_0.stirpd, pxt_1.stirpd]; 
-
+            
+            obj.set_fs(); % ensure good sampling; 
+            % __> Reading from temp onboard memory_ 
+            
+            % ___ Rebuild / Standardization / 
+            %{
+            obj.drawIntervals; 
+            obj.sampleIntervals;
+            obj.drawDistributions; 
+            %}
+            switch vars.useEvents
+                case 'shuffle' % 3D data
+                    % // ppData is slaved from shuffle; 
+                    obj.ppData = obj.eventShuffle.getPpData; 
+            end
+            
+            obj.x0Data.getIntervalIndices(obj.ppData); %, 'dataField', vars.useEvents); 
+            obj.x1Data.getIntervalIndices(obj.ppData); %, 'dataField', vars.useEvents); 
+            %
+            obj.x0Data.samplePrimaryData(obj.xtData);
+            obj.x1Data.samplePrimaryData(obj.xtData);
+            %
+            obj.px0Data.assignPx(obj.stateMapping, obj.x0Data); 
+            obj.px1Data.assignPx(obj.stateMapping, obj.x1Data); 
+            %
+            
+            % ___>> This needs an upgrade for multi-comp <<___
+            % Also not sure if this is an implicit flag. 
+            
+            % --> unless otherwise stated iterate over all. 
+            
+            for m = 1:obj.nXtChannels
+                for u = 1:obj.nPpChannels
+                    obj.sdo(m,u).compute(obj.px0Data, obj.px1Data); 
+                end
+                disp(strcat("Finished ", num2str(m), "/", num2str(obj.nXtChannels)));
+            end
+            %obj.sdo.compute(obj.px0Data, obj.px1Data); 
+            
+            1; 
+            %{
+            switch TARGET
+                case 'unit'
+                    %
+                    obj.drawIntervals; 
+                    obj.sampleIntervals; 
+                    obj.drawDistributions;
+                    %
+                    obj.sdo.compute(obj.px0Data, obj.px1Data); 
+                case 'background'
+                    % --> Override drawing intervals
+                    randShuff = copy(obj.eventShuffle); 
+                    N_EVENTS = 10000; % per trial; 
+                    tMax = min(obj.xtData.trTimeLen); 
+                    % __ compenate for dura; 
+                    tMax = tMax - (obj.x1Data.dura_nPoints/obj.x1Data.fs);
+                    
+                    %xMax = xMax - obj.x1Data.dura_nPoints;
+                    randShuff.random(obj.nTrials, obj.nXtChannels, N_EVENTS, ...
+                        'maxX', tMax, 'type', 'times'); 
+                        %'maxX', xMax, 'type', 'index'); 
+                    shuffppData = randShuff.getPpData; 
+                    %
+                    shuffPp_ix0Data = obj.x0Data.getIntervalIndices(shuffppData, 'dataField', 'shuffle');
+                    shuffPp_ix1Data = obj.x1Data.getIntervalIndices(shuffppData, 'dataField', 'shuffle'); 
+                    shuffPp_ix0Data.samplePrimaryData(obj.xtData);
+                    shuffPp_ix1Data.samplePrimaryData(obj.xtData);
+                    shuffPp_px0Data = obj.px0Data.assignPx(obj.stateMapping, shuffPp_ix0Data); 
+                    shuffPp_px1Data = obj.px0Data.assignPx(obj.stateMapping, shuffPp_ix1Data); 
+                    %
+                    obj.backgroundSDO.compute(shuffPp_px0Data, shuffPp_px1Data);  
+                    1; 
+                case 'shuffle'
+                    % // Temporary override; --> Macro this into a function
+                    
+                    %--> shuffle first; then draw; 
+                    obj.ppData.validateData; 
+                    if ~obj.eventShuffle.importedData
+                        obj.eventShuffle.import(obj.ppData); 
+                    end
+                    if ~obj.shuffledPpData
+                        obj.eventShuffle.shuffle(); 
+                    end
+                    % grab indicies;
+                    shuffppData = obj.eventShuffle.getPpData; 
+                    % --> Temporary override : Ideally we should take the
+                    % ppdata
+                    shuffPp_ix0Data = obj.x0Data.getIntervalIndices(shuffppData, 'dataField', 'shuffle');
+                    shuffPp_ix1Data = obj.x1Data.getIntervalIndices(shuffppData, 'dataField', 'shuffle'); 
+                    shuffPp_ix0Data.samplePrimaryData(obj.xtData);
+                    shuffPp_ix1Data.samplePrimaryData(obj.xtData);
+                    shuffPp_px0Data = obj.px0Data.assignPx(obj.stateMapping, shuffPp_ix0Data); 
+                    shuffPp_px1Data = obj.px0Data.assignPx(obj.stateMapping, shuffPp_ix1Data); 
+                    %
+                    obj.shuffleSDO.compute(shuffPp_px0Data, shuffPp_px1Data);  
+            end
+            %}
         end
+            
+        % || Operations on SDOs (Not analysis) ||
+        % Plot; Predict; Compute; Extract; 
+        %-----------------------------------------------------------------%
+        function [stirpd] = getStirpd(obj, useTrials, useChannels)
+            arguments
+                obj
+                useTrials   = 1:obj.nTrials; 
+                useChannels = 1:obj.nPpChannels; 
+                % --> not sure exactly how this multiplexes. 
+            end
+            xTmp0 = obj.x0Data.discretize(obj.stateMapping); 
+            xTmp1 = obj.x1Data.discretize(obj.stateMapping); 
+            
+            hx0 = cellhcat(xTmp0.data(useTrials)); 
+            hx1 = cellhcat(xTmp1.data(useTrials)); 
+            if length(useChannels) > 1
+                % --> how do we want to plot these? Separately? 
+                hx0 = cellhcat(hx0(useChannels,:)'); % cat on top of each other; flatten
+                hx1 = cellhcat(hx1(useChannels,:)'); % cat on top of each other; flatten;
+            end
+            stirpd = pxTools.getStirpd(hx0, hx1, obj.stateMapping.nBins); 
+        end
+        %
+        function f = plotStirpd(obj, useTrials, useChannels)
+            arguments
+                obj
+                useTrials   = 1:obj.nTrials; 
+                useChannels = 1:obj.nPpChannels; 
+            end
+            stirpd = obj.getStirpd(useTrials, useChannels); % pass; 
+            if nargout > 0
+                f = figure;
+            end
+            % NOTE: There are other things we can pass into this function.
+            pxTools.plot.stirpd(stirpd,abs(obj.x0Data.dura_nPoints) );
+        end
+        %{
         % ++ Method to replace the estimated background SDO ++ 
         function obj = computeBackgroundSdo(obj, xtdc)
             arguments
@@ -257,8 +450,9 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             %}
             obj.generatedExactBackground = true;  
         end
+        %}
         % ++ Method to replace the Markov Matrix; 
-    
+        % --> Export to analysis class. 
         %// Class-Wrapped method for Stat testing/ analysis; 
         function obj = performStats(obj, SIG_PVAL, Z_SCORE)
             arguments 
@@ -288,7 +482,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             %// This one requires the definition of the STA as mean of px
             MATTYPE = obj.transitionMatType; 
             
-            %
             %// for some reason the 'sensor' field doesn't work 
             useXtChNo = find(strcmp(obj.xtChName, [xtdc.data{1,1}(:).sensor]), 1); 
             usePpChNo = find(strcmp(obj.ppChName, [ppdc.data{1,1}(:).sensor]), 1); 
@@ -326,34 +519,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
            obj.generatedTransitionMatrices = true; 
         end
         
-        %% Bungle
-        function sMat = bungleSdoStruct(obj)
-           %// Method to 'reconstruct' a miniSDO array for the
-           % common plotter method; 
-           % __ >> Double-wrap a cell to make it look like a stacked 
-            sMat = SAT.compute.sdoStruct_new(1,1); 
-            sMat.signalType     = obj.xtChName; 
-            sMat.neuronNames    = {obj.ppChName}; 
-            sMat.levels         = obj.stateMapping; 
-            sMat.sdosJoint      = {obj.sdoJoint}; 
-            sMat.sdos           = {obj.sdo}; 
-            sMat.bkgrndJointSDO = obj.sdoBkgrndJoint; 
-            sMat.bkgrndSDO      = obj.sdoBkgrnd; 
-            sMat.shuffles       = {obj.shuffles}; 
-            sMat.stats          = {obj.stats};
-            if ~isempty(obj.params)
-                sMat.params         = obj.params; 
-            else
-                % __ for posterity__ (Redundant)
-                sMat.params      = struct( ...
-                    'xt', obj.xtProperties, ...
-                    'pp', obj.ppProperties, ...
-                    'px', obj.pxProperties); 
-            end
-            sMat.stirpd         = {obj.stirpd}; 
-
-        end
-        
         %% Plot (Overload)
         function plot(obj, options)
             arguments
@@ -368,24 +533,13 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             if isempty(obj.stats)
                 performStats(obj);  
             end
-            %sMat = bungleSdoStruct(obj);
 
             SAT.plot.plotHeader(obj, ...
                 1,1, ...
-                'filter', options.filter, ...
+                'filter', options.filter, ...indices
                 'saveFig', options.saveFig, ....
                 'saveFormat', options.saveFormat, ...
                 'outputDirectory', options.outputDirectory); 
-            %SAT.plot.plotHeader(sMat); 
-
-            %{
-            SAT.plotSDO(sMat, 1,1, ...
-                'filter', 0, ...
-                'saveFig', options.saveFig, ...
-                'saveFormat', options.saveFormat, ...
-                'outputDirectory', options.outputDirectory); 
-
-            %}
            
             N_PX0_PTS = round(abs(obj.px0DuraMs*obj.fs/1000));  
 
@@ -393,10 +547,18 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
 
         end
         
+        function obj = set_fs(obj)
+            if obj.fs > 0
+                obj.x0Data.fs = obj.fs; 
+                obj.x1Data.fs = obj.fs; 
+            end
+            
+        end
 
         %% Export to pxtDataCell
         %// use transition matrices of SDO to predict pxt1 from an
         %input pxtDataCell
+        %{
         function pxt_est = getPredictionPxt(obj, px0, duraMs)
             arguments
                 obj
@@ -450,20 +612,83 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             %  __ DUMMY FILL ___ 
             pxt_est.backgroundPx    = zeros(obj.nStates,1); 
             pxt_est.backgroundMkv   = zeros(obj.nStates,1); 
-
             %
             pxt_est.dataMatrices = obj.transitionMat; 
 
            % // export to a pxt;  
             
         end
+        %}
+        
     end
-    %{
-    methods (Static)
-        function plotMatrix(mat)
-
-        end
-    end
-    %}  
 
 end
+
+%------------------------------- Depreciated Support Func ---------------%
+%% Bungle
+function sMat = bungleSdoStruct(obj)
+   %// Method to 'reconstruct' a miniSDO array for the
+   % common plotter method; 
+   % __ >> Double-wrap a cell to make it look like a stacked 
+    sMat = SAT.compute.sdoStruct_new(1,1); 
+    sMat.signalType     = obj.xtChName; 
+    sMat.neuronNames    = {obj.ppChName}; 
+    sMat.levels         = obj.stateMapping; 
+    sMat.sdosJoint      = {obj.sdoJoint}; 
+    sMat.sdos           = {obj.sdo}; 
+    sMat.bkgrndJointSDO = obj.sdoBkgrndJoint; 
+    sMat.bkgrndSDO      = obj.sdoBkgrnd; 
+    sMat.shuffles       = {obj.shuffles}; 
+    sMat.stats          = {obj.stats};
+    if ~isempty(obj.params)
+        sMat.params         = obj.params; 
+    else
+        % __ for posterity__ (Redundant)
+        sMat.params      = struct( ...
+            'xt', obj.xtProperties, ...
+            'pp', obj.ppProperties, ...
+            'px', obj.pxProperties); 
+    end
+    sMat.stirpd         = {obj.stirpd}; 
+end
+%------------
+        function obj = importSdoStruct(obj, sdoStruct, XT_CH_NO, PP_CH_NO)
+            arguments
+                obj
+                sdoStruct
+                XT_CH_NO {mustBeInteger} = 1; 
+                PP_CH_NO {mustBeInteger} = 1;
+            end
+            %// import from standard sdo multicompare Struct; 
+            obj.xtChName        = sdoStruct(XT_CH_NO).signalType; 
+            obj.ppChName        = sdoStruct(XT_CH_NO).neuronNames{PP_CH_NO};
+            obj.pxtNames        = {'sdo'}; 
+            obj.nPxtTypes       = 1; 
+            %obj.nEvents         = 0; 
+            obj.xtProperties    = sdoStruct(XT_CH_NO).params.xt; 
+            obj.ppProperties    = sdoStruct(XT_CH_NO).params.pp; 
+            obj.pxProperties    = sdoStruct(XT_CH_NO).params.px;
+            obj.stateMapping    = sdoStruct(XT_CH_NO).levels; 
+            obj.nStates         = length(sdoStruct(XT_CH_NO).levels) - 1; 
+            obj.px0DuraMs      = sdoStruct(XT_CH_NO).params.px.px0DurationMs; 
+            obj.px1DuraMs      = sdoStruct(XT_CH_NO).params.px.px1DurationMs; 
+            obj.nShuffles       = size(sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}.SDOShuff, 3); 
+            obj.sdo             = sdoStruct(XT_CH_NO).sdos{PP_CH_NO}; 
+            obj.sdoJoint        = sdoStruct(XT_CH_NO).sdosJoint{PP_CH_NO}; 
+            obj.sdoBkgrnd       = sdoStruct(XT_CH_NO).bkgrndSDO; 
+            obj.sdoBkgrndJoint  = sdoStruct(XT_CH_NO).bkgrndJointSDO; 
+            obj.shuffles        = sdoStruct(XT_CH_NO).shuffles{PP_CH_NO}; 
+            obj.stats           = sdoStruct(XT_CH_NO).stats{PP_CH_NO}; 
+            obj.markovMatrix    = eye(obj.nStates); %This is just a DUMMY!
+            try
+                %// For depreciated
+                obj.params      = sdoStruct(XT_CH_NO).params; 
+            end
+            try
+                obj.stirpd      = sdoStruct(XT_CH_NO).stirpd{PP_CH_NO}; 
+                obj.nEvents     = sdoStruct(XT_CH_NO).stats{PP_CH_NO}.nEvents; 
+            end
+
+            %__
+            obj.generatedExactBackground = true;  
+        end

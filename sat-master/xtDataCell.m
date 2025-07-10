@@ -40,6 +40,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
     properties (Hidden, Dependent)
         % // Internal Flags for Stability
         discretizedData
+        definedState
         sampledData
     end
         
@@ -47,7 +48,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
         %% Dependent/Dynamic Properties; 
         function LI = get.discretizedData(obj)
             LI = false; 
-            if ~isempty(obj.data{1,1}(1).stateSignal)
+            if ~isempty(obj.data.data{1,1}(1).stateSignal)
                 LI = true; 
             end
         end
@@ -66,6 +67,10 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
         %-----------------------------
         function sensor = get.sensor(obj)
             sensor = obj.data.sensor; 
+        end
+        %------------------------------
+        function LI = get.definedState(obj)
+            LI = obj.stateMap.definedState; 
         end
 
         %% __ CONSTRUCTOR
@@ -203,35 +208,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
             obj.stateMapping.getChannelAmp; 
         end
         
-        % __ explicit method for setting min/max channel amplitude.
-        % Possibly temporary, as we don't know if it would make more sense
-        % to make this dynamic or not
-        %{
-        function obj = setWeightMatrix(obj, METHOD)
-            arguments
-                obj
-                METHOD char {mustBeMember(METHOD, {'ica', 'pca', 'max', 'std'})}= obj.linearTransform.decomposeMethod; 
-            end
-            
-            switch METHOD
-                case {'ica'}
-                    xt = cellstructvcat(obj.data.data, obj.data.dataField); 
-                otherwise %{'pca, 'max', std'}
-                    xt = getTensor; 
-            end
-            %
-            obj.linearTransform.calculateWeightMatrix(xt,METHOD); 
-        end
-        %}
-        %{
-        function obj = applyLinearTranform(obj)
-            % // uses the linear transformation matrix to apply a method
-            obj.linearTransform.applyLinearTransform(obj.data); 
-
-        end
-        %}
-        %}
-        
         %% Auxillary Operation
         function obj = importTensor(obj, ten, vars)
             % Repopulate data using supplied 2-3D Tensor; 
@@ -332,59 +308,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
             values = obj.data.getValuesAtIndices(indices, ...
                 'useChannels', vars.useChannels, 'useTrials', vars.useTrials, ...
                 'dataField', vars.dataField); 
-           
-        end
-        
-        % NOTE: This used to be called 'merge'
-        % --> We're calling it 'hcat' as its a bit more descriptive of
-        % what's going on. 
-        %{
-        function obj = merge(obj, xtdc, vars)
-            arguments
-                obj 
-                xtdc xtDataCell
-                vars.pad = 'nan'; 
-            end
-            % _____
-            
-            if ~(obj.nTrials == xtdc.nTrials)
-                disp("xtDataCells do not have compatible sizes"); 
-            end
-            if ~(obj.fs == xtdc.fs)
-                xtdc.resample(obj.fs); 
-                1;
-            end
-            
-            for tr = 1:obj.nTrials
-                if ~(obj.trTimeLen(tr) == xtdc.trTimeLen(tr))
-                    tMax = max(obj.trTimeLen(tr), xtdc.trTimeLen(tr)); 
-                    nPts = tMax*obj.fs+1; 
-                    if (length(obj.data{1,tr}(1).envelope) == nPts)
-                        for ch = 1:obj.nTrials
-                            %TODO: Finish this loop
-                            1; 
-                        end
-                    end  
-                end
-                obj.data{1,tr} = [obj.data{1,tr}, xtdc.data{1,tr}]; 
-                try
-                    obj.metadata{1,tr} = [obj.metadata{1,tr} xtdc.metadata{1,tr}]; 
-                catch
-                    1; 
-                end
-            end
-            obj.channelAmpMax = [obj.channelAmpMax; xtdc.channelAmpMax]; 
-            obj.channelAmpMin = [obj.channelAmpMin; xtdc.channelAmpMin];
-            mat = zeros(obj.nChannels+xtdc.nChannels);
-            mat(1:obj.nChannels,1:obj.nChannels) = obj.weightMatrix; 
-            mat(obj.nChannels+1:end, obj.nChannels+1:end) = xtdc.weightMatrix;
-            obj.weightMatrix = mat; 
-            obj.nChannels = obj.nChannels+xtdc.nChannels;
-            obj.sensor = [obj.sensor; xtdc.sensor]; 
-            
-        end
-         %}       
-
+        end    
 
         %% ___ Plotter/ Visualization Methods; 
         function plot(obj, useTrials, useChannels, OFFSET, vars)

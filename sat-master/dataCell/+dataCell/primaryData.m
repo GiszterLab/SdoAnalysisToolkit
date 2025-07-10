@@ -10,7 +10,7 @@
 % primaryData is composed in: 
 %   - xtDataCell
 %   - ppDataCell
-%   - pxtDataCell
+%   - sdoMat
 
 %_______________________________________
 % Copyright (C) 2024 Trevor S. Smith
@@ -33,20 +33,22 @@ classdef primaryData < handle & matlab.mixin.Copyable
     properties
         %// Added here as common utils. 
         data        = []; 
-        metadata    = []; 
+        metadata    = []; % just tacked on as use-field 
         trialMeta   = []; % Temp ... Maybe to include? 
+        % __ Populate during import __ 
         dataType    {mustBeMember(dataType, {'xtData', 'ppData', 'pxtData', 'None'})} = 'None'; 
         dataSource  = []; 
-        dataField   = []; 
+        dataField   = [];
         trTimeStart = []; 
         trTimeStop  = []; 
-        trTimeLen   = []; % Populate this during import; 
+        trTimeLen   = []; 
     end
     properties (Dependent) % public; 
         fs          {mustBeNonnegative}
         nTrials     {mustBeInteger}
         nChannels   {mustBeInteger}
         sensor        
+        nTrialEvents
     end
     
     properties (Hidden, Dependent)
@@ -89,7 +91,19 @@ classdef primaryData < handle & matlab.mixin.Copyable
         function LI = get.haveSensorNames(obj)
             LI = ~isempty(obj.sensor); 
         end
-
+        %--------------------------------------
+        function n = get.nTrialEvents(obj)
+            if strcmp(obj.dataType,'xtData')
+                n = ones(obj.nChannels, obj.nTrials); 
+                return
+            end
+            n = zeros(obj.nChannels, obj.nTrials); 
+            for tr = 1:obj.nTrials
+                for ch = 1:obj.nChannels
+                    n(ch,tr) = obj.data{1,tr}(ch).nEvents;
+                end
+            end
+        end
         %------------------------------%
         function nTrials = get.nTrials(obj)
             if isempty(obj.data)
@@ -132,10 +146,15 @@ classdef primaryData < handle & matlab.mixin.Copyable
             switch dataClass
                 case 'ppData'
                     S = dataCell.constructors.getPpDataHolder(N_TRIALS, N_CHANNELS); 
+                    dataField = 'times'; 
                 case 'xtData'
                     S = dataCell.constructors.getXtDataHolder(N_TRIALS, N_CHANNELS); 
+                    dataField = 'envelope'; 
             end
-            obj.data = S; 
+            obj.data        = S(1,:); 
+            obj.trialMeta   = S(2,:); 
+            obj.dataType = dataClass; 
+            obj.dataField = dataField; 
         end
         
         %% import 
@@ -245,8 +264,9 @@ classdef primaryData < handle & matlab.mixin.Copyable
             nUseTrials      = length(useTrials); 
             nUseChannels    = length(useChannels); 
             obj_out = obj.copy(); 
-            datCell = obj.data(1, useTrials); 
+            datCell = obj.data(1, useTrials); % Trim to trial ROI
             for tr = 1:nUseTrials
+                % Trim to channel ROI
                 datCell{1,tr} = datCell{1,tr}(useChannnels); 
                 for ch = 1:nUseChannels
                     switch obj.dataType
@@ -298,7 +318,6 @@ classdef primaryData < handle & matlab.mixin.Copyable
                 end
             end
             obj.fs = DESIRED_HZ; 
-            
         end
         %% Conversion Methods 
         % TODO: Expand; Perhaps breakout different 'data' with subclasses?
@@ -331,8 +350,6 @@ classdef primaryData < handle & matlab.mixin.Copyable
                     end
                     %--------------------------------------
             end
-            
-            
         end
         %--------------------- Utilities---------------------
         % -- > Takes a cell or string/char
@@ -474,7 +491,7 @@ classdef primaryData < handle & matlab.mixin.Copyable
                     data = cellvcat(dat(useChannels,:)); 
                     return
                 else
-                    dat = data(useChannels,:); 
+                    data = dat(useChannels,:); 
                     return;
                 end
             end
@@ -594,7 +611,7 @@ classdef primaryData < handle & matlab.mixin.Copyable
                 obj
                 FILTERTYPE {mustBeMember(FILTERTYPE, {'notch', ...
                     'notchRMS', 'triRMSmov', 'trirmsmov','mov', ...
-                    'gaussmov', 'trimov', 'expmov', ...
+                    'gaussmov', 'trimov', 'exsamplepmov', ...
                     'rmsmov','bandpass', 'highpass', 'lowpass',...
                     'butter', 'emgButter'})}
                 N_POINTS
@@ -810,6 +827,18 @@ classdef primaryData < handle & matlab.mixin.Copyable
             end
         end
         %--------------------------------------------------------------%
+        function obj = conform(obj, data)
+            arguments
+                obj 
+                data dataCell.primaryData
+            end
+            % --> conform obj to data (ppData --> xtData timing)
+            obj.trTimeStart = data.trTimeStart; 
+            obj.trTimeStop  = data.trTimeStop; 
+            obj.trTimeLen   = data.trTimeLen;
+        end
+        
+        %--------------------------------------------------------------%
         function obj= validateData(obj)
             switch obj.dataType
                 case 'None'
@@ -819,12 +848,7 @@ classdef primaryData < handle & matlab.mixin.Copyable
                 case 'ppData'
                     obj.validate_primaryData_ppdata; 
             end
-            
-            
-        end
-        
-        
-        
+        end  
     end
     
     %% PRIVATE METHODS
@@ -838,8 +862,14 @@ classdef primaryData < handle & matlab.mixin.Copyable
                     % Horizontal Time row vectors; 
                     % (Maybe one day we can flip this to cols...)
                     if ~isempty(obj.data{1,tr}(u).times)
-                        [sz_y,sz_x] = size(obj.data{1,tr}(u).times);  
+                        [sz_x, sz_y] = size(obj.data{1,tr}(u).times);  
+                        %{
                         if (sz_y > sz_x) && (sz_y > 1)
+                            obj.data{1,tr}(u).times = obj.data{1,tr}(u).times'; 
+                        end
+                        %}
+                        if ((sz_x > 1) && (sz_y == 1))
+                            % col --> row; 
                             obj.data{1,tr}(u).times = obj.data{1,tr}(u).times'; 
                         end
                     end

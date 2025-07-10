@@ -33,7 +33,6 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 %__________________________________________
 
-
 classdef pxtDataCell < handle & matlab.mixin.Copyable % & dataCellSuperClass &dataCell.dependencies.probabilityData
     properties (Access = public)
         % __   % just rip-it and stick-it ____
@@ -84,8 +83,8 @@ classdef pxtDataCell < handle & matlab.mixin.Copyable % & dataCellSuperClass &da
                 ppdc        ppDataCell
                 XT_CH_NO    {mustBeInteger} = 1; 
                 PP_CH_NO    {mustBeInteger} = 1; 
-
             end
+            disp(strcat("Importing xtCh#", num2str(XT_CH_NO), " ppCh#", num2str(PP_CH_NO))); 
             obj.xtData      = xtdc.data.subsample(1:xtdc.nTrials, XT_CH_NO); 
             obj.ppData      = ppdc.data.subsample(1:ppdc.nTrials, PP_CH_NO);  
         end

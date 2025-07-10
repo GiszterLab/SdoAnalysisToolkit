@@ -9,27 +9,27 @@
 
 %TODO: Better subsampling for trialwise handling [x]
 
-
 classdef stateMap < handle & matlab.mixin.Copyable
     properties
         mapMethod   char {mustBeMember(mapMethod, {'linear', 'log', 'linearsigned', 'logsigned'})} = 'log'; 
         maxMode     char {mustBeMember(maxMode, {'pTrial','xTrialxSeg'})} = 'xTrialxSeg'
-        nChannels   = 0; 
-        nTrials     = 0; 
         nBins       {mustBeInteger, mustBeNonnegative} = 20; 
         %
         channelDefMax = []; % Keep the observed vs. defined max/min separate; 
         channelDefMin = []; % Keep the observed vs. defined max/min separate;
+        channelAmpMax = []; % Observed Max x(t)
+        channelAmpMin = []; % Observed Min x(t)
         %
         stateMapping = []; % Let's set this up as a [N_STATES+1, N_CH, N_TRIALS]
-        % These should be defined on sample; 
-        channelAmpMax 
-        channelAmpMin
+        % These should be defined on sample;
         %
         allowClipping = 0; 
         % ___>> Also should allow the inverse from this; assign xt from pxt
     end
-    
+    properties (Dependent)
+       nTrials 
+       nChannels
+    end
     properties (Hidden, Dependent)
         determinedMinMax % auto
         definedMinMax    % custom
@@ -58,6 +58,10 @@ classdef stateMap < handle & matlab.mixin.Copyable
                 LI = false; 
                 return
             end
+            if isempty(obj.stateMapping)
+                LI = false; 
+                return
+            end
             if all( diff(obj.stateMapping, [], 1) > 0)
                 LI = true; 
             end
@@ -70,15 +74,21 @@ classdef stateMap < handle & matlab.mixin.Copyable
             end
         end
         %----------------------------------%
+        function n = get.nChannels(obj)
+            n = size(obj.channelAmpMax,1); 
+        end
+        %---
+        function n = get.nTrials(obj)
+            n = size(obj.channelAmpMax,2); 
+        end
+        
+        %----------------------------------%
         % // for now, let's just assume we're composing with classes; 
         function obj = getChannelAmp(obj, primaryData)
             arguments
                 obj
                 primaryData dataCell.primaryData
             end
-            %
-            obj.nChannels   = primaryData.nChannels; 
-            obj.nTrials     = primaryData.nTrials; 
             %
             obj.channelAmpMax = zeros(primaryData.nChannels, primaryData.nTrials);
             obj.channelAmpMin = zeros(primaryData.nChannels, primaryData.nTrials);
@@ -107,7 +117,7 @@ classdef stateMap < handle & matlab.mixin.Copyable
                 return
             end
             if ~(obj.nBins == obj2.nBins)
-                disp("nC"); 
+                disp("Bin sizes not compatible"); 
                 return
             end
             obj.data        = {obj.data, obj2.data}; 
@@ -138,11 +148,11 @@ classdef stateMap < handle & matlab.mixin.Copyable
             
             if ~obj.allowClipping 
                 % Force all values to a state; 
+                % this 'should' work, but doesn't with discretize; 
                 obj.stateMapping(1,:,:)     = -inf; 
                 obj.stateMapping(end,:,:)   = inf; 
             end
         end
-        
         
         %------------------------------------------------------------%
         function data = discretizeSignal(obj, data, vars)
@@ -175,16 +185,34 @@ classdef stateMap < handle & matlab.mixin.Copyable
         %---------------------------------------------------------------
         % Pared alternative for use on raw data; 
         function data_out = discretizeSignalRaw(obj, data, useMapCh, useMapTr)
-            
-            data_out = discretize(data, obj.stateMapping(:,useMapCh, useMapTr)); 
-            
+            % hack-acround for the dumb not allowing -inf/inf; 
+            stateMap = obj.stateMapping; 
+            if iscell(data)
+                [d_row, d_col] = size(data); 
+                data_out = cell(d_row, d_col); 
+                for r = 1:d_row
+                    for c = 1:d_col
+                        data_out{r,c} = discretize(data{r,c}, stateMap(:,r, c)); 
+                    end
+                end
+            else
+                data_out = discretize(data, obj.stateMapping(:,useMapCh, useMapTr)); 
+            end
         end
-            
-        
+        %-------------------
+        function obj = subsample(obj, useTrials, useChannels)
+            % >> 
+            sfields = {'channelDefMax', 'channelDefMin', 'channelAmpMax', 'channelAmpMin'};
+            for f = 1:4
+                obj.(sfields{f}) = obj.(sfields{f})(useChannels, useTrials); 
+            end
+            if obj.definedState
+                obj.stateMapping = obj.stateMapping(:,useChannels,useTrials); 
+            end
+        end
+        %---
     end
             
-    
-    
 end
 
 %% Auxillary Functions

@@ -1,9 +1,10 @@
-%%
+%% (DataCell) Linear Transformer (OOP) -V2
 
 % Bit of a dummy class for now; 
 
 % This is to contain the linear transforms and associated matrices for the
-% V2 DataCell + SAT toolboxes
+% V2 DataCell + SAT toolboxes which were originally in the public
+% xtDataCell class. 
 
 
 classdef linearTransformer
@@ -16,7 +17,6 @@ classdef linearTransformer
     properties (Dependent)
         nChannels
     end
-    
     
     methods 
         function nChannels = get.nChannels(obj)

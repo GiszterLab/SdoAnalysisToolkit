@@ -77,7 +77,10 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
         end        
         %-------------------------------
         function LI = get.shuffledData(obj)
-            LI = obj.shuffler.shuffledData; 
+            LI = false; 
+            if ~isempty(obj.shuffler)
+                LI = obj.shuffler.shuffledData; 
+            end
             %{
             if ~obj.sampledData
                 LI = false;
@@ -109,7 +112,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
                 N_TRIALS    {mustBeInteger} = 0; 
                 N_CHANNELS  {mustBeInteger} = 0; 
             end
-            obj.data        = dataCell.primaryData('ppData', N_TRIALS, N_CHANNELS); 
+            obj.data        = dataCell.primaryData('ppData', N_TRIALS, N_CHANNELS);
+            obj.shuffler     = dataCell.shuffler; 
         end
 
         %% Operation Methods 
@@ -122,6 +126,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
             obj.data.dataField = 'times'; 
             obj.data.dataType = 'ppData'; 
             obj.data.validateData; 
+            obj.shuffler.data = obj.data; 
         end
 
         % Added 8.29.2024

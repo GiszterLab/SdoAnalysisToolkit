@@ -15,7 +15,6 @@
 % indices
 % = 't1_nPoints' = Number of time points to include in the 'post' event
 % indices
-% - 'maxLen'= Upper bound on the allowed indices of the shuffle.
 % OUTPUTS
 %   - idx_t0 = {1,N_PP_CH} cell of [t0_nPoints x N_OBS x N_SHUFFLE]; if st is a double,
 %       this is a doubles array
@@ -47,7 +46,7 @@ function [idx_t0, idx_t1] = getPerieventIndices(st, vars)
         st
         vars.n_shift = 0; %note this differs from documentation...  
         vars.z_delay = 0; 
-        vars.t0_nPoints {mustBeInteger} = 20; 
+        vars.t0_nPoints {mustBeInteger} = 20;
         vars.t1_nPoints {mustBeInteger} = 20;
         vars.maxLen = []; 
     end
@@ -61,10 +60,11 @@ function [idx_t0, idx_t1] = getPerieventIndices(st, vars)
         st_flat = st(:)'; 
         if nRows > 1
             HAS_SHUFFLES = 1; 
+        else
+            HAS_SHUFFLES = 0; 
         end
 
     else
-
         % __ multi comp
         ISCELL = 1; 
         N_PP_CH     = length(st); 
@@ -94,7 +94,8 @@ function [idx_t0, idx_t1] = getPerieventIndices(st, vars)
     
     st_flat = round(st_flat); 
     
-    N_SPIKES = N_PP_EVENTS'*nRows; %dot product
+    N_SPIKES = N_PP_EVENTS'*nRows; %dot product        
+        1; 
     %N_SPIKES = sum(N_PP_EVENTS); 
     
     % Quickly generate offset grids w/ associated parameters; 

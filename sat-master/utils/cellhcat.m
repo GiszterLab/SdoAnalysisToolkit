@@ -208,7 +208,32 @@ switch celltype
             else
                 LI = true(1, sz0x); 
             end
-            arr{row} = horzcat(cl{row,LI});
+            % ---------- Patch in for cat'ing 3D arrays (2025.7.10)----
+            try
+                arr{row} = horzcat(cl{row,LI});
+            catch
+                if all(nElemDim(row,LI) > 2)
+                    % // try cat'ing as blocks
+                    tmp = zeros(nnz(LI), max(nElemDim)); 
+                    xList = find(LI); 
+                    for ii = 1:nnz(LI)
+                        %// Find best dim; 
+                        [out] = size( cl{row, xList(ii)} );
+                        tmp(ii,1:length(out)) = out; 
+                    end
+                    % // These have to match on at least NDIMS-1 dims
+                    err = tmp*diag(1./median(tmp))-1; 
+                    tol = 1e-6;
+                    miniCatDim = find(sum(abs(err))>tol);
+                    if length(miniCatDim) > 1
+                        disp("Block size not compatible with hcat"); 
+                        return
+                    else
+                        arr{row} = cat(miniCatDim, cl{row,LI}); 
+                    end
+                end
+            end
+            %-----------------------------------------------------------
         end
         offset = cell(sz0y,1);        
         %_______
