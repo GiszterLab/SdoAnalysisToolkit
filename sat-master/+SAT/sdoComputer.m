@@ -22,21 +22,13 @@
   
   classdef sdoComputer < handle & matlab.mixin.Copyable
       properties
+          % _____ Data ____ 
           sdoMatrix         = []; % L
           sdoMatrixNormed   = []; % Lnorm
           jointMatrix       = []; % M
           backgroundSdo     = [];  % << 'subtractive' component for background subtraction.
-          %
-          algorithm {mustBeMember(algorithm, {'v3', 'v5', 'v7'})} = 'v3';
-          backgroundSubtraction = true; % This should be handled upstream. [or here]
-          parallelCompute       = false; 
-          obswise               = false; % Used for shuffles / multistacks
-          lowMemory             = false; 
-          verbose               = true; 
-          % Trial Handling; 
-          trialHandling         = 'combine' % Dummy; 
-          %
-          %
+          % ___ Meta________
+          config    SAT.properties.computerProperties
           nEvents = 0;
       end
       properties (Dependent)
@@ -50,24 +42,26 @@
           importedBackground
           computedSdo
       end
-      
       methods
-          function obj = sdoComputer(type)
+          function obj = sdoComputer(type, config)
               arguments
                   type = 'unit'; 
+                  config = SAT.properties.computerProperties(); 
               end
+              obj.config = config; % slave to 'config' as passed, if passed.
               switch type
                   case 'unit'
                       % standard; 
                   case 'background'
                       % TO FILL
                   case 'shuffle'
-                      obj.obswise = true; 
+                      %obj.obswise = true; 
+                      obj.config.obswise = true; 
               end        
           end
           %-------------------------------------
           function name = get.algorithmName(obj)
-              switch obj.algorithm
+              switch obj.config.algorithm
                   case 'v3'
                       name = 'linearEstimate'; 
                   case 'v5'            
@@ -78,7 +72,7 @@
           end
           %---------------------------------------
           function n = get.nStates(obj)
-              n = length(obj.sdoMatrix); 
+              n = size(obj.sdoMatrix,1); 
           end
           %-----------
           function px0 = get.px0(obj)
@@ -108,7 +102,20 @@
                   return
               end
               
+              % cell hcat is BRUTAL here for shuffles; let's take the sum
+              % instead
+              N_SHUFF = size(obj.px0,3); 
+              
+              L_buff = zeros(obj.nStates, obj.nStates, N_SHUFF); 
+              M_buff = zeros(obj.nStates, obj.nStates, N_SHUFF);  
+              Ln_buff= zeros(obj.nStates,  obj.nStates, N_SHUFF); 
+              
+              spkCount = 0; 
+              for tr = 1:px0.nTrials
+                  
+                  
               % --> Need to figure out what I'm going to do w/ trials
+              %{
               if px0.nTrials > 1
                     px0_flat = cellhcat(px0.data(1,:)); 
                     px1_flat = cellhcat(px1.data(1,:));
@@ -116,8 +123,11 @@
                   px0_flat = px0.data{1};
                   px1_flat = px1.data{1};
               end
+              %}
+              px0_flat = px0.data{1,tr}; 
+              px1_flat = px1.data{1,tr}; 
               
-              if obj.backgroundSubtraction
+              if obj.config.backgroundSubtraction
                   if ~obj.importedBackground
                       disp("No background matrix defined for background subtraction!");
                       return
@@ -134,21 +144,34 @@
                   px0_flat = pd_px1; % Override 
               end
               
-              switch obj.algorithm
+              switch obj.config.algorithm
                   case 'v3'
                     [L,M,Ln] = SAT.compute.sdo3(px0_flat, px1_flat, ...
-                        'parallelCompute',obj.parallelCompute); 
+                        'parallelCompute',obj.config.parallelCompute, ...
+                        'rescale', 0); 
                   case 'v5'
                     [L,M,Ln] = SAT.compute.sdo5(px0_flat, px1_flat, ...
-                        'parallelCompute',obj.parallelCompute);   
+                        'parallelCompute',obj.config.parallelCompute, ...
+                        'rescale', 0);   
                   case 'v7'
                      [L,M,Ln] = SAT.compute.sdo7(px0_flat, px1_flat, ...
-                        'parallelCompute',obj.parallelCompute);         
+                        'parallelCompute',obj.config.parallelCompute, ...
+                        'rescale', 0);         
               end
+              L_buff = L_buff + L; 
+              Ln_buff= Ln_buff+ Ln; 
+              M_buff = M_buff + M; 
+              
+              end
+              L     = L_buff / spkCount; 
+              Ln    = Ln_buff/ spkCount; 
+              M     = M_buff / spkCount;
+              %
+              
               obj.sdoMatrix         = L; 
               obj.sdoMatrixNormed   = Ln; 
               obj.jointMatrix       = M; 
-              obj.nEvents           = length(px0_flat); 
+              obj.nEvents           = spkCount; %length(px0_flat); 
           end
           %--------------------------------------
           function obj = setBackgroundMatrix(obj, VAR)
@@ -157,8 +180,8 @@
                       obj.backgroundSDO = zeros(obj.nStates); 
                   end
               else
-                  % __ otherwise , set; 
-                    obj.backgroundSDO = VAR; 
+                % __ otherwise , set; 
+                obj.backgroundSDO = VAR; 
               end
           end
           
@@ -197,8 +220,8 @@
                   implay(obj.(TARGET));
               catch
                   % hack around for people w/o toolbox; 
-                  f = figure; 
-                  for zz = 1:1000
+                  figure; 
+                  for zz = 1:obj.nEvents
                       imagesc(obj.(TARGET)(:,:,zz)); 
                       cMap = SAT.sdoUtils.getSdoColormap(obj.(TARGET)(:,:,zz));
                       colormap(cMap); 

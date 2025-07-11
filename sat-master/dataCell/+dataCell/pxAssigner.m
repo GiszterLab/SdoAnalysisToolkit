@@ -14,12 +14,10 @@
 
 classdef pxAssigner < handle & matlab.mixin.Copyable
     properties
-        data        = {};   
-        weighting   = 'equal';
+        data  cell = {};  %OUTPUT
+        % __ Import_Only:  
         sensor cell = {}; 
-        % __ For (Gaussian) filter Kernel______
-        G_smoothFWidth_Pts = 0; 
-        G_smoothFStdev_Pts = 0; 
+        config dataCell.properties.pxProperties
     end
     properties (Dependent)
         nStates
@@ -28,7 +26,7 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
         nObservations 
     end
     properties (Hidden)
-        filteredDistributions   = 0; 
+        filteredDistributions = 0; 
     end
     properties(Dependent, Hidden)
         sampledData
@@ -49,7 +47,6 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
         function n = get.nStates(obj)
             if ~obj.sampledData
                 n = 0;
-                return
             else
                 n = size(obj.data{1,1}); 
             end
@@ -69,7 +66,15 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
         
         % >> This is kind of weird that we define state upstream in xtdc,
         % but then have to reasample it here...
-                  
+        % ____ Slaves; 
+        function obj = pxAssigner(pxProperties)
+            arguments
+                pxProperties dataCell.properties.pxProperties = dataCell.pxProperties(); 
+            end
+            obj.config = pxProperties;
+        end
+        
+        %--------
         function obj = assignPx(obj, stateMap, intervalData)
             arguments
                 obj
@@ -89,7 +94,7 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
             weiArr = repelem({obj.weighting}, obj.nChannels, obj.nTrials); 
             %}
             binArr = repelem({stateMap.nBins}, intervalData.n_XT_Channels, intervalData.nTrials); 
-            weiArr = repelem({obj.weighting}, intervalData.n_XT_Channels, intervalData.nTrials);             
+            weiArr = repelem({obj.config.weighting}, intervalData.n_XT_Channels, intervalData.nTrials);             
             
             pxOut = cellfun(@pxTools.getPxFromX, xOut, binArr, weiArr, 'uniformOut', 0); 
             %
@@ -141,6 +146,10 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
                 LI = false; 
                 return
             end
+            if ~all( (obj.nObservations - pxa.nObservations) == 0)
+                LI = false; 
+            end
+            %{
             for ch = 1:obj.nChannels
                 for tr = 1:obj.nTrials
                     if ~(obj.nObservations(ch,tr) == pxa.nObservations(ch,tr))
@@ -148,6 +157,7 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
                     end
                 end
             end
+            %}
         end
         %------------------------------------------------------------
         function pxCell = assignPxRaw(obj, stateMap, xCell)
@@ -199,6 +209,7 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
                 obj.imagesc;
             end
         end
+        %-----------------------------------
     end 
 end
 

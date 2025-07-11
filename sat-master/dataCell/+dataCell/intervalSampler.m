@@ -30,13 +30,10 @@
     
 classdef intervalSampler < handle & matlab.mixin.Copyable
     properties
+        config dataCell.properties.intervalProperties
         data        = []; %{N_XT_CHANNELS, N_TRIALS}
         indices     = []; %{N_PP_CHANNELS, N_TRIALS}
-        n_shift     = 0; 
-        z_delay     = 0; 
-        dura_ms     = 10; 
-        fs          = 0; % x(t).fs; 
-        %
+        % >> We want a way to define these directly; 
         sensor_idx  = []; % For index origin
         sensor_xt   = []; % For sampling origin
     end
@@ -44,7 +41,14 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
         nTrials
         n_IDX_Channels
         n_XT_Channels
+        % Slaved
+        %{
         dura_nPoints
+        n_shift     %= 0; 
+        z_delay     %= 0; 
+        dura_ms     %= 10; 
+        fs          %= 0; % x(t).fs; 
+        %}
     end
     properties (Dependent, Hidden)
         calculatedIndices
@@ -67,14 +71,45 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
         function n = get.n_XT_Channels(obj)
             n = size(obj.data, 1); 
         end
+        %{
+        % -- Define Set/Get with slaves -- %
+        function n = get.dura_nPoints(obj)
+            n = obj.config.dura_nPoints; 
+        end
+        function n = get.n_shift(obj)
+            n = obj.config.n_shift; 
+        end
+        function set.n_shift(obj, n)
+            obj.config.n_shift = n; 
+        end
+        function n = get.z_delay(obj)
+            n = obj.config.z_delay; 
+        end
+        function set.z_delay(obj, n)
+            obj.config.z_delay = n; 
+        end
+        function n = get.dura_ms(obj)
+            n = obj.config.dura_ms; 
+        end
+        function set.dura_ms(obj,n)
+            obj.config.dura_ms = n; 
+        end
+        function n = get.fs(obj)
+            n = obj.config.fs; 
+        end
+        function set.fs(obj,n)
+            obj.config.fs = n; 
+        end
+        %}
         %---------------------------------%
-        function obj = intervalSampler()
+        function obj = intervalSampler(intervalProperties)
+            arguments
+                intervalProperties dataCell.properties.intervalProperties = dataCell.properties.intervalProperties; 
+            end
+            obj.config = intervalProperties;
             % Constructor -- To Fill 
         end
-        %------------------------------%
-        function nPoints = get.dura_nPoints(obj)
-            nPoints = ceil(obj.fs*obj.dura_ms/1000); % this allows nans; 
-        end
+
         % -----------------------------%
         % // Get indicies from ppDataCell, etc. 
         function obj = getIntervalIndices(obj, data, useTrials, useChannels, vars)
@@ -89,27 +124,25 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
             if ~strcmp(data.dataType, 'ppData')
                 disp("Intervals not defined for provided dataType"); 
             end
-            if isnan(obj.dura_nPoints)
+            if isnan(obj.config.dura_nPoints)
                 disp("Sample Frequency must be defined first"); 
             end
-            
-            obj.conform(data, 'type', vars.input); 
             
             nUseChannels    = length(useChannels); 
             nUseTrials      = length(useTrials); 
             
             % Convert from sec --> xtdc.indices; 
             st_tr = data.getData(useTrials, useChannels, 'dataField', vars.dataField); 
-            idx_tr = cellfun(@times, st_tr, repelem({obj.fs}, nUseChannels, nUseTrials), 'uniformOutput', 0); 
+            idx_tr = cellfun(@times, st_tr, repelem({obj.config.fs}, nUseChannels, nUseTrials), 'uniformOutput', 0); 
             idx_tr = cellfun(@round, idx_tr, 'uniformOutput', 0); 
             
             idx = cell(nUseChannels, nUseTrials);
             
             % __>> this is converting to 3D for some reason; 
             for tri = 1:nUseTrials
-                maxIdx = data.trTimeLen(tri)*obj.fs; 
+                maxIdx = data.trTimeLen(tri)*obj.config.fs; 
                 idx(:,tri) = pxTools.getIntervals(idx_tr(:,tri), ...
-                    'nShift', obj.n_shift, 'nPoints', obj.dura_nPoints, 'maxLen', maxIdx); 
+                    'nShift', obj.config.n_shift, 'nPoints', obj.config.dura_nPoints, 'maxLen', maxIdx); 
             end
             obj.indices = idx;  
             obj.sensor_idx = data.sensor{useChannels};
@@ -137,6 +170,7 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
                 'dataField',    data.dataField); 
             %
             obj.sensor_xt = data.sensor{vars.useChannels};
+            obj.config.fs = data.fs;
         end
         %----------------- These are 'raw' overrides for shuffle -------
         function indexCell = getIntervalIndicesRaw(obj, stCell, TYPE, fs)
@@ -144,7 +178,7 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
                 obj
                 stCell % spike-time Cell {times!!!!}
                 TYPE {mustBeMember(TYPE, {'signal', 'state'})} = 'signal';
-                fs = obj.fs; 
+                fs = obj.config.fs; 
             end
             % operate directly on trains; 
             [nUseChannels, nUseTrials] = size(stCell); 
@@ -180,6 +214,7 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
             end
             % TODO: Make this a generic setter method w/ concrete
             % implementation. 
+            obj.config.fs = data.fs; 
             for tr = 1:obj.nTrials
                 for ch = 1:obj.n_XT_Channels
                     switch vars.type

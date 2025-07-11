@@ -10,7 +10,8 @@
 %TODO: Better subsampling for trialwise handling [x]
 
 classdef stateMap < handle & matlab.mixin.Copyable
-    properties
+    %------------------------------
+    properties (SetObservable)
         mapMethod   char {mustBeMember(mapMethod, {'linear', 'log', 'linearsigned', 'logsigned'})} = 'log'; 
         maxMode     char {mustBeMember(maxMode, {'pTrial','xTrialxSeg'})} = 'xTrialxSeg'
         nBins       {mustBeInteger, mustBeNonnegative} = 20; 
@@ -26,6 +27,11 @@ classdef stateMap < handle & matlab.mixin.Copyable
         allowClipping = 0; 
         % ___>> Also should allow the inverse from this; assign xt from pxt
     end
+    
+    events
+        propertiesChanged
+    end
+    %-------------------------
     properties (Dependent)
        nTrials 
        nChannels
@@ -81,7 +87,54 @@ classdef stateMap < handle & matlab.mixin.Copyable
         function n = get.nTrials(obj)
             n = size(obj.channelAmpMax,2); 
         end
-        
+        %{
+        % // Define for ALL properties; 
+        function set.mapMethod(obj, val)
+            obj.mapMethod = val; 
+            obj.notifyChange();
+        end
+        function set.maxMode(obj,val)
+            obj.maxMethod = val;
+             obj.notifyChange();
+        end
+        function set.nBins(obj,val)
+            obj.nBins= val;
+            obj.notifyChange();
+        end
+        function set.channelDefMax(obj,val)
+            obj.channelDefMax = val; 
+            obj.notifyChange(); 
+        end
+        function set.channelDefMin(obj, val)
+            obj.channelDefMin = val;
+            obj.notifyChange();
+        end
+
+        function set.channelAmpMax(obj, val)
+            obj.channelAmpMax = val;
+            obj.notifyChange();
+        end
+
+        function set.channelAmpMin(obj, val)
+            obj.channelAmpMin = val;
+            obj.notifyChange();
+        end
+
+        function set.stateMapping(obj, val)
+            obj.stateMapping = val;
+            obj.notifyChange();
+        end
+
+        function set.allowClipping(obj, val)
+            obj.allowClipping = val;
+            obj.notifyChange();
+        end
+
+        % -- NOTIFIER --
+        function notifyChange(obj)
+            notify(obj, 'propertiesChanged'); 
+        end
+        %}
         %----------------------------------%
         % // for now, let's just assume we're composing with classes; 
         function obj = getChannelAmp(obj, primaryData)
