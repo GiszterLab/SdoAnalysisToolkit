@@ -75,9 +75,6 @@ else
         end
     else
         M = (px1*px0'); %./N_XT; %scale here; 
-        % __ Correlation matrix, minus mirrored components; 
-        %dM = M-min(M,M'); 
-        %L = dM - diag(sum(dM)); 
         L = M - diag(sum(M));
     end
 end

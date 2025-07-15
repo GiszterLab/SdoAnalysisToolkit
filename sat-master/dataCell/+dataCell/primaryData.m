@@ -421,19 +421,30 @@ classdef primaryData < handle & matlab.mixin.Copyable
         function values = getValuesAtIndices(obj, indices, vars)
             arguments
                 obj
-                indices = []; 
+                indices = []; % [N_XT_CH, N_TR, N_PP_CH/OBS]
                 vars.useChannels    = 1:obj.nChannels;
                 vars.useTrials      = 1:obj.nTrials; 
                 vars.dataField      = obj.dataField; 
             end            
-     
-            N_USE_TRIALS    = length(vars.useTrials); 
-            N_USE_XT_CH     = length(vars.useChannels);
+            %
+            % Here, we will take index as a {N_XT, N_TR, N_PP}
+            % --> this treats N_PP as a sample depth for the same
+            % channels/trials. 
+            %
+            % data cell downsampled to a {N_USE_XT, N_USE_TR}, then sampled
+            % 1:1
+            
+            %% TODO: Shuffle - Acceleration
+            
+            %These will get matched 1:1 with the index 
+            
+            N_USE_TR    = length(vars.useTrials); 
+            N_USE_XT    = length(vars.useChannels);
             
             % __ Pre-parse
             if ~iscell(indices)
                 % Evaluate time points across ALL trials?? 
-                indices = repelem({indices}, 1, N_USE_TRIALS);  
+                indices = repelem({indices}, 1, N_USE_TR);  
             end
             if isempty(vars.useChannels)
                 vars.useChannels = 1:obj.nChannels; 
@@ -443,26 +454,32 @@ classdef primaryData < handle & matlab.mixin.Copyable
                 values = obj.getTensor(vars.useChannels, vars.useTrials); 
                 return
             end
-            %____________
-            % {1 x N} indices can refer to either TRIAL indices, or CHANNEL indices...
-            % we will need to refer between the two.
             
-            % Ideally, we want to get the output as a {N_CHANNELS x N_TRIALS} cell of
-            % lookup values 
+            [ix_x, ix_y, ix_z] = size(indices); 
             
-            values = cell(N_USE_XT_CH, N_USE_TRIALS);
-            for tri = 1:N_USE_TRIALS
-                tr = vars.useTrials(tri); 
-                if isempty(indices{tri})
-                    continue
-                end
-                for chi = 1:N_USE_XT_CH
-                    ch = vars.useChannels(chi); 
-                    % __ Iterative Lookup
-                    values{chi,tri} = obj.data{1,tr}(ch).(vars.dataField)(indices{tri}); 
-                    if (size(indices{tri},1) >1) && (size(values{chi,tri},1) == 1)
-                        % deal with transposed columns
-                        values{chi,tri} = values{chi,tri}'; 
+            if ~(ix_x == N_USE_XT) || ~(ix_y == N_USE_TR)
+                disp("[primaryData]: Index dimensions are not compatible with data sample!");
+                return
+            end
+            %
+            values = cell(ix_x, ix_y, ix_z); % [N_CH, N_TR, ix_z]; 
+            %
+            for zz = 1:ix_z % Each independent sample ; DIM3 IX
+                for tri = 1:N_USE_TR
+                    tr = vars.useTrials(tri); 
+                    if isempty(indices{1,tri,zz})
+                        continue
+                    end
+                    for chi = 1:N_USE_XT
+                        ch = vars.useChannels(chi); 
+                        % __ Iterative Lookup
+                        values{chi,tri,zz} = obj.data{1,tr}(ch).(vars.dataField)(indices{chi,tri,zz}); 
+                        %{
+                        if (size(indices{tri},1) >1) && (size(values{chi,tri},1) == 1)
+                            % deal with transposed columns
+                            values{chi,tri} = values{chi,tri}'; 
+                        end
+                        %}
                     end
                 end
             end

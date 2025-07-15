@@ -21,7 +21,8 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
     end
     properties (Dependent)
         nStates
-        nChannels
+        nChannels % I think this is nXTChannels
+        nReplicates
         nTrials
         nObservations 
     end
@@ -42,6 +43,9 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
         end
         function n = get.nTrials(obj)
             n = size(obj.data,2); 
+        end
+        function n = get.nReplicates(obj)
+            n = size(obj.data,3); 
         end
         %----------------------------------
         function n = get.nStates(obj)
@@ -85,18 +89,15 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
                 disp("state map not yet defined"); 
             end
             
-            %TODO: Better extract discretized signals... or else pull
-            %discretized data from xtdc.data; 
-
-            xOut    = stateMap.discretizeSignalRaw(intervalData.data);
-            %{
-            binArr = repelem({stateMap.nBins}, obj.nChannels, obj.nTrials); 
-            weiArr = repelem({obj.weighting}, obj.nChannels, obj.nTrials); 
-            %}
-            binArr = repelem({stateMap.nBins}, intervalData.n_XT_Channels, intervalData.nTrials); 
-            weiArr = repelem({obj.config.weighting}, intervalData.n_XT_Channels, intervalData.nTrials);             
+            % We assume interval.data is of the form {N_CHAN, N_TRIAL,
+            % N_SAMP/SPIKES} % stateMaps are applied to each value of DIM
+            % 1. 
             
-            pxOut = cellfun(@pxTools.getPxFromX, xOut, binArr, weiArr, 'uniformOut', 0); 
+            %TODO: Better extract discretized signals... or else pull
+            % data from xtdc.data; 
+            
+            xOut    = stateMap.discretizeSignalRaw(intervalData.data);
+            pxOut = obj.assignPxRaw(stateMap, xOut);
             %
             if ~iscell(pxOut)
                 pxOut = {pxOut}; 
@@ -149,15 +150,6 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
             if ~all( (obj.nObservations - pxa.nObservations) == 0)
                 LI = false; 
             end
-            %{
-            for ch = 1:obj.nChannels
-                for tr = 1:obj.nTrials
-                    if ~(obj.nObservations(ch,tr) == pxa.nObservations(ch,tr))
-                        LI = false; 
-                    end
-                end
-            end
-            %}
         end
         %------------------------------------------------------------
         function pxCell = assignPxRaw(obj, stateMap, xCell)
@@ -166,26 +158,49 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
                 stateMap    dataCell.stateMap 
                 xCell       cell
             end
-            % xCell is a {x,y} cell of [idx, col, shuff] array; 
+            % xCell is a {x,y,z} cell of [Xi, col, shuff] array; 
+            [ix_x, ix_y, ix_z] = size(xCell); 
             
-            nUseTr = stateMap.nTrials; 
+            smBins3 = repelem({stateMap.nBins}, ix_x, ix_y, ix_z); 
+            weight3 = repelem({obj.config.weighting},  ix_x, ix_y, ix_z); 
+            
+            pxCell = cellfun(@pxTools.getPxFromX, xCell, smBins3, weight3,'uniformOut', 0); 
+            %{
+                        nUseTr = stateMap.nTrials; 
             nUseCh = stateMap.nChannels;
-            
             pxCell = cell(nUseCh, nUseTr);  
             for tr = 1:nUseTr
                 for ch = 1:nUseCh
                     pxCell{ch,tr} = pxTools.getPxFromX(xCell{ch,tr}, stateMap.nBins, obj.weighting); 
                 end
             end
+            %}
         end
         %-------------------------------------------------------------
-        function f = imagesc(obj, useTrials, useChannels)
+        function obj_out = subsample(obj, useXtChannels, useTrials, usePpChannels)
             arguments
                 obj
-                useTrials   = 1:obj.nTrials
-                useChannels = 1:obj.nChannels
+                useXtChannels   = 1:obj.nChannels; 
+                useTrials       = 1:obj.nTrials; 
+                usePpChannels   = 1:obj.nReplicates;
             end
-            obj_tmp = copy(obj); 
+            obj_out = copy(obj); 
+            if ~obj.sampledData
+                return
+            end
+            obj_out.data = obj_out.data(useXtChannels,useTrials,usePpChannels); 
+            obj_out.sensor = obj_out.sensor(useXtChannels); 
+        end
+        %-------------------------------------------------------------
+        function f = imagesc(obj, useTrials, useChannels, useReplicates)
+            arguments
+                obj
+                useTrials       = 1:obj.nTrials
+                useChannels     = 1:obj.nChannels
+                useReplicates   = 1:obj.nReplicates;
+            end
+            obj_tmp = copy(obj);
+            obj_tmp.data = obj_tmp.data(:,:,useReplicates);
             obj_tmp.data = obj_tmp.data(:,useTrials); 
             obj_tmp.data = obj_tmp.data(useChannels,:);
             obj_tmp.hcat(); 

@@ -102,72 +102,75 @@
                   return
               end
               
-              % cell hcat is BRUTAL here for shuffles; let's take the sum
-              % instead
-              N_SHUFF = size(obj.px0,3); 
+              % NOTE: IT is possible that px0/px1 contains 3D data [N_XT,
+              % N_TR, N_PP
               
-              L_buff = zeros(obj.nStates, obj.nStates, N_SHUFF); 
-              M_buff = zeros(obj.nStates, obj.nStates, N_SHUFF);  
-              Ln_buff= zeros(obj.nStates,  obj.nStates, N_SHUFF); 
+              N_SHUFF = size(obj.px0,3); 
+              N_STATES = px0.nStates(1); % obj inherits nStates downstream from this
+              
+              L_buff = zeros(N_STATES, N_STATES, N_SHUFF); 
+              M_buff = zeros(N_STATES, N_STATES, N_SHUFF);  
+              Ln_buff= zeros(N_STATES, N_STATES, N_SHUFF); 
               
               spkCount = 0; 
               for tr = 1:px0.nTrials
                   
-                  
-              % --> Need to figure out what I'm going to do w/ trials
-              %{
-              if px0.nTrials > 1
-                    px0_flat = cellhcat(px0.data(1,:)); 
-                    px1_flat = cellhcat(px1.data(1,:));
-              else
-                  px0_flat = px0.data{1};
-                  px1_flat = px1.data{1};
-              end
-              %}
-              px0_flat = px0.data{1,tr}; 
-              px1_flat = px1.data{1,tr}; 
-              
-              if obj.config.backgroundSubtraction
-                  if ~obj.importedBackground
-                      disp("No background matrix defined for background subtraction!");
-                      return
-                  end
-                  if ~ismatrix(px0_flat)
-                      [sz_x, sz_y, sz_z] = size(px0_flat); 
-                      px0_flat_2 = reshape(px0_flat, sz_x, []); 
-                      pdpx1_flat = obj.backgroundSdo*px0_flat_2+px0_flat_2; 
-                      pd_px1 = reshape(pdpx1_flat, sz_x, sz_y, sz_z); 
+                  % --> Need to figure out what I'm going to do w/ trials
+                  %{
+                  if px0.nTrials > 1
+                        px0_flat = cellhcat(px0.data(1,:)); 
+                        px1_flat = cellhcat(px1.data(1,:));
                   else
-                      pd_px1 = obj.backgroundSdo * px0_flat + px0_flat; 
+                      px0_flat = px0.data{1};
+                      px1_flat = px1.data{1};
                   end
+                  %}
+                  px0_flat = px0.data{1,tr}; 
+                  px1_flat = px1.data{1,tr}; 
+
+                  if obj.config.backgroundSubtraction
+                      if ~obj.importedBackground
+                          disp("No background matrix defined for background subtraction!");
+                          return
+                      end
+                      if ~ismatrix(px0_flat)
+                          % Flatten shuffles for speed; 
+                          [sz_x, sz_y, sz_z] = size(px0_flat); 
+                          px0_flat_2 = reshape(px0_flat, sz_x, []); 
+                          pdpx1_flat = obj.backgroundSdo*px0_flat_2+px0_flat_2; 
+                          pd_px1 = reshape(pdpx1_flat, sz_x, sz_y, sz_z); 
+                      else
+                          pd_px1 = obj.backgroundSdo * px0_flat + px0_flat; 
+                      end
+                      %
+                      px0_flat = pd_px1; % Override 
+                  end
+
+                  switch obj.config.algorithm
+                      case 'v3'
+                        [L,M,Ln] = SAT.compute.sdo3(px0_flat, px1_flat, ...
+                            'parallelCompute',obj.config.parallelCompute, ...
+                            'rescale', 0); 
+                      case 'v5'
+                        [L,M,Ln] = SAT.compute.sdo5(px0_flat, px1_flat, ...
+                            'parallelCompute',obj.config.parallelCompute, ...
+                            'rescale', 0);   
+                      case 'v7'
+                         [L,M,Ln] = SAT.compute.sdo7(px0_flat, px1_flat, ...
+                            'parallelCompute',obj.config.parallelCompute, ...
+                            'rescale', 0);         
+                  end
+                  L_buff = L_buff + L; 
+                  Ln_buff= Ln_buff+ Ln; 
+                  M_buff = M_buff + M; 
                   %
-                  px0_flat = pd_px1; % Override 
+                  spkCount = spkCount + size(px0_flat,2);
               end
-              
-              switch obj.config.algorithm
-                  case 'v3'
-                    [L,M,Ln] = SAT.compute.sdo3(px0_flat, px1_flat, ...
-                        'parallelCompute',obj.config.parallelCompute, ...
-                        'rescale', 0); 
-                  case 'v5'
-                    [L,M,Ln] = SAT.compute.sdo5(px0_flat, px1_flat, ...
-                        'parallelCompute',obj.config.parallelCompute, ...
-                        'rescale', 0);   
-                  case 'v7'
-                     [L,M,Ln] = SAT.compute.sdo7(px0_flat, px1_flat, ...
-                        'parallelCompute',obj.config.parallelCompute, ...
-                        'rescale', 0);         
-              end
-              L_buff = L_buff + L; 
-              Ln_buff= Ln_buff+ Ln; 
-              M_buff = M_buff + M; 
-              
-              end
+              spkCount = max(spkCount,1);
               L     = L_buff / spkCount; 
               Ln    = Ln_buff/ spkCount; 
               M     = M_buff / spkCount;
               %
-              
               obj.sdoMatrix         = L; 
               obj.sdoMatrixNormed   = Ln; 
               obj.jointMatrix       = M; 
@@ -184,7 +187,7 @@
                 obj.backgroundSDO = VAR; 
               end
           end
-          
+          %--------------- Prediction ----------
           % // Write to output prediction; 
           function px1_est = predictPx(obj, px0)
               arguments
@@ -230,6 +233,5 @@
               end
           end
           %----------------- 
-          
       end
   end

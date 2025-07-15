@@ -60,7 +60,6 @@ nStaM = SAT.sdoUtils.normsdo(sta_mMat, sta_mMat);
 
 HConv = nBkdM*nStaM; %convolution of M ~~ Sum of effects (L); 
 
-%sta_px0 = sum(sta_mMat); 
 sta_px0 = sum(jSdo.Unit); 
 
 %H5_M = HConv*diag(sta_px0); 

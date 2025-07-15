@@ -77,7 +77,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
     end
 
     methods
-        %function obj = sdoMat(N_XT, N_PP, Type, stateMapping, config, x0Config, x1Config)
         function obj = sdoMat(N_XT, N_PP, Type, stateMapping, x0Config, x1Config, pxConfig)
             arguments
                 N_XT = 1; 
@@ -85,7 +84,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
                 Type {mustBeMember(Type, {'unit', 'background', 'shuffle'})} = 'unit'; 
                 % these are for syncing w/ master; 
                 stateMapping dataCell.stateMap = dataCell.stateMap(); 
-                %config  SAT.properties.computerProperties = SAT.properties.computerProperties(); 
                 x0Config dataCell.properties.intervalProperties = dataCell.properties.intervalProperties(0,0,-10); 
                 x1Config dataCell.properties.intervalProperties = dataCell.properties.intervalProperties(0,0,+10); 
                 pxConfig dataCell.properties.pxProperties = dataCell.properties.pxProperties();
@@ -107,20 +105,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             obj.sdo             = repelem(SAT.sdoComputer(Type, config), N_XT, N_PP); 
             % __ >> this may be reorganized; 
         end
-        %{
-        %-------------
-        function fs = get.fs(obj)
-            if ~isempty(obj.xtData)
-                fs = obj.xtData.config.fs; 
-            else
-                fs = 0; 
-            end
-        end
-        function set.fs(obj, fs)
-            obj.x0Data.config.fs = fs; 
-            obj.x1Data.config.fs = fs; 
-        end
-        %}
         %-------------
         function n = get.nTrials(obj)
             n = obj.xtData.nTrials; 
@@ -263,7 +247,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             end
             obj.stateMapping.discretizeSignal; 
         end
-        
         %------------------------------------------------------------------
         % // these are a series of temporary functions; 
         % --> I think I can put the shuffle/backgrounds at this step; 
@@ -282,7 +265,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
                 obj.x0Data.conform(obj.xtData); 
                 obj.x1Data.conform(obj.xtData); 
             end
-            
             obj.x0Data.getIntervalIndices(obj.ppData, 'dataField', vars.useEvents); 
             obj.x1Data.getIntervalIndices(obj.ppData, 'dataField', vars.useEvents);
         end
@@ -307,6 +289,9 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
                 obj
                 vars.useEvents {mustBeMember(vars.useEvents, {'times', 'shuffle'})} = 'times';
                 vars.rebuild = 0; 
+                vars.useTrials      = 1:obj.nTrials;
+                vars.useXtChannels  = 1:obj.nXtChannels; 
+                vars.usePpChannels  = 1:obj.nPpChannels;
             end
             
             % TODO: Better handling of shuffles in the time data; -->
@@ -320,10 +305,13 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             
             % __> Reading from temp onboard memory_ 
             % ___ Rebuild / Standardization / 
+            
+            % --> We only want to shuffle 1x!
             switch vars.useEvents
                 case 'shuffle' % 3D data
                     % // ppData is slaved from shuffle; 
-                    obj.ppData = obj.eventShuffle.getPpData; 
+                    obj.ppData = obj.eventShuffle.getPpData('flatten', 0); 
+                    %obj.ppData = obj.eventShuffle.getPpData('flatten', 1);  
             end
             
             % __ >> I should link these under dependencies. 
@@ -331,30 +319,74 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             if (~(obj.x0Data.calculatedIndices && obj.x1Data.calculatedIndices)) || vars.rebuild == 1
                 obj.drawIntervals();%, 'useEvents', vars.useEvents); 
             end
-            if (~(obj.x0Data.sampledData && obj.x1Data.sampledData)) || vars.rebuild == 1
-                obj.sampleIntervals()
-            end
-            %
-            if (~(obj.px0Data.sampledData && obj.px1Data.sampledData)) || vars.rebuild == 1
-                obj.drawDistributions()
-            end
             
             % ___>> This needs an upgrade for multi-comp <<___
             % Also not sure if this is an implicit flag. 
             
-            % --> unless otherwise stated iterate over all. 
+           
+            % This represents ALL Combinations (usually)
+            
+            obj.x0Data.samplePrimaryData(obj.xtData, ...
+                'useTrials', vars.useTrials, 'useChannels', vars.useXtChannels);
+            obj.x1Data.samplePrimaryData(obj.xtData, ...
+                'useTrials', vars.useTrials, 'useChannels', vars.useXtChannels);
+           %
+           
+           	if strcmp(vars.useEvents, 'shuffle')
+               %TODO: Need to shuffle-accelerate
+                1; 
+            end
+           % this section is a bit too brutal for estimating shuffle; 
+           % --> I may need to get the acceleration up
+            obj.px0Data.assignPx(obj.stateMapping, obj.x0Data); 
+            obj.px1Data.assignPx(obj.stateMapping, obj.x1Data);     
             
             for m = 1:obj.nXtChannels
+                % --> Currently, x0/x1 only sample from one source; 
                 for u = 1:obj.nPpChannels
-                    obj.sdo(m,u).compute(obj.px0Data, obj.px1Data); 
+                    obj.sdo(m,u).compute(obj.px0Data.subsample(m,vars.useTrials,u), obj.px1Data.subsample(m,vars.useTrials,u)); 
                 end
                 disp(strcat("Finished ", num2str(m), "/", num2str(obj.nXtChannels)));
             end
-
         end
             
         % || Operations on SDOs (Not analysis) ||
         % Plot; Predict; Compute; Extract; 
+        %--------------------------------------------------
+        function sdos = getSdos(obj, useXtChannels, usePpChannels, NORM)
+            arguments
+                obj
+                useXtChannels = 1; 
+                usePpChannels = 1; 
+                NORM = 0; 
+            end
+            
+            if ~obj.computedSdo
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            
+            N_USE_XT = length(useXtChannels); 
+            N_USE_PP = length(usePpChannels); 
+            
+            sdos = cell(1,N_USE_XT); 
+            for m_i = 1:N_USE_XT
+                m = useXtChannels(m_i); 
+                sdos{m_i} =  zeros(obj.nStates, obj.nStates, N_USE_PP); 
+                for u_i = 1:N_USE_PP
+                    u = usePpChannels(u_i);
+                    if NORM == 1
+                        sdos{m_i}(:,:,u_i) = obj.sdo(m,u).sdoMatrixNormed; 
+                    else 
+                        sdos{m_i}(:,:,u_i) = obj.sdo(m,u).sdoMatrix; 
+                    end
+                end
+            end
+            if N_USE_XT == 1
+                sdos = sdos{1};% unwrap
+            end
+        end
+        
         %-----------------------------------------------------------------%
         function [stirpd] = getStirpd(obj, useTrials, useChannels)
             arguments
@@ -464,74 +496,19 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             N_PX0_PTS = round(abs(obj.px0DuraMs*obj.fs/1000));  
             pxTools.plot.stirpd(obj.stirpd, N_PX0_PTS, 'binDuraMs', 1000/obj.fs, 'nSpikes', obj.nEvents); 
         end
-
         %% Export to pxtDataCell
-        %// use transition matrices of SDO to predict pxt1 from an
-        %input pxtDataCell
-        %{
-        function pxt_est = getPredictionPxt(obj, px0, duraMs)
+        function pd_px1Data = getPredictionPx(obj, px0Data, vars)
             arguments
                 obj
-                px0 pxtDataCell
-                duraMs double = 0; 
+                px0Data dataCell.pxAssigner = obj.px0Data;
+                vars.dummy = []; % for later use; 
             end
-            
-            if ~obj.generatedTransitionMatrices
-                disp("Transition Matrices have not Generated yet!"); 
-                return
-            end
+            % // Pipe from sdoComputer
+            vars.dummy; 
+            pd_px1Data = obj.pxAssigner(px0Data); 
 
-            %TODO: Check for mismatch in filters/etc. 
-            
-            pxt_est = dataCell.adaptors.getConformedPxtDataCell(obj, 'px1'); 
-
-            %pxt_est = pxtDataCell(); 
-            pxt_est.data        = cell(1, obj.nPxtTypes); 
-            pxt_est.pxtNames    = cell(1, obj.nPxtTypes);  
-            if isa(px0.data, 'cell')
-                ISCELL = 1; 
-            else
-                ISCELL = 0; 
-            end
-            
-            for hh = 1:obj.nPxtTypes
-                if ISCELL
-                    pxData = px0.data{1}; 
-                else
-                    pxData = px0.data; 
-                end
-               pdPx = pxTools.predictPxtfromPx0(obj.transitionMat{hh}, pxData); 
-               pxt_est.data{hh} = pdPx;  
-               pxt_est.pxtNames{hh} = obj.pxtNames{hh}; 
-            end
-            %______ BACK COPY_________
-            pxt_est.copyProperties(obj, {'xtName', 'ppName', 'xtChName', ...
-                'ppChName', 'nPxtTypes', 'nEvents', 'xtProperties', ...
-                'ppProperties', 'nStates', 'markovMatrix', 'stateMapping'}); 
-    
-            %__ Be Cautious !!
-            pxt_est.markovMatrix    = obj.markovMatrix; %// this isn't exactly the same. Px of prediction  
-            % __ Unique/ Differing Calls
-            %{
-            pxt_est.duraMs          = obj.px1DuraMs; 
-            %pxt_est.stateMapping    = obj.stateMapping; 
-            pxt_est.zDelay          = obj.pxProperties.zDelay; 
-            pxt_est.filterWid       = obj.pxProperties.smoothingFilterWidth; 
-            pxt_est.filterStd       = obj.pxProperties.smoothingFilterStd; 
-            %}
-            %  __ DUMMY FILL ___ 
-            pxt_est.backgroundPx    = zeros(obj.nStates,1); 
-            pxt_est.backgroundMkv   = zeros(obj.nStates,1); 
-            %
-            pxt_est.dataMatrices = obj.transitionMat; 
-
-           % // export to a pxt;  
-            
         end
-        %}
         
     end
 end
-
-%------------------------------- Depreciated Support Func ---------------%
 

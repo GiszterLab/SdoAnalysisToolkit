@@ -7,7 +7,6 @@
 % distributions; 
 %   - ppDataCell, pxtDataCell, eventDataCell, sdos
 %
-% called by pxtDataCell
 
 % This is going to be the new method for defining the sampling properties
 % from data; used to draw distributions, as necessary. 
@@ -40,15 +39,7 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
     properties (Dependent)
         nTrials
         n_IDX_Channels
-        n_XT_Channels
-        % Slaved
-        %{
-        dura_nPoints
-        n_shift     %= 0; 
-        z_delay     %= 0; 
-        dura_ms     %= 10; 
-        fs          %= 0; % x(t).fs; 
-        %}
+        n_XT_Channels        
     end
     properties (Dependent, Hidden)
         calculatedIndices
@@ -71,36 +62,6 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
         function n = get.n_XT_Channels(obj)
             n = size(obj.data, 1); 
         end
-        %{
-        % -- Define Set/Get with slaves -- %
-        function n = get.dura_nPoints(obj)
-            n = obj.config.dura_nPoints; 
-        end
-        function n = get.n_shift(obj)
-            n = obj.config.n_shift; 
-        end
-        function set.n_shift(obj, n)
-            obj.config.n_shift = n; 
-        end
-        function n = get.z_delay(obj)
-            n = obj.config.z_delay; 
-        end
-        function set.z_delay(obj, n)
-            obj.config.z_delay = n; 
-        end
-        function n = get.dura_ms(obj)
-            n = obj.config.dura_ms; 
-        end
-        function set.dura_ms(obj,n)
-            obj.config.dura_ms = n; 
-        end
-        function n = get.fs(obj)
-            n = obj.config.fs; 
-        end
-        function set.fs(obj,n)
-            obj.config.fs = n; 
-        end
-        %}
         %---------------------------------%
         function obj = intervalSampler(intervalProperties)
             arguments
@@ -145,7 +106,7 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
                     'nShift', obj.config.n_shift, 'nPoints', obj.config.dura_nPoints, 'maxLen', maxIdx); 
             end
             obj.indices = idx;  
-            obj.sensor_idx = data.sensor{useChannels};
+            obj.sensor_idx = data.sensor(useChannels);
         end
         % // use existing indices to sample points; 
         % --> Here we assume nTrials is comparable; if not, we need to
@@ -155,7 +116,8 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
                 obj
                 data dataCell.primaryData % e.g. xtDataCell.data; 
                 vars.useTrials      = 1:obj.nTrials; 
-                vars.useChannels    = 1:data.nChannels;
+                vars.useChannels    = 1:data.nChannels; % xtChannels
+                vars.usePpChannels  = 1:obj.n_IDX_Channels; 
             end
             if ~obj.calculatedIndices
                 disp("Calculate indices first")
@@ -164,12 +126,15 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
             %  
             obj.conform(data, 'type', 'indices'); 
             
-            obj.data = data.getValuesAtIndices( obj.indices(:,vars.useTrials), ...    
+            % multiplex indices; 
+            IX = repelem(permute(obj.indices(:,vars.useTrials), [3,2,1]), length(vars.useChannels), 1, 1); 
+            
+            obj.data = data.getValuesAtIndices( IX, ...    
                 'useChannels',  vars.useChannels, ...
                 'useTrials',    vars.useTrials, ...
                 'dataField',    data.dataField); 
             %
-            obj.sensor_xt = data.sensor{vars.useChannels};
+            obj.sensor_xt = data.sensor(vars.useChannels);
             obj.config.fs = data.fs;
         end
         %----------------- These are 'raw' overrides for shuffle -------
@@ -192,7 +157,7 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
             end
             %
             indexCell = pxTools.getIntervals(ixCell, ...
-                    'nShift', obj.n_shift, 'nPoints', obj.dura_nPoints);  
+                    'nShift', obj.config.n_shift, 'nPoints', obj.config.dura_nPoints);  
         end
         %--------------
         % // This is a simple fusion method // 
@@ -220,8 +185,8 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
                     switch vars.type
                         case 'indices'
                             % include interval start/ends
-                            tMin = 1 + max([-obj.dura_nPoints,0]); %TODO: Upgrade for multi
-                            tMax = ceil(data.trTimeLen(1,tr)*data.fs) - max([obj.dura_nPoints,0]);
+                            tMin = 1 + max([-obj.config.dura_nPoints,0]); %TODO: Upgrade for multi
+                            tMax = ceil(data.trTimeLen(1,tr)*data.fs) - max([obj.config.dura_nPoints,0]);
                             %
                             IX = obj.indices{ch,tr}; 
                             IX(IX < tMin) = tMin; 
@@ -229,8 +194,8 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
                             obj.indices{ch,tr} = IX;
                         case 'times'
                             % include interval start/ends
-                            tMin = 0 + max(+[-obj.dura_ms, 0]); %TODO: passthrough upgrade for xt
-                            tMax = data.trTimeLen(1,tr) - max([obj.dura_ms, 0]); 
+                            tMin = 0 + max(+[-obj.config.dura_ms, 0]); %TODO: passthrough upgrade for xt
+                            tMax = data.trTimeLen(1,tr) - max([obj.config.dura_ms, 0]); 
                             %
                             tX = obj.data{ch,tr}; 
                             tX(tX<tMin) = tMin; 

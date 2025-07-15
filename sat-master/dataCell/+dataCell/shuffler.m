@@ -159,7 +159,11 @@ classdef shuffler < handle & matlab.mixin.Copyable
             obj.shuffleData = shuffData;  %{nChannels,nTrials} of [nShuff, dat]            
         end
         %-------------------------------------------------------------
-        function ppData = getPpData(obj)
+        function ppData = getPpData(obj, vars)
+            arguments
+                obj
+                vars.flatten = 0; % flatten shuffles; 
+            end
             % extract a (shuffled) primaryData; 
             % !!! This 'does' work, but it can cause downstream issues, if
             % shuffles are pegged to 'times'
@@ -174,8 +178,12 @@ classdef shuffler < handle & matlab.mixin.Copyable
                 for ch = 1:obj.nChannels
                     % // originally we ran this in the 'shuffle' field, but
                     % it may make sense to take it from spikes; 
-                    
-                    ppData.data{1,tr}(ch).times     = obj.shuffleData{ch,tr}; 
+                    if vars.flatten
+                        st = obj.shuffleData{ch,tr}';
+                        ppData.data{1,tr}(ch).times     = st(:);
+                    else
+                        ppData.data{1,tr}(ch).times     = obj.shuffleData{ch,tr}; 
+                    end
                     %{
                    ppData.data{1,tr}(ch).shuffle   = ...
                     obj.shuffleData{ch,tr};

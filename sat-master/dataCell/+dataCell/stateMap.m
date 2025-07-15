@@ -1,5 +1,5 @@
 %% stateMap Class (OOP) - D2
-
+%
 % Support class for handling the data discretization
 % For composition with time series --> State definining public classes
 
@@ -238,29 +238,32 @@ classdef stateMap < handle & matlab.mixin.Copyable
         %---------------------------------------------------------------
         % Pared alternative for use on raw data; 
         function data_out = discretizeSignalRaw(obj, data, useMapCh, useMapTr)
-            % hack-acround for the dumb not allowing -inf/inf; 
             stateMap = obj.stateMapping; 
-            if iscell(data)
-                [d_row, d_col] = size(data); 
-                data_out = cell(d_row, d_col); 
-                for r = 1:d_row
-                    for c = 1:d_col
-                        data_out{r,c} = discretize(data{r,c}, stateMap(:,r, c)); 
+            if iscell(data) % UPGRADE for 3d [ assume independent channels on X, Trials on y; independent SAMPLES of chanels, on zz
+                [d_row, d_col, d_lvf] = size(data); 
+                data_out = cell(d_row, d_col, d_lvf); 
+                for l = 1:d_lvf
+                    for r = 1:d_row
+                        for c = 1:d_col
+                            data_out{r,c,l} = discretize(data{r,c,l}, stateMap(:,r, c)); 
+                        end
                     end
                 end
             else
-                data_out = discretize(data, obj.stateMapping(:,useMapCh, useMapTr)); 
+                % Array input-output
+                data_out = discretize(data, obj.stateMapping(:,useMapCh, useMapTr(1))); 
             end
         end
         %-------------------
-        function obj = subsample(obj, useTrials, useChannels)
+        function obj_out = subsample(obj, useTrials, useChannels)
             % >> 
+            obj_out = copy(obj); 
             sfields = {'channelDefMax', 'channelDefMin', 'channelAmpMax', 'channelAmpMin'};
             for f = 1:4
-                obj.(sfields{f}) = obj.(sfields{f})(useChannels, useTrials); 
+                obj_out.(sfields{f}) = obj.(sfields{f})(useChannels, useTrials); 
             end
             if obj.definedState
-                obj.stateMapping = obj.stateMapping(:,useChannels,useTrials); 
+                obj_out.stateMapping = obj.stateMapping(:,useChannels,useTrials); 
             end
         end
         %---
