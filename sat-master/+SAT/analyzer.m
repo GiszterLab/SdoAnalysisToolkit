@@ -31,8 +31,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
         sdoConfig       SAT.properties.computerProperties
         % __ These pass through __ 
         x0Config        dataCell.properties.intervalProperties 
-        x1Config        d                    disp("Computing Shuffle SDOs"); 
-                    obj.shuffleSDO.compute('useEvents', 'shuffle'); ataCell.properties.intervalProperties 
+        x1Config        dataCell.properties.intervalProperties 
         pxConfig        dataCell.properties.pxProperties
         %
         % Core Properties
@@ -50,8 +49,6 @@ classdef analyzer < handle & matlab.mixin.Copyable
     end  
     properties (Hidden)
         configSnapshot
-        %wasChanged = fal                    disp("Computing Shuffle SDOs"); 
-                    obj.shuffleSDO.compute('useEvents', 'shuffle'); se; % used to flag for changed properties
         stateMapListenerObj
         % // Listeners for pushing mode-specific changes //
         ListenerObj_algo
@@ -71,8 +68,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
     end
     
     properties (Hidden, Dependent)
-        importedData                    disp("Computing Shuffle SDOs"); 
-                    obj.shuffleSDO.compute('useEvents', 'shuffle'); 
+        importedData                    
         definedState
         shuffledSpikes 
         computedBackgroundSdo
@@ -87,8 +83,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
                 N_XT = 1; 
                 N_PP = 1;
             end
-            % // Master                    disp("Computing Shuffle SDOs"); 
-                    obj.shuffleSDO.compute('useEvents', 'shuffle'); s// 
+            % // Master
             stateMap = dataCell.stateMap(); % Generate 1x; slave;
             x0Config = dataCell.properties.intervalProperties(0,0,-10);
             x1Config = dataCell.properties.intervalProperties(0,0,+10); 
@@ -124,8 +119,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
             % __ Configs for Downstream __
             obj.x0Config = x0Config; 
             obj.x1Config = x1Config; 
-            obj.pxConf                    disp("Computing Shuffle SDOs"); 
-                    obj.shuffleSDO.compute('useEvents', 'shuffle'); ig = pxConfig; 
+            obj.pxConfig = pxConfig; 
             %
             obj.saveSnapshot(); 
         end
@@ -142,8 +136,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
         % -- Aliasing
         function LI = get.importedData(obj)
             LI = obj.unitSDO.importedXtData && obj.unitSDO.importedPpData;
-        end                    disp("Computing Shuffle SDOs"); 
-                    obj.shuffleSDO.compute('useEvents', 'shuffle'); 
+        end
         %----
         function n = get.nPpChannels(obj)
             if ~obj.importedData
@@ -162,8 +155,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
         end
         % --- 
         function n = get.nTrials(obj)
-            if ~obj.                    disp("Computing Shuffle SDOs"); 
-                    obj.shuffleSDO.compute('useEvents', 'shuffle'); importedData
+            if ~obj.importedData
                 n = 0; 
             else
                 n = obj.unitSDO.nTrials; 
@@ -181,8 +173,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
         function LI = get.definedState(obj)
             LI = obj.unitSDO.definedState; 
         end
-        %                    disp("Computing Shuffle SDOs"); 
-                    obj.shuffleSDO.compute('useEvents', 'shuffle'); 
+        %
         function n = get.nStates(obj)
             n = obj.stateMapping.nBins; 
         end
@@ -203,8 +194,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
             end
         end
         %}
-       %-----------                    disp("Computing Shuffle SDOs"); 
-                    obj.shuffleSDO.compute('useEvents', 'shuffle'); ---------
+       %--------------------
 %}
         %---------------
         %% GET / SET Components
