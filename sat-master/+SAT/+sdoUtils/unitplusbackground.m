@@ -144,17 +144,37 @@ switch vars.method
         
         w = reshape(vars.weightVector, 1, 1, nUnits); 
         
-        sc_re_unit_dSdo = tensorprod(reparam_unit_dSdo, w, 3); 
-        sc_re_unit_jSdo0 = repmat(bk_jSdo, 1, 1, nUnits); 
-        sc_re_unit_jSdo = tensorprod(sc_re_unit_jSdo0, w, 3); 
-        %sc_re_unit_jSdo = tensorprod(z_unit_jSdo, w, 3); 
-        % // This is should have the same 
+        try 
+            sc_re_unit_dSdo = tensorprod(reparam_unit_dSdo, w, 3); 
+            sc_re_unit_jSdo0 = repmat(bk_jSdo, 1, 1, nUnits); 
+            sc_re_unit_jSdo = tensorprod(sc_re_unit_jSdo0, w, 3); 
+            %sc_re_unit_jSdo = tensorprod(z_unit_jSdo, w, 3); 
+            % // This is should have the same 
+            
+        catch
+            % ------ for older MATLAB
+            nStates = size(reparam_unit_dSdo,1); 
+                        
+            sc_re_unit_dSdo = zeros(nStates, nStates, nUnits); 
+            sc_re_unit_jSdo = zeros(nStates, nStates, nUnits); 
+            for z = 1:nUnits
+                sc_re_unit_dSdo(:,:,z) = reparam_unit_dSdo(:,:,z)*w(z); 
+                sc_re_unit_jSdo(:,:,z) = bk_jSdo(:,:,z)*w(z); 
+            end
+            
+            
+        end
+       
         
         d_sc_sum = sc_re_unit_dSdo + bk_dSdo; 
         j_sc_sum = sc_re_unit_jSdo + bk_jSdo; 
         
         % Rescaled-normed
         [sc_sum_dSdo, sc_sum_jSdo] = SAT.sdoUtils.normsdo(d_sc_sum, j_sc_sum); %bk_jSdo); 
+        
+        %
+        sum_unit_dSdo = sc_sum_dSdo; 
+        sum_unit_jSdo = sc_sum_jSdo; 
 end
 
 

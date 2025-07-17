@@ -35,7 +35,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
         pxConfig        dataCell.properties.pxProperties
         %
         % Core Properties
-        predictionMatrices  SAT.predict.HH_predictionMatrices
+        %predictionMatrices  SAT.predict.HH_predictionMatrices
         errorStruct         SAT.predict.predictionError2
         sdoStruct       = []; % dummy for deprecated
         nBackgroundPts        = 10000; % per-trial  
@@ -106,6 +106,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
             %--------------
             obj.sdoConfig = sdoConfig;
             %
+            %obj.errorStruct = SAT.predict.predictionError2
             %
             % // Slaves // 
             obj.stateMapping    = stateMap; 
@@ -374,7 +375,6 @@ classdef analyzer < handle & matlab.mixin.Copyable
                     obj.shuffle('shuffle'); 
                     1; 
                 end
-                
                 FAST_SHUFF = 1;
                 tic;
                 if FAST_SHUFF == 1
@@ -387,7 +387,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
                 %}
                 toc; 
             end
-            if isempty(TARGET) || strcmp(TARGET, 'shuffle')
+            if isempty(TARGET) || strcmp(TARGET, 'unit')
                 disp("Computing Unit SDOs");
                 tic;
                 obj.unitSDO.compute(); 
@@ -457,7 +457,6 @@ classdef analyzer < handle & matlab.mixin.Copyable
            % // call to external bungler
            sdoS = SAT.deprecated.getSdoStructFunc(obj);
        end
-          
        %---------------------------- 
        % // Legacy Struct // 
        function obj = performStats(obj, SIG_PVAL, Z_SCORE)
@@ -475,13 +474,53 @@ classdef analyzer < handle & matlab.mixin.Copyable
             obj.zScore  = Z_SCORE; 
        end
        % 
-       function obj = computePredictionError(obj)
-           pdx0 = computeError; 
-           
-           % Construct; 
-           pdE = SAT.predict.predictionError(obj.pValue, obj.nShuffles); 
-           
-           1; 
+       function pxData = getPxData(obj, USE_XT_CH, USE_PP_CH, target, element) 
+           arguments
+               obj
+               USE_XT_CH = 1:obj.nXtChannels;
+               USE_PP_CH = 1:obj.nPpChannels;
+               target {mustBeMember(target, {'px0', 'px1'})} = 'px0'; 
+               element {mustBeMember(element, {'unitSDO'})} = 'unitSDO';
+           end
+           switch target
+               case 'px0'
+                    pxData = obj.(element).px0Data.subsample( ...
+                        USE_XT_CH, 1:obj.nTrials, USE_PP_CH);
+               case 'px1'
+                    pxData = obj.(element).px1Data.subsample( ...
+                        USE_XT_CH, 1:obj.nTrials, USE_PP_CH);                  
+           end
+       end
+       %
+       function xData = getxData(obj, USE_XT_CH, USE_PP_CH, target, element)
+           arguments
+               obj
+               USE_XT_CH
+               USE_PP_CH
+               target   {mustBeMember(target, {'x0', 'x1'})} = 'x0'; 
+               element  {mustBeMember(element, {'unitSDO'})} = 'unitSDO';
+           end
+           switch target
+               case 'x0'
+                   xData = obj.(element).x0Data.subsample(...
+                       USE_XT_CH, 1:obj.nTrials, USE_PP_CH);
+               case 'x1'
+                      xData = obj.(element).x1Data.subsample(...
+                       USE_XT_CH, 1:obj.nTrials, USE_PP_CH);    
+           end
+       end
+       %
+       function obj = computePredictionError(obj, XT_CH_NO, PP_CH_NO)
+           % // import x0/1 px0/1
+           % Construct
+           obj.errorStruct = SAT.predict.predictionError2(obj.pValue, obj.nShuffles);
+           % Import; 
+           obj.errorStruct.import(obj, XT_CH_NO, PP_CH_NO); 
+           %
+           obj.errorStruct.predictPxError(); 
+           %
+           obj.errorStruct = obj.errorStruct.computeError(); 
+          
        end
     end 
 end

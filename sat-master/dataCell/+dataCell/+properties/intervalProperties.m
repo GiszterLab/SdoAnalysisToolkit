@@ -3,7 +3,8 @@
 % lightweight support parameter class for intervals
 % --> Used to sync and pass parameters for intervalSampling.
 %
-% meant to work in concert with 'intervalSampler
+% meant to work in concert with 'intervalSampler; %Handle class to support
+% inheritance
 
 % Trevor S. Smith, 2025
 

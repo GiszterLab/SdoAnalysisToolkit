@@ -256,6 +256,15 @@ classdef stateMap < handle & matlab.mixin.Copyable
         end
         %-------------------
         function obj_out = subsample(obj, useTrials, useChannels)
+            arguments
+                obj
+                useTrials   = []; 
+                useChannels = 1:obj.nChannels; 
+            end
+            
+            if isempty (useTrials)
+                useTrials = 1:obj.nTrials; 
+            end
             % >> 
             obj_out = copy(obj); 
             sfields = {'channelDefMax', 'channelDefMin', 'channelAmpMax', 'channelAmpMin'};

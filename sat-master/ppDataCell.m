@@ -81,29 +81,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
             if ~isempty(obj.shuffler)
                 LI = obj.shuffler.shuffledData; 
             end
-            %{
-            if ~obj.sampledData
-                LI = false;
-                return
-            end
-            % Find first trial w/ data
-            ix_tr = find(sum(obj.nTrialEvents,1)>1,1);
-            ix_n = find(obj.nTrialEvents(:,ix_tr),1);
-            if isempty(ix_tr)
-                LI = false; 
-                return
-            end
-            if ~isfield(obj.data{1,ix_tr}, 'shuffle')
-                % used for compatibility
-                LI = false; 
-                return
-            end
-            if isempty(obj.data{1,ix_tr}(ix_n).shuffle) 
-                LI = false; 
-            else
-                LI = true; 
-            end
-            %}
         end
 
         %% __ CONSTRUCTOR
@@ -278,48 +255,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
                 end
             end
         end
-
-        % This should be implemented as part of the shuffler methods.
-        % --> pxt drawer
-        % --> There's not a good reason to actually implement this here; 
-        %{
-        function [idx0_Cell, idx1_Cell] = getPerieventIndices(obj, useTrials, useChannels, vars)
-            arguments
-                obj
-                useTrials       = 1:obj.nTrials; 
-                useChannels     = 1:obj.nChannels; 
-                vars.n_shift    = 0; %note this differs from documentation...  
-                vars.z_delay    = 0; 
-                vars.t0_nPoints {mustBeInteger} = 20; 
-                vars.t1_nPoints {mustBeInteger} = 20;
-                vars.fs         = obj.fs
-                vars.dataField   {mustBeMember(vars.dataField, {'times', 'shuffle'})} = 'times'; 
-            end
-            
-            N_USE_TRIALS    = length(useTrials); 
-            N_USE_PP        = length(useChannels); 
-            %// Push out to the pxTools.getPerieventIndices.m script of the same name; 
-            
-            % Get {N_CHANNELs x N_TRIALs} Cell array of indices; 
-            spkData = obj.getRasterIndices(vars.fs, useTrials, useChannels, 'dataField', vars.dataField); 
-            %
-            idx0_Cell = cell(N_USE_PP, N_USE_TRIALS); 
-            idx1_Cell = cell(N_USE_PP, N_USE_TRIALS); 
-            
-            for tri =1:N_USE_TRIALS
-                tr = useTrials(tri); 
-                maxT = round(obj.trTimeLen(tr)*vars.fs); 
-                if ~all(cellfun(@isempty, spkData(:,tr)))
-                    [ix0, ix1] = pxTools.getPerieventIndices(spkData(:, tr), ...
-                        'n_shift', vars.n_shift, 'z_delay', vars.z_delay, ... 
-                        't0_nPoints', vars.t0_nPoints, 't1_nPoints', vars.t1_nPoints, 'maxLen', maxT); 
-                    % ___ 
-                    idx0_Cell(:,tri) = ix0'; 
-                    idx1_Cell(:,tri) = ix1'; 
-                end
-            end
-        end     
-        %}
         %_____________________________________________________
         % || X-Correlogram for inferring spike lags || 
 
@@ -394,40 +329,17 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
             obj.data.trTimeLen = timeArr; 
         end
         %_______
-        function obj = shuffle(obj, useChannels, N_SHUFFLES, SHUFF_METHOD) 
+        function obj = shuffle(obj,USE_TRIALS, USE_CHANNELS)
             arguments
                 obj
-                useChannels    {mustBeNumeric} = 1:obj.nChannels; 
-                N_SHUFFLES  {mustBeInteger} = obj.nShuffles;  
-                SHUFF_METHOD char = obj.shuffMethod; 
+                USE_TRIALS     {mustBeNumeric} = 1:data.nTrials; 
+                USE_CHANNELS   {mustBeNumeric} = 1:data.nChannels; 
             end
             
-            %TODO: Pull this from the shuffler subclass
+            obj.shuffler.shuffle(...
+                'useTrials', USE_TRIALS, ...
+                'useChannels', USE_CHANNELS); 
             
-            %{
-            N_USE_CH = length(useChannels); 
-            % ___ TRIALWISE SHUFFLE RESAMPLER
-            for chi = 1:N_USE_CH
-                ch = useChannels(chi); 
-                for tr = 1:obj.nTrials 
-                    ppTrData = obj.data{1,tr}(ch).(obj.dataField); 
-                    nTrEvents = obj.data{1,tr}(ch).nEvents; 
-                    if nTrEvents > 1
-                        switch SHUFF_METHOD
-                            case {'ISI', 'isi'}
-                                shuff = shuffleSpikesInsideRange(ppTrData, ppTrData(1), ppTrData(end), N_SHUFFLES); 
-                            case {'CIF', 'cif'} 
-                                shuff = cifReshuffle(ppTrData, obj.fs, N_SHUFFLES, obj.shuffTau,  'method', obj.shuffCIF); 
-                                shuff = sort(shuff,2); 
-                        end
-                    else
-                        shuff = repmat(ppTrData, N_SHUFFLES, 1);
-                    end
-                    obj.data{1,tr}(ch).shuffle = shuff; 
-                end
-            end
-            %}
-            %______ 
         end
         %% 
         %{
@@ -519,18 +431,15 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
                 vars.rateCode = 1; % this isn't a filter; but a bin-count;  
             end
             xtdc = xtDataCell();
-            xtData = obj.data.convertDataType('xtData', 'fs', SAMPLE_HZ); 
-            
-            if ~(vars.rateCode == 0)
-                %TODO: Call a filter on this here; 
-            end
-            xtdc.data = xtData; % No need to call import directly; 
+            xtData = obj.data.convertDataType('xtData', 'fs', SAMPLE_HZ, ...
+                'rateCode', vars.rateCode); 
+            xtdc.data = xtData; % No need to call import directly; just rip primaryData; 
             
         end
         
         %% PLOTTER METHODS
         %// Plot Spike-Rasters Rasters; 
-        function plotSpikes(obj, useTrials, useChannels, PLOT_ALL)
+        function f = plotSpikes(obj, useTrials, useChannels, PLOT_ALL)
             arguments
                 obj
                 useTrials     {mustBeNumeric} = 1:obj.nTrials;
@@ -539,21 +448,39 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
             end
             %
             % __ Add pre-check here to exclude completely-empty channels
-            try 
-                useChannels = intersect(useChannels, find(sum(obj.nTrialEvents, 2))); 
-            catch
-                1; 
-            end
+            useChannels = intersect(useChannels, find(sum(obj.nTrialEvents, 2))); 
+
             % __ 
-            N_USE_CHANNELS  = length(useChannels); 
-            N_TRIALS        = length(useTrials); 
-            catTimes = getConcatEventTimes(obj, useTrials, useChannels);  
+            
+            trialDurations= cumsum(obj.data.trTimeLen(useTrials));
+            %trial_offsets = [0 timeOffVect]; 
+            
+            catSpikeTimes        = obj.getConcatEventTimes(useTrials, useChannels);  
+            
+            if nargout > 0
+                
+                f = dataCell.plotters.plotSpikes(catSpikeTimes, ...
+                    obj.sensor(useChannels), ...
+                    trialDurations, ...
+                    'trialNumber', useTrials, ...
+                    'PLOT_ALL', PLOT_ALL); 
+
+            else
+                
+               dataCell.plotters.plotSpikes(catSpikeTimes, ...
+                obj.sensor(useChannels), ...
+                trialDurations, ...
+                'trialNumber', useTrials, ...
+                'PLOT_ALL', PLOT_ALL); 
+            end
             %
+            
+            %{
             if PLOT_ALL
                 cArr = rgb_colorGen(N_USE_CHANNELS, 'default'); 
             end
-            timeOffVect = cumsum(obj.trTimeLen(useTrials));
-            offsets = [0 timeOffVect]; 
+            
+            
             T_MAX = timeOffVect(end); 
             figure; 
             for chi = 1:N_USE_CHANNELS
@@ -580,6 +507,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
             yticklabels(flip(obj.sensor(useChannels))); 
             xlabel("Time (S)");     
             title("Plotted Event Times"); 
+            %}
         end
         function plotWaves(obj, useTrials, useRows, PLOT_ALL)
             arguments

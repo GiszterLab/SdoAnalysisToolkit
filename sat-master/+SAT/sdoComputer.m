@@ -1,6 +1,6 @@
   %% SAT.computer V2 (OOP)
   %
-  % (Temporary?) Kernel class for handling SDO properties and computations.
+  % Kernel class for handling SDO properties and computations.
   % 
   % This alone likely isn't sufficient for SDO Analysis; it only handles
   % the parameterization of the functions, and the core-compute
@@ -19,6 +19,9 @@
   % operations on the matrix + import/export
   
   % -->> It will also need to be the one to handle prediction + background
+  
+  % Trevor S. Smith, 2025
+  % 
   
   classdef sdoComputer < handle & matlab.mixin.Copyable
       properties
@@ -116,15 +119,6 @@
               for tr = 1:px0.nTrials
                   
                   % --> Need to figure out what I'm going to do w/ trials
-                  %{
-                  if px0.nTrials > 1
-                        px0_flat = cellhcat(px0.data(1,:)); 
-                        px1_flat = cellhcat(px1.data(1,:));
-                  else
-                      px0_flat = px0.data{1};
-                      px1_flat = px1.data{1};
-                  end
-                  %}
                   px0_flat = px0.data{1,tr}; 
                   px1_flat = px1.data{1,tr}; 
 
@@ -148,28 +142,29 @@
 
                   switch obj.config.algorithm
                       case 'v3'
-                        [L,M,Ln] = SAT.compute.sdo3(px0_flat, px1_flat, ...
+                        [L,M] = SAT.compute.sdo3(px0_flat, px1_flat, ...
                             'parallelCompute',obj.config.parallelCompute, ...
                             'rescale', 0); 
                       case 'v5'
-                        [L,M,Ln] = SAT.compute.sdo5(px0_flat, px1_flat, ...
+                        [L,M] = SAT.compute.sdo5(px0_flat, px1_flat, ...
                             'parallelCompute',obj.config.parallelCompute, ...
                             'rescale', 0);   
                       case 'v7'
-                         [L,M,Ln] = SAT.compute.sdo7(px0_flat, px1_flat, ...
+                         [L,M] = SAT.compute.sdo7(px0_flat, px1_flat, ...
                             'parallelCompute',obj.config.parallelCompute, ...
                             'rescale', 0);         
                   end
                   L_buff = L_buff + L; 
-                  Ln_buff= Ln_buff+ Ln; 
+                  %Ln_buff= Ln_buff+ Ln; 
                   M_buff = M_buff + M; 
                   %
                   spkCount = spkCount + size(px0_flat,2);
               end
               spkCount = max(spkCount,1);
               L     = L_buff / spkCount; 
-              Ln    = Ln_buff/ spkCount; 
+              %Ln    = Ln_buff/ spkCount; 
               M     = M_buff / spkCount;
+              Ln    = SAT.sdoUtils.normsdo(L,M); 
               %
               obj.sdoMatrix         = L; 
               obj.sdoMatrixNormed   = Ln; 

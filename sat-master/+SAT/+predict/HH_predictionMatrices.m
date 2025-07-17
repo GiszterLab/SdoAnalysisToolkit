@@ -3,7 +3,7 @@
 % Class-Def structure for HH testing
 % Reduxed as a lightweight class. 
 
-% TODO: Better call-out handling to existing getH1 --- getH7 methods
+% TODO: Better call-out handling to existing getH1 :: getH7 methods
 
 %_______________________________________
 % Copyright (C) 2025 Trevor S. Smith
@@ -90,9 +90,12 @@ classdef HH_predictionMatrices < handle & matlab.mixin.Copyable
                 "type",obj.type); 
             %--------------------------
             % [H2] Gaussian
+            H2_std = min(sata.pxConfig.G_smoothFStdev_Pts, 1); 
+            H2_wid = min(sata.pxConfig.G_smoothFWidth_Pts, 1); 
+            
             H_StructS.(sFields{2}) = SAT.predict.matrices.getH2(sata.nStates, ...
-                "filterStd",  sata.pxConfig.G_smoothFStdev_Pts, ...
-                'filterWidth',sata.pxConfig.G_smoothFWidth_Pts, ...
+                "filterStd",  H2_std, ...
+                'filterWidth',H2_wid, ...
                 'type', obj.type); 
             %---------------------------
             % [H3] STA
@@ -133,8 +136,23 @@ classdef HH_predictionMatrices < handle & matlab.mixin.Copyable
             H_StructS.(sFields{6}) = mat; 
             %----------------------------
             % [H7] (pass SDO)
-                     
-            H_StructS.(sFields{7}) =  sata.unitSDO.sdo(XT_CH_NO, PP_CH_NO).sdoMatrixNormed; 
+            
+            if sata.sdoConfig.backgroundSubtraction == 1
+                bkdSDO  = sata.backgroundSDO.sdo(XT_CH_NO, PP_CH_NO).sdoMatrix; 
+                bkjSDO  = sata.backgroundSDO.sdo(XT_CH_NO, PP_CH_NO).jointMatrix; 
+                dSDO    = sata.unitSDO.sdo(XT_CH_NO, PP_CH_NO).sdoMatrix;
+                jSDO    = sata.unitSDO.sdo(XT_CH_NO, PP_CH_NO).jointMatrix;
+                [L,M] = SAT.sdoUtils.unitplusbackground(bkdSDO,bkjSDO, dSDO, jSDO);
+                if 1 == 1
+                    H_StructS.(sFields{7}) = L; 
+                else
+                    H_StructS.(sFields{7}) = M; 
+                end
+            else
+               H_StructS.(sFields{7}) =  sata.unitSDO.sdo(XT_CH_NO, PP_CH_NO).sdoMatrixNormed; 
+            end
+
+            
             %%  -- 
             zArr = zeros(sata.nStates, sata.nStates, length(sFields)); 
             for z = 1:length(sFields)

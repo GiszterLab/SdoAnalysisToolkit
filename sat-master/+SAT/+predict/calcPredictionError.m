@@ -97,7 +97,7 @@ for m = 1:N_XT_CH
             errorS(f).L_inf         = max( abs(x1States-pdStates)); 
             %____ StateWise Error Rates (relative to REFERENCE/OBS States)
             errorS(f).L0_x_state            = zeros(1,N_BINS); 
-            errorS(f).L0_running_x_state    = cell(1,N_BINS);
+            errorS(f).L0_running_x_stapredictionMatriceste    = cell(1,N_BINS);
             errorS(f).L1_x_state            = zeros(1,N_BINS); 
             errorS(f).L1_running_x_state    = cell(1,N_BINS); 
             errorS(f).L2_x_state            = zeros(1,N_BINS); 

@@ -1,5 +1,7 @@
 % Constructor for the Error Structure 
 
+% These can be expanded, as desired.
+% Migrates to the original code package 
 function errorStruct = errorStruct_new(N_FIELDS)
     %// Precast empty
 errorStruct= struct( ...

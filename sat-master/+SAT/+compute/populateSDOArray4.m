@@ -180,7 +180,7 @@ if vars.condenseShuffles
     disp("NOTE: Condensing Shuffles may greatly increase compute time."); 
 end
 
-nUseTrials = length(vars.useTrials); 
+%nUseTrials = length(vars.useTrials); 
 
 
 %% PreCastArr

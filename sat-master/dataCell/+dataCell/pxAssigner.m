@@ -165,16 +165,7 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
             weight3 = repelem({obj.config.weighting},  ix_x, ix_y, ix_z); 
             
             pxCell = cellfun(@pxTools.getPxFromX, xCell, smBins3, weight3,'uniformOut', 0); 
-            %{
-                        nUseTr = stateMap.nTrials; 
-            nUseCh = stateMap.nChannels;
-            pxCell = cell(nUseCh, nUseTr);  
-            for tr = 1:nUseTr
-                for ch = 1:nUseCh
-                    pxCell{ch,tr} = pxTools.getPxFromX(xCell{ch,tr}, stateMap.nBins, obj.weighting); 
-                end
-            end
-            %}
+
         end
         %-------------------------------------------------------------
         function obj_out = subsample(obj, useXtChannels, useTrials, usePpChannels)

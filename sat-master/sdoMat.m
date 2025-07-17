@@ -11,10 +11,6 @@
 % --> I NEED a way to save a reduced form of the SDO, which is
 % class-resilent. {XML + CSV? }
 
-% --> Note that we don't have callers which read changes to the properties
-% of pxData and x0Data before making predictions, relative to predicting
-% from this class ... 
-
 %_______________________________________
 % Copyright (C) 2023 Trevor S. Smith
 % Drexel University College of Medicine
@@ -75,7 +71,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
         importedPpData
         computedSdo
     end
-
     methods
         function obj = sdoMat(N_XT, N_PP, Type, stateMapping, x0Config, x1Config, pxConfig)
             arguments
@@ -325,7 +320,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             
            
             % This represents ALL Combinations (usually)
-            
             obj.x0Data.samplePrimaryData(obj.xtData, ...
                 'useTrials', vars.useTrials, 'useChannels', vars.useXtChannels);
             obj.x1Data.samplePrimaryData(obj.xtData, ...
@@ -348,6 +342,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
                 end
                 disp(strcat("Finished ", num2str(m), "/", num2str(obj.nXtChannels)));
             end
+            %
         end
             
         % || Operations on SDOs (Not analysis) ||

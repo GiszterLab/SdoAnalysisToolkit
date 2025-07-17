@@ -1,6 +1,6 @@
 %% dataCell.intervalSampler
 % 
-% Support Class for drawing intervals from time events
+% Support Class for drawing intervals from time events / Sampling Data
 %
 % Useful for defining intervals. 
 % A mix-in for classes which have events, around which we may want to draw
@@ -137,6 +137,22 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
             obj.sensor_xt = data.sensor(vars.useChannels);
             obj.config.fs = data.fs;
         end
+        %------------------%
+        function obj_out = subsample(obj, useXtChannels, useTrials, usePpChannels)
+            arguments
+                obj
+                useXtChannels   = 1:obj.n_XT_Channels; 
+                useTrials       = 1:obj.nTrials; 
+                usePpChannels   = 1:obj.n_IDX_Channels;
+            end
+            obj_out = copy(obj); 
+            if ~obj.sampledData
+                return
+            end
+            obj_out.data = obj_out.data(useXtChannels,useTrials,usePpChannels); 
+            obj_out.sensor_xt = obj_out.sensor_xt(useXtChannels); 
+        end        
+        
         %----------------- These are 'raw' overrides for shuffle -------
         function indexCell = getIntervalIndicesRaw(obj, stCell, TYPE, fs)
             arguments

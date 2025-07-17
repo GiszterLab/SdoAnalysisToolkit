@@ -1,6 +1,7 @@
+%% SAT.sdoUtils.fastShuff()
+% Utility for more rapid shuffling, even if more indirect and difficult to maintain
 
-% Utility for more rapid shuffling, 
-% even if more indirect and difficult to maintain
+% Trevor S. Smith, 2025
 
 function shuffSDOMat = fastShuff(shuffSDOMat)
 arguments
@@ -15,7 +16,6 @@ end
 
 xtData = shuffSDOMat.xtData; %.data; 
 ppData = shuffSDOMat.eventShuffle.getPpData(); 
-%ppData = shuffleSDOMat.ppData; %.data;
 
 xtData = shuffSDOMat.stateMapping.discretizeSignal(xtData); 
 
@@ -65,8 +65,7 @@ for tr = 1:N_TRIALS
     
     for m = 1:N_XT_CH
        
-        xt = xtData.data{1,tr}(m).stateSignal; 
-        %xt = xtData.getData(tr,m, 'dataField', 'stateSignal'); 
+        xt = xtData.data{1,tr}(m).stateSignal; % Direct reference for speed; FRAGILE
         
         xi0_tr = xi0(:,1:nx); 
         xi1_tr = xi1(:,1:nx); 
@@ -102,24 +101,11 @@ for tr = 1:N_TRIALS
                 % TODO: Add a predictive background step; 
                 
             end
-            %{
-            if m == 1
-                ppCounter(u) = ppCounter(u)+ size(shuff_tr_idx,1); 
-            end
-            %}
             %
             % this is a bit inefficient, but it's how sdo3/5/7 take input;
             px0_3 = reshape(px0_flat, shuffSDOMat.nStates, [], shuffSDOMat.eventShuffle.nShuffles);
             px1_3 = reshape(px1_flat, shuffSDOMat.nStates, [], shuffSDOMat.eventShuffle.nShuffles);
             %
-            %}
-            %{
-            for ss = 1:nShuffles
-                t0 = (ss-1)*nEventsXTrial(u,tr)+1; 
-                t1 = (ss)*nEventsXTrial(u,tr); 
-                % 
-                %}
-                
                 switch shuffSDOMat.config.algorithm
                     case 'v3'
                         %[L,M] = SAT.compute.sdo3(px0_flat(:,t0:t1), px1_flat(:,t0:t1), ...
@@ -134,25 +120,17 @@ for tr = 1:N_TRIALS
                             'rescale', 0, ...
                             'parallelCompute', shuffSDOMat.config.parallelCompute);                    
                     case 'v7'
-
                          %[L,M] = SAT.compute.sdo7(px0_flat(:,t0:t1), px1_flat(:,t0:t1), ...
                         [L,M] = SAT.compute.sdo7(px0_3, px1_3, ...
                             0, ....
                             'rescale', 0, ...
                             'parallelCompute', shuffSDOMat.config.parallelCompute);     
                 end
-            %{
-                sdo_m_cell{m,u}(:,:,ss) = sdo_m_cell{m,u}(:,:,ss)+M; 
-                sdo_l_cell{m,u}(:,:,ss) = sdo_l_cell{m,u}(:,:,ss)+L; 
-                %sdo_ln_cell{m,u}(:,:,ss)= sdo_ln_cell{m,u}(:,:,ss)+Ln;
-                
-            end
         %}
             % Implicit add down across trials; 
             sdo_m_cell{m,u} = sdo_m_cell{m,u}+M;
             sdo_l_cell{m,u} = sdo_l_cell{m,u}+L; 
             %sdo_ln_cell{m,u} = sdo_ln_cell{m,u}+Ln;
-
         end
         disp(strcat("...Finished Ch ", num2str(m), "/", num2str(N_XT_CH)));
     end
@@ -178,9 +156,5 @@ for m = 1:N_XT_CH
             = sdo_m_cell{m,u};
     end
 end
-
-1; 
-
-
 
 end
