@@ -72,7 +72,14 @@ end
 classType = class(sdo); 
 switch classType
     case 'sdoMat'
-        sdoStruct = sdo.bungleSdoStruct; 
+        try
+            sdoStruct = sdo.bungleSdoStruct; 
+        catch
+            sdoStruct =  sdo.getSdoStruct(XT_SDO_CH_NO, PP_SDO_CH_NO); 
+        end
+    case 'SAT.analyzer'
+        sdoStruct = sdo.sdoStruct(); %sdo.getSdoStruct(); 
+        
     case 'sdoMultiMat'
         sdoStruct = sdo.sdoStruct; 
 end

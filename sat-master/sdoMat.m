@@ -315,21 +315,13 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
                 obj.drawIntervals();%, 'useEvents', vars.useEvents); 
             end
             
-            % ___>> This needs an upgrade for multi-comp <<___
-            % Also not sure if this is an implicit flag. 
-            
            
             % This represents ALL Combinations (usually)
             obj.x0Data.samplePrimaryData(obj.xtData, ...
                 'useTrials', vars.useTrials, 'useChannels', vars.useXtChannels);
             obj.x1Data.samplePrimaryData(obj.xtData, ...
                 'useTrials', vars.useTrials, 'useChannels', vars.useXtChannels);
-           %
            
-           	if strcmp(vars.useEvents, 'shuffle')
-               %TODO: Need to shuffle-accelerate
-                1; 
-            end
            % this section is a bit too brutal for estimating shuffle; 
            % --> I may need to get the acceleration up
             obj.px0Data.assignPx(obj.stateMapping, obj.x0Data); 
@@ -466,10 +458,21 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
            obj.generatedTransitionMatrices = true; 
         end
         
+       function sdoS = getSdoStruct(obj,USE_XT_CH, USE_PP_CH)
+           if ~exist('USE_XT_CH', 'var'); USE_XT_CH = []; end
+           if ~exist('USE_PP_CH', 'var'); USE_PP_CH = []; end
+           if isempty(USE_XT_CH);USE_XT_CH = 1:obj.nXtChannels; end
+           if isempty(USE_PP_CH);USE_PP_CH = 1:obj.nPpChannels; end
+           sdoS = SAT.deprecated.getSdoStructFunc(obj, USE_XT_CH, USE_PP_CH);
+       end
+       
+        
         %% Plot (Overload)
-        function plot(obj, options)
+        function plot(obj, XT_CH_NO, PP_CH_NO, options)
             arguments
                 obj
+                XT_CH_NO = 1; 
+                PP_CH_NO = 1; 
                 options.saveFig         {mustBeNumericOrLogical} = 0; 
                 options.saveFormat      {mustBeMember(options.saveFormat, {'png', 'svg'})} = 'png'; 
                 options.outputDirectory = []; 
@@ -477,17 +480,20 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             end
             % MASTER 'plot all' method; 
             % ____
+            %{
             if isempty(obj.stats)
                 performStats(obj);  
             end
-
+            %}
+            obj.sdo(XT_CH_NO, PP_CH_NO).plot()
+            %{
             SAT.plot.plotHeader(obj, ...
-                1,1, ...
+                XT_CH_NO, PP_CH_NO, ...
                 'filter', options.filter, ...indices
                 'saveFig', options.saveFig, ....
                 'saveFormat', options.saveFormat, ...
                 'outputDirectory', options.outputDirectory); 
-           
+           %}
             N_PX0_PTS = round(abs(obj.px0DuraMs*obj.fs/1000));  
             pxTools.plot.stirpd(obj.stirpd, N_PX0_PTS, 'binDuraMs', 1000/obj.fs, 'nSpikes', obj.nEvents); 
         end

@@ -2,7 +2,7 @@
 %
 % Primary Data Dependencies 
 %
-% Used a plugin- composite for public classes.
+% Used a plugin for public classes.
 %
 % primaryData is used for the classes which directly interact with data,
 % ensuring good handling, interconversion, and sampling; 
@@ -153,8 +153,8 @@ classdef primaryData < handle & matlab.mixin.Copyable
             end
             obj.data        = S(1,:); 
             obj.trialMeta   = S(2,:); 
-            obj.dataType = dataClass; 
-            obj.dataField = dataField; 
+            obj.dataType    = dataClass; 
+            obj.dataField   = dataField; 
         end
         
         %% import 
@@ -836,7 +836,10 @@ classdef primaryData < handle & matlab.mixin.Copyable
                         xtLen = trLenPt(tr); 
                     elseif trLenPt(tr) < xtLen
                         % __ PAD; 
-                        xt = [xt, zeros(1, trLenPt-xtLen)]; 
+                        xt0 = zeros(1, trLenPt); 
+                        xt0(1,1:xtLen) = xt; 
+                        xt = xt0; 
+                        %xt = [xt, zeros(1, trLenPt-xtLen)]; 
                     end
                     obj_out.data{1,tr}(ch).(vars.datafield) = xt(1:xtLen); 
                     % -->> Regenerate min/max; 

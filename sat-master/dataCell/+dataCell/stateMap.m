@@ -5,12 +5,24 @@
 
 % Do we want this to actually hold probabilistic data, or just have
 % everything we need for inheritances?
-% --> Probably make this lightweight and composable
 
-%TODO: Better subsampling for trialwise handling [x]
+%_______________________________________
+% Copyright (C) 2025 Trevor S. Smith
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 classdef stateMap < handle & matlab.mixin.Copyable
-    %------------------------------
     properties (SetObservable)
         mapMethod   char {mustBeMember(mapMethod, {'linear', 'log', 'linearsigned', 'logsigned'})} = 'log'; 
         maxMode     char {mustBeMember(maxMode, {'pTrial','xTrialxSeg'})} = 'xTrialxSeg'
@@ -21,13 +33,9 @@ classdef stateMap < handle & matlab.mixin.Copyable
         channelAmpMax = []; % Observed Max x(t)
         channelAmpMin = []; % Observed Min x(t)
         %
-        stateMapping = []; % Let's set this up as a [N_STATES+1, N_CH, N_TRIALS]
-        % These should be defined on sample;
-        %
+        stateMapping = [];  % [N_STATES+1, N_CH, N_TRIALS]
         allowClipping = 0; 
-        % ___>> Also should allow the inverse from this; assign xt from pxt
     end
-    
     events
         propertiesChanged
     end
@@ -42,7 +50,7 @@ classdef stateMap < handle & matlab.mixin.Copyable
         definedState
         trialwise 
     end
-    
+    %% --------------------------------------------------------------------
     methods
         function LI = get.definedMinMax(obj)
             LI = false; 
@@ -87,54 +95,6 @@ classdef stateMap < handle & matlab.mixin.Copyable
         function n = get.nTrials(obj)
             n = size(obj.channelAmpMax,2); 
         end
-        %{
-        % // Define for ALL properties; 
-        function set.mapMethod(obj, val)
-            obj.mapMethod = val; 
-            obj.notifyChange();
-        end
-        function set.maxMode(obj,val)
-            obj.maxMethod = val;
-             obj.notifyChange();
-        end
-        function set.nBins(obj,val)
-            obj.nBins= val;
-            obj.notifyChange();
-        end
-        function set.channelDefMax(obj,val)
-            obj.channelDefMax = val; 
-            obj.notifyChange(); 
-        end
-        function set.channelDefMin(obj, val)
-            obj.channelDefMin = val;
-            obj.notifyChange();
-        end
-
-        function set.channelAmpMax(obj, val)
-            obj.channelAmpMax = val;
-            obj.notifyChange();
-        end
-
-        function set.channelAmpMin(obj, val)
-            obj.channelAmpMin = val;
-            obj.notifyChange();
-        end
-
-        function set.stateMapping(obj, val)
-            obj.stateMapping = val;
-            obj.notifyChange();
-        end
-
-        function set.allowClipping(obj, val)
-            obj.allowClipping = val;
-            obj.notifyChange();
-        end
-
-        % -- NOTIFIER --
-        function notifyChange(obj)
-            notify(obj, 'propertiesChanged'); 
-        end
-        %}
         %----------------------------------%
         % // for now, let's just assume we're composing with classes; 
         function obj = getChannelAmp(obj, primaryData)
@@ -179,7 +139,6 @@ classdef stateMap < handle & matlab.mixin.Copyable
         end
         %-----------------------------------------------------------%
         function obj = buildStateMap(obj)
-            
             obj.stateMapping = zeros(obj.nBins+1, obj.nChannels,  obj.nTrials); 
             for ch = 1:obj.nChannels
                  switch obj.maxMode
@@ -239,6 +198,22 @@ classdef stateMap < handle & matlab.mixin.Copyable
         % Pared alternative for use on raw data; 
         function data_out = discretizeSignalRaw(obj, data, useMapCh, useMapTr)
             stateMap = obj.stateMapping; 
+            % COPILOT OPT
+            if iscell(data)
+                [d_row, d_col, d_lvf] = size(data);
+                % Generate indices for each cell
+                [R, C, L] = ndgrid(1:d_row, 1:d_col, 1:d_lvf);
+                % Flatten indices for linear access
+                idx = [R(:), C(:), L(:)];
+                % Apply discretize using cellfun
+                data_out = reshape(cellfun(@(i) discretize(data{i(1), i(2), i(3)}, stateMap(:, i(1), i(2))), ...
+                               num2cell(idx, 2), 'UniformOutput', false), d_row, d_col, d_lvf);
+            else
+                data_out = discretize(data, obj.stateMapping(:, useMapCh, useMapTr(1)));  % Array input-output
+            end
+            
+            %{
+            stateMap = obj.stateMapping; 
             if iscell(data) % UPGRADE for 3d [ assume independent channels on X, Trials on y; independent SAMPLES of chanels, on zz
                 [d_row, d_col, d_lvf] = size(data); 
                 data_out = cell(d_row, d_col, d_lvf); 
@@ -253,6 +228,7 @@ classdef stateMap < handle & matlab.mixin.Copyable
                 % Array input-output
                 data_out = discretize(data, obj.stateMapping(:,useMapCh, useMapTr(1))); 
             end
+            %}
         end
         %-------------------
         function obj_out = subsample(obj, useTrials, useChannels)

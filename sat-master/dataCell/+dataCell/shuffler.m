@@ -3,20 +3,33 @@
 % Support class handling the resampling and shuffling operations handled by
 % the probablistic and statistical testing methods; 
 % 
-% >> Eventually, it would be nice to upgrade this to compensate for other
-% methods of sampling, including GLMs. 
+% TODO: Future extension to more exotic shuffle methods, such as GLMs.
+
+% Copyright (C) 2025  Trevor S. Smith
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 classdef shuffler < handle & matlab.mixin.Copyable
     properties
-        data        = {}; % for holding data; 
+        data        = {}; % [INPUT] for holding data; 
+        shuffleData = {}; % [OUTPUT] {nTrials, nChannels} of [nShuffles, dat]
+        %
         nShuffles   {mustBeInteger} = 1000; 
         shuffMethod char    {mustBeMember(shuffMethod, {'isi', 'cif', 'random'})} = 'isi'; 
         shuffTau    double  = 0.2; 
         shuffCIF    char    {mustBeMember(shuffCIF, {'sg', '-hg', 'expd', 'tb'})} = '-hg'; 
-        %
-        shuffleData = {}; %{nTrials, nChannels} of [nShuffles, dat]
     end
-    
     properties(Dependent)
         importedData 
         shuffledData  % This is a logical; 
@@ -87,34 +100,23 @@ classdef shuffler < handle & matlab.mixin.Copyable
                 nTrials
                 nChannels
                 nEvents
-                vars.maxX % either in X (if index) or T (if times)
+                vars.maxX  = nEvents; % either in X (if index) or T (if times)
                 vars.type {mustBeMember(vars.type, {'times', 'index'})} = 'index'; 
                 vars.seed = []; 
             end
-            % // basically just randomly populate the shuffler; For null
-            % hypothesis testing/background. 
+            % TODO: Implement a seed pass for reproducibility; 
             randCell = cell(nChannels, nTrials); 
             
-            % could place this as 'all-at-once' but may hit a memory
-            % bottleneck
-            
-            % TODO: Implement a seed pass for reproducibility; 
-            
-            % --> shuffling index can be odd. 
-            
-            for tr = 1:nTrials
-                for ch = 1:nChannels
-                    switch vars.type
-                        case 'index'
-                            % --> This gets a bit awkward to work with.
-                            randCell{ch,tr} = sort(randi(vars.maxX, [1,nEvents]));
-                        case 'times'
-                            % TODO: Add in a FS multiplier. 
-                            randCell{ch,tr} = sort(rand(1, nEvents))*vars.maxX; 
-                    end
-                end
+            switch vars.type
+                case 'index'
+                    randCell = cellfun(@(~) ...
+                        sort(randi(vars.maxX, [1,nEvents])), randCell, ...
+                        'UniformOutput', 0); 
+                case 'times'
+                    randCell = cellfun(@(~) ...
+                        sort(rand(1, nEvents)*vars.maxX), randCell, ...
+                        'UniformOutput', 0); 
             end
-            
             % Not sure if I should override the property here. 
             obj.shuffleData = randCell; 
         end
@@ -167,8 +169,6 @@ classdef shuffler < handle & matlab.mixin.Copyable
             % extract a (shuffled) primaryData; 
             % !!! This 'does' work, but it can cause downstream issues, if
             % shuffles are pegged to 'times'
-            % --> better to leave within the dedicated 'shuffle' or just
-            % pass the whole shuffler.
             if obj.importedData
                 ppData = obj.data; 
             else
@@ -184,10 +184,6 @@ classdef shuffler < handle & matlab.mixin.Copyable
                     else
                         ppData.data{1,tr}(ch).times     = obj.shuffleData{ch,tr}; 
                     end
-                    %{
-                   ppData.data{1,tr}(ch).shuffle   = ...
-                    obj.shuffleData{ch,tr};
-                    %}
                 end
             end
             ppData.dataType = 'ppData'; 

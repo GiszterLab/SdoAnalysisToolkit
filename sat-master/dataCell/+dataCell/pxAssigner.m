@@ -1,23 +1,39 @@
 %% pxAssigner (OOP) V2
-
-% Support class for probability-based methods 
-% (Replaces probalistic inheritance). 
 %
-% How to assign probability distributions to intervals of signal. 
+% Support class for probability-based methods. How to derive distributions
+% of state from intervals of signals. 
+%
+% Also behaves as a px-Data holder.
+%
+% We are potentially interested in different assignments of distributions
+% may correspond to definitions of state. 
+%
+% TO ADD: Kernel-level operations on the distributions; splining/gaussians
+% TO DO: Add reverse-assignment of p(x) --> x
 
-% --> Not sure whether it makes more sense to including reverse mapping
-% functions from p(x)-->x or to place in a different class. 
+%_______________________________________
+% Copyright (C) 2025 Trevor S. Smith
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-% TO ADD; Kernel-level operations on the distributions; splining/gaussians
-
-% Trevor S. Smith, 2025
 
 classdef pxAssigner < handle & matlab.mixin.Copyable
     properties
-        data  cell = {};  %OUTPUT
+        data    cell = {};  %OUTPUT
         % __ Import_Only:  
-        sensor cell = {}; 
-        config dataCell.properties.pxProperties
+        sensor  cell = {}; 
+        config  dataCell.properties.pxProperties
     end
     properties (Dependent)
         nStates
@@ -32,7 +48,7 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
     properties(Dependent, Hidden)
         sampledData
     end
-    
+    %% ------------------------------------ %%
     methods
         function LI = get.sampledData(obj)
             LI = ~isempty(obj.data); 
@@ -217,9 +233,4 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
         end
         %-----------------------------------
     end 
-end
-
-function CH_IDX = getChannelIndex(obj, NAME)
-[CH_IDX] = find(ismember(cellfun(@char, obj.sensor, ...
-    'uniformOutput',0), cellfun(@char, NAME, 'uniformOutput',0))); 
 end

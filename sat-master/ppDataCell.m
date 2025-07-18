@@ -1,11 +1,6 @@
 %% ppDataCell (OOP) -- V2
 % OOP-based class for handling of point-process datatypes. Designed for use
-% within the SDO Analysis Toolkit. 
-
-% TODO: Modularize Plotters
-
-% 8.12.2024 - Added Validation to the import method to ensure that the
-% arrangement of data corresponds to expectations
+% within the SDO Analysis Toolkit and //dataCell// backbone. 
 
 %_______________________________________
 % Copyright (C) 2023 Trevor S. Smith
@@ -30,9 +25,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
     properties
         data        dataCell.primaryData
         shuffler    dataCell.shuffler
-        %// List of values; 
-        
-        % __ Shuffling Parameters; 
     end
     properties (Dependent)
         % // These are piped from composed classes; 
@@ -44,8 +36,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
     % These are just shortcut aliases
     properties (Hidden, Dependent)
         shuffledData    
-    end
-    
+    end   
     %
     methods
         %% Dependencies
@@ -108,7 +99,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
 
         % Added 8.29.2024
         % Concatenate and flatten multiple trials; 
-        function obj = concat(obj, useTrials)
+        % --> Put this in primary data
+        function obj = combineTrials(obj, useTrials)
             arguments
                 obj
                 useTrials = 1:obj.nTrials;
@@ -193,33 +185,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
         end
         
         %% EXTRACTION Methods
-        %{
-        function binXtCell = getBinaryImpulses(obj, SAMPLE_HZ, useTrials, useChannels, vars)
-            arguments 
-                obj
-                SAMPLE_HZ   {mustBeNumeric} = obj.fs; 
-                useTrials   {mustBeNumeric} = 1:obj.nTrials; 
-                useChannels {mustBeNumeric} = 1:obj.nChannels; 
-                vars.rateCode {mustBeNumericOrLogical} = 0;
-            end
-            %// Use to discretize event times into index positions, at some
-            %set sample Hz.           
-            
-            N_USE_TRIALS    = length(useTrials); 
-
-            binXtCell = cell(1,N_USE_TRIALS); 
-            
-            for tri = 1:N_USE_TRIALS
-                tr = useTrials(tri); 
-                trEventTimesAll = {obj.data{1,tr}.(obj.dataField)}; 
-                trEventTimes    = trEventTimesAll(useChannels); 
-                %// Call to external function; 
-                binXtCell{tr} = binarize_ppData(trEventTimes, SAMPLE_HZ, obj.trTimeLen(tr), vars.rateCode); 
-            end
-        end
-        %}
         
-        %// Concat event times (w/ proper offset); 
         function catTimes = getConcatEventTimes(obj, useTrials, useChannels) 
             arguments
                 obj
@@ -341,50 +307,12 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
                 'useChannels', USE_CHANNELS); 
             
         end
-        %% 
-        %{
-        function obj = merge(obj, ppdc)
-            arguments
-                 obj
-                 ppdc ppDataCell
-            end
-            % ___ 
-
-            if ~(obj.nTrials == ppdc.nTrials)
-                disp("ppDataCells do not have compatible sizes"); 
-                return
-            end
-
-            for tr = 1:obj.nTrials
-                obj.data{1,tr} = [obj.data{1,tr}, ppdc.data{1,tr}]; 
-                try
-                    obj.metadata{1,tr} = [obj.metadata{1,tr}, ppdc.metadata{1,tr}]; 
-                catch
-                    1; 
-                end
-            end
-
-            newFs = min(obj.fs, ppdc.fs); 
-            %{
-            if obj.fs > newFs
-                obj.resample(newFs); 
-            elseif ppdc.fs > newFs
-                ppdc.resample(newFs); 
-            end
-            %}
-            obj.fs = newFs; 
-            obj.nTrialEvents = [obj.nTrialEvents; ppdc.nTrialEvents]; 
-            obj.trTimeLen   = max(obj.trTimeLen, ppdc.trTimeLen);
-            obj.sensor      = [obj.sensor, ppdc.sensor]; 
-            obj.nChannels   = obj.nChannels + ppdc.nChannels;  
-        end
-        %}
         %% Extraction Methods 
 
         %// Extract subsets of the dataCell containing points within a given range.  
         % --> Probably should put this in the primaryData method, if we
         % still want it. 
-        function timeStamps = getBinnedTimestamps(obj, tStart, tStop, useChannels, useTrials)
+        function obj_out = getBinnedTimestamps(obj, tStart, tStop, useChannels, useTrials)
             arguments
                 obj
                 tStart      = -inf
@@ -392,39 +320,14 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
                 useChannels = 1:obj.nChannels; 
                 useTrials   = 1:obj.nTrials
             end
-            % _____
-            trialTimeStamps = obj.data(1,useTrials);
-            %
-            N_USE_TR = length(useTrials); 
-            N_USE_CH = length(useChannels); 
-            %
-            timeStamps = cell(1, N_USE_TR); 
+            
+            obj_out = copy(obj); 
+            obj_out.data.getDataInRange( [tStart,tStop], useChannels, useTrials); 
 
-            for tr = 1:N_USE_TR
-                %__ Subset
-                trial_times = trialTimeStamps{tr}(useChannels); 
-                
-                for ch = 1:N_USE_CH
-                    %// Now, bin
-                    LI = (trial_times(ch).times >= tStart) & (trial_times(ch).times <= tStop); 
-                    if nnz(LI) == 0 
-                        trial_times(ch).envelope    = []; 
-                        trial_times(ch).times       = []; 
-                        trial_times(ch).nEvents     = 0; 
-                    else
-                        trial_times(ch).envelope    = trial_times(ch).envelope(LI,:); 
-                        trial_times(ch).times       = trial_times(ch).times(LI); 
-                        trial_times(ch).nEvents     = sum(LI); 
-                    end
-                end
-                timeStamps{tr} = trial_times; 
-            end
         end
 
         %% Conversion Methods; 
         function xtdc = getXtDataCell(obj, SAMPLE_HZ, vars)
-            % // Method to convert the observed point process data into some
-            % an xtDataCell; 
             arguments
                 obj
                 SAMPLE_HZ {mustBeNumeric} = obj.fs;  
@@ -449,66 +352,24 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
             %
             % __ Add pre-check here to exclude completely-empty channels
             useChannels = intersect(useChannels, find(sum(obj.nTrialEvents, 2))); 
-
             % __ 
             
             trialDurations= cumsum(obj.data.trTimeLen(useTrials));
-            %trial_offsets = [0 timeOffVect]; 
-            
             catSpikeTimes        = obj.getConcatEventTimes(useTrials, useChannels);  
             
             if nargout > 0
+                f = figure; 
+            end
                 
-                f = dataCell.plotters.plotSpikes(catSpikeTimes, ...
-                    obj.sensor(useChannels), ...
-                    trialDurations, ...
-                    'trialNumber', useTrials, ...
-                    'PLOT_ALL', PLOT_ALL); 
-
-            else
-                
-               dataCell.plotters.plotSpikes(catSpikeTimes, ...
+           dataCell.plotters.plotSpikes(catSpikeTimes, ...
                 obj.sensor(useChannels), ...
                 trialDurations, ...
                 'trialNumber', useTrials, ...
                 'PLOT_ALL', PLOT_ALL); 
-            end
             %
-            
-            %{
-            if PLOT_ALL
-                cArr = rgb_colorGen(N_USE_CHANNELS, 'default'); 
-            end
-            
-            
-            T_MAX = timeOffVect(end); 
-            figure; 
-            for chi = 1:N_USE_CHANNELS
-                nSpikes = length(catTimes{chi}); 
-                if PLOT_ALL == 1
-                    hold on; 
-                    yy = 1-chi;
-                    for s = 1:nSpikes
-                        line([catTimes{chi}(s) catTimes{chi}(s)], [yy-0.25, yy+0.25], 'Color', cArr(chi,:) ); 
-                    end
-                else
-                    scatter(catTimes{chi}, (1-chi)*ones(1, nSpikes), 'square');
-                end
-                hold on; 
-                line([0, T_MAX], [1-chi, 1-chi], 'Color', 'k')
-            end
-            
-            for tr = 1:N_TRIALS
-                line([timeOffVect(tr) timeOffVect(tr)], [0+0.5 1-chi-0.5], 'Color', 'k', 'lineStyle', '--'); 
-                text(offsets(tr), -N_USE_CHANNELS+0.5, strcat("Trial#", num2str(useTrials(tr)))); 
-            end
-            hold off 
-            yticks(-N_USE_CHANNELS+1:0); 
-            yticklabels(flip(obj.sensor(useChannels))); 
-            xlabel("Time (S)");     
-            title("Plotted Event Times"); 
-            %}
+
         end
+        
         function plotWaves(obj, useTrials, useRows, PLOT_ALL)
             arguments
                 obj

@@ -8,17 +8,26 @@
 % SDOs, and extracting the various analyzes/significance testing as
 % intersections of these SDOs. 
 % 
-% --> This better segregates the base SDO methods/computations from the
-% analysis methods. 
-
-% --> I may want to rename/integrate the 'sdoMat' class to better hold
-% everything we need. 
 
 % NOTE: {sdoMat}.stateMapping properties are bidirectionally lined to the
 % analyzer.stateMapping properties; modifying one will modify the others.
 
-% WARNING: Shifts to SDO definitions properties are only unimodal analzyer
-% --> sdoMats; 
+%_______________________________________
+% Copyright (C) 2025 Trevor S. Smith
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 
 classdef analyzer < handle & matlab.mixin.Copyable
     properties
@@ -35,9 +44,8 @@ classdef analyzer < handle & matlab.mixin.Copyable
         pxConfig        dataCell.properties.pxProperties
         %
         % Core Properties
-        %predictionMatrices  SAT.predict.HH_predictionMatrices
-        errorStruct         SAT.predict.predictionError2
-        sdoStruct       = []; % dummy for deprecated
+        predictionError         SAT.predict.predictionError2
+        sdoStruct             = []; % dummy for deprecated struct; 
         nBackgroundPts        = 10000; % per-trial  
         nShuffles             = 1000; % One-way-push
         % ------------------------------
@@ -105,9 +113,6 @@ classdef analyzer < handle & matlab.mixin.Copyable
                 'trialHandling_configChanged', @(src, event)obj.syncConfig(src));
             %--------------
             obj.sdoConfig = sdoConfig;
-            %
-            %obj.errorStruct = SAT.predict.predictionError2
-            %
             % // Slaves // 
             obj.stateMapping    = stateMap; 
             obj.unitSDO         = sdoMat(N_XT, N_PP,'unit', stateMap, ...
@@ -133,6 +138,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
             obj.configSnapshot.x0Config = obj.x0Config;
             obj.configSnapshot.x1Config = obj.x1Config;
             obj.configSnapshot.pxConfig = obj.pxConfig;
+            obj.configSnapshot.sdoConcig= obj.sdoConfig;
         end
         % -- Aliasing
         function LI = get.importedData(obj)
@@ -283,8 +289,8 @@ classdef analyzer < handle & matlab.mixin.Copyable
             %
             obj.stateMapping = xtdc.stateMap; 
             %
-            obj.unitSDO.import(xtdc, ppdc, useXtChannels, usePpChannels); 
-            obj.shuffleSDO.import(xtdc, ppdc, useXtChannels, usePpChannels); 
+            obj.unitSDO.import      (xtdc, ppdc, useXtChannels, usePpChannels); 
+            obj.shuffleSDO.import   (xtdc, ppdc, useXtChannels, usePpChannels); 
             obj.backgroundSDO.import(xtdc, ppdc, useXtChannels, usePpChannels);
             %
             obj.x0Config.fs = xtdc.data.fs;
@@ -305,11 +311,10 @@ classdef analyzer < handle & matlab.mixin.Copyable
             %
             obj.shuffleSDO.eventShuffle.import(obj.shuffleSDO.ppData); 
             obj.backgroundSDO.eventShuffle.import(obj.backgroundSDO.ppData); %init/conform
-                        tMax = min(obj.unitSDO.xtData.trTimeLen); 
+            tMax = min(obj.unitSDO.xtData.trTimeLen); 
             obj.backgroundSDO.eventShuffle.random( ...
                 obj.nTrials, obj.nXtChannels, obj.nBackgroundPts, ...
-                        'maxX', tMax, 'type', 'times'); 
-           % obj.shuffle; 
+                'maxX', tMax, 'type', 'times'); 
         end
         %-------------------------
         
@@ -371,10 +376,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
             end
             %
             if (~obj.computedShuffleSdo) || OVERRIDE || strcmp(TARGET, 'shuffle')
-                if ~obj.shuffledSpikes
-                    obj.shuffle('shuffle'); 
-                    1; 
-                end
+                if ~obj.shuffledSpikes; obj.shuffle('shuffle'); end
                 FAST_SHUFF = 1;
                 tic;
                 if FAST_SHUFF == 1
@@ -407,7 +409,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
                     tMax = min(obj.unitSDO.xtData.trTimeLen); 
                     obj.backgroundSDO.eventShuffle.random( ...
                         obj.nTrials, obj.nXtChannels, obj.nBackgroundPts, ...
-                                'maxX', tMax, 'type', 'times'); 
+                        'maxX', tMax, 'type', 'times'); 
                 case 'shuffle'
                     obj.shuffleSDO.eventShuffle.shuffle();                     
             end
@@ -453,10 +455,58 @@ classdef analyzer < handle & matlab.mixin.Copyable
             obj.predictionMatrices = HH_predict;
         end
        %--------------------------
-       function sdoS = getSdoStruct(obj)
-           % // call to external bungler
-           sdoS = SAT.deprecated.getSdoStructFunc(obj);
+       function sdoS = getSdoStruct(obj,USE_XT_CH, USE_PP_CH)
+           if ~exist('USE_XT_CH', 'var'); USE_XT_CH = []; end
+           if ~exist('USE_PP_CH', 'var'); USE_PP_CH = []; end
+           if isempty(USE_XT_CH);USE_XT_CH = 1:obj.nXtChannels; end
+           if isempty(USE_PP_CH);USE_PP_CH = 1:obj.nPpChannels; end
+           sdoS = SAT.deprecated.getSdoStructFunc(obj, USE_XT_CH, USE_PP_CH);
        end
+       %--------------------------
+       
+       function plot(obj, XT_CH_NO, PP_CH_NO, INCLUDE_STATS)
+           arguments
+               obj
+               XT_CH_NO = 1; 
+               PP_CH_NO = 1; 
+               INCLUDE_STATS = 1;
+           end
+           
+           obj.sdoStruct = obj.getSdoStruct(XT_CH_NO, PP_CH_NO); 
+           
+           obj.sdoStruct = SAT.compute.performStats(obj.sdoStruct, XT_CH_NO, PP_CH_NO);
+           
+           %obj.unitSDO.plot(XT_CH_NO, PP_CH_NO); 
+           
+           % TODO: Implement a plot CONFIG element, we can
+           % pass/autopopulate
+           
+           SAT.plot.plotHeader(obj, ...
+                XT_CH_NO, PP_CH_NO, ...
+                'filter', 0, ...
+                'saveFig', 0, ...
+                'outputDirectory', []); 
+            
+            %, ...
+            %{
+                'filter', options.filter, ...indices
+                'saveFig', options.saveFig, ....
+                'saveFormat', options.saveFormat, ...
+                'outputDirectory', options.outputDirectory); 
+            %}
+           
+           
+           if INCLUDE_STATS
+               
+               
+               
+               obj.computePredictionError(XT_CH_NO, PP_CH_NO); 
+               obj.computePredictionError.plot(); 
+           end
+
+           
+       end
+       
        %---------------------------- 
        % // Legacy Struct // 
        function obj = performStats(obj, SIG_PVAL, Z_SCORE)
@@ -474,24 +524,17 @@ classdef analyzer < handle & matlab.mixin.Copyable
             obj.zScore  = Z_SCORE; 
        end
        % 
-       function pxData = getPxData(obj, USE_XT_CH, USE_PP_CH, target, element) 
+       function data = getData(obj, USE_XT_CH, USE_PP_CH, target, element) 
            arguments
                obj
                USE_XT_CH = 1:obj.nXtChannels;
                USE_PP_CH = 1:obj.nPpChannels;
-               target {mustBeMember(target, {'px0', 'px1'})} = 'px0'; 
+               target   {mustBeMember(target, {'x0Data', 'x1Data','px0Data', 'px1Data'})} = 'x0Data'; 
                element {mustBeMember(element, {'unitSDO'})} = 'unitSDO';
            end
-           switch target
-               case 'px0'
-                    pxData = obj.(element).px0Data.subsample( ...
-                        USE_XT_CH, 1:obj.nTrials, USE_PP_CH);
-               case 'px1'
-                    pxData = obj.(element).px1Data.subsample( ...
-                        USE_XT_CH, 1:obj.nTrials, USE_PP_CH);                  
-           end
+           data = obj.(element).(target).subsample(USE_XT_CH, 1:obj.nTrials, USE_PP_CH);
        end
-       %
+       %{
        function xData = getxData(obj, USE_XT_CH, USE_PP_CH, target, element)
            arguments
                obj
@@ -500,6 +543,14 @@ classdef analyzer < handle & matlab.mixin.Copyable
                target   {mustBeMember(target, {'x0', 'x1'})} = 'x0'; 
                element  {mustBeMember(element, {'unitSDO'})} = 'unitSDO';
            end
+          switch target
+               case 'x0'
+                   TARGET = 'x0Data'; 
+               case 'x1'
+                   TARGET = 'x1Data';              
+           end
+           
+           
            switch target
                case 'x0'
                    xData = obj.(element).x0Data.subsample(...
@@ -509,17 +560,17 @@ classdef analyzer < handle & matlab.mixin.Copyable
                        USE_XT_CH, 1:obj.nTrials, USE_PP_CH);    
            end
        end
+       %}
+       
        %
        function obj = computePredictionError(obj, XT_CH_NO, PP_CH_NO)
            % // import x0/1 px0/1
            % Construct
-           obj.errorStruct = SAT.predict.predictionError2(obj.pValue, obj.nShuffles);
+           obj.predictionError = SAT.predict.predictionError2(obj.pValue, obj.nShuffles);
            % Import; 
-           obj.errorStruct.import(obj, XT_CH_NO, PP_CH_NO); 
-           %
-           obj.errorStruct.predictPxError(); 
-           %
-           obj.errorStruct = obj.errorStruct.computeError(); 
+           obj.predictionError.import(obj, XT_CH_NO, PP_CH_NO); 
+           obj.predictionError.predictPxError(); 
+           obj.predictionError = obj.predictionError.computeError(); 
           
        end
     end 

@@ -2,7 +2,9 @@
 % Public class for manipulating X(t) and interconverting. 
 % Designed for use within the SDO Analysis Toolkit
 
-% xtDataCell class used here to contain/operate on time series type data; 
+% xtDataCell class used here to contain/operate on time series type data;  
+
+% This has been reduxed to simplify and consolidate calls.
 
 %_______________________________________
 % Copyright (C) 2023 Trevor S. Smith
@@ -92,8 +94,8 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
             end
             %
             obj.data.import(dataHolder, inputname(2)); 
-            obj.data.dataType = 'xtData';
-            obj.data.dataField = FIELDNAME;
+            obj.data.dataType       = 'xtData';
+            obj.data.dataField      = FIELDNAME;
             %
             obj.stateMap.getChannelAmp(obj.data); 
             obj.linearTransform = dataCell.linearTransformer(obj.data.nChannels); 
@@ -140,16 +142,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
             end
             
             obj.data.filter(FILTERTYPE, N_POINTS, F_VAR, 'dataField', vars.datafield); 
-        end
-
-        % Added 8.29.2024
-        % -->> I should migrate this to vcat?
-        function obj = concat(obj, useTrials)
-            arguments
-                obj
-                useTrials = 1:obj.nTrials; 
-            end
-            obj = dataCell.manipulate.concatenateTrials(obj, useTrials); 
         end
         
         function obj = resetEnvelope(obj)
@@ -266,6 +258,15 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
             obj.linearTransform.subsample(useChannels); 
 
         end
+                % Added 8.29.2024
+        % -->> I should migrate this to vcat?
+        function obj = combineTrials(obj, useTrials)
+            arguments
+                obj
+                useTrials = 1:obj.nTrials; 
+            end
+            obj = dataCell.manipulate.concatenateTrials(obj, useTrials); 
+        end
         %-----------------------------------------%
         function [obj] = hcat(obj, dcList) 
              arguments
@@ -311,20 +312,19 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
         end    
 
         %% ___ Plotter/ Visualization Methods; 
-        function plot(obj, useTrials, useChannels, OFFSET, vars)
+        function plot(obj, useTrials, useChannels, offset, vars)
             arguments
                 obj
                 useTrials   double = 1:obj.nTrials; 
                 useChannels double = 1:obj.nChannels;  
-                OFFSET      double = [];  
+                offset      double = [];  
                 vars.datafield char = obj.data.dataField; 
                 vars.trialTicks {mustBeNumericOrLogical} = 0; 
             end
             
-            obj.data.plot(useTrials,useChannels, OFFSET, ...
+            obj.data.plot(useTrials,useChannels, offset, ...
                 'dataField', vars.datafield, 'trialTicks', vars.trialTicks);
         end
 
     end
-
 end

@@ -4,16 +4,9 @@
   % 
   % This alone likely isn't sufficient for SDO Analysis; it only handles
   % the parameterization of the functions, and the core-compute
-  % capabilities
+  % capabilities. 
   %
-  % --> I should have a spin-out class for statistics.
-  % --> This is a lightweight matrix class. If we want to do background
-  % subtraction, etc, this should be handled upstream. --> px0--px0* -->
-  % sdoComputer. 
   
-  % Maybe also a method for how we handle classes; shuffles; etc. 
-  
-  % --> use constructor to select for 'unit', 'background' 'shuffle' 
   
   % >> This class should also handle all of the plotters and direct
   % operations on the matrix + import/export
@@ -113,7 +106,6 @@
               
               L_buff = zeros(N_STATES, N_STATES, N_SHUFF); 
               M_buff = zeros(N_STATES, N_STATES, N_SHUFF);  
-              Ln_buff= zeros(N_STATES, N_STATES, N_SHUFF); 
               
               spkCount = 0; 
               for tr = 1:px0.nTrials
@@ -155,21 +147,19 @@
                             'rescale', 0);         
                   end
                   L_buff = L_buff + L; 
-                  %Ln_buff= Ln_buff+ Ln; 
                   M_buff = M_buff + M; 
                   %
                   spkCount = spkCount + size(px0_flat,2);
               end
               spkCount = max(spkCount,1);
               L     = L_buff / spkCount; 
-              %Ln    = Ln_buff/ spkCount; 
               M     = M_buff / spkCount;
               Ln    = SAT.sdoUtils.normsdo(L,M); 
               %
               obj.sdoMatrix         = L; 
               obj.sdoMatrixNormed   = Ln; 
               obj.jointMatrix       = M; 
-              obj.nEvents           = spkCount; %length(px0_flat); 
+              obj.nEvents           = spkCount;
           end
           %--------------------------------------
           function obj = setBackgroundMatrix(obj, VAR)
@@ -226,6 +216,13 @@
                       pause(1/FPS); 
                   end
               end
+          end
+          %-----------------
+          function plot(obj)
+              sMat = obj.sdoMatrix;
+              figure;
+              SAT.plot.plotSdoStack(sMat); 
+              
           end
           %----------------- 
       end

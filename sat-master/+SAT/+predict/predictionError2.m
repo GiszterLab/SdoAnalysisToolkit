@@ -43,10 +43,6 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
         %
         errorStruct
         pVal = 0.05; 
-        %nShuffles   = 1000; 
-        %{
-        plotProperties  = []; 
-        %}
         params              SAT.properties.computerProperties
         predictionMatrices  SAT.predict.HH_predictionMatrices
     end
@@ -65,31 +61,11 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
     methods
         % __ calculate the prediction error 
         function obj = predictionError2(P_VAL, N_SHUFF)
-            obj.pVal        = P_VAL; 
-            obj.nShuffles   = N_SHUFF;
-            %{
-           % ++ WARNING: Fragile Calls ++
-           scalar_fieldnames = {...
-               'L0_running',...
-               'L1_running',...
-               'L2_running', ...
-               'KLD', ...
-               'logLikelihood'}; 
-
-           statewise_fieldnames = { ...
-               'L0_running_x_state', ...
-               'L1_running_x_state', ...
-               'L2_running_x_state'}; 
-            
-            obj.pd_x1DataCell    = cell(1,7); 
-            obj.pd_px1DataCell   = cell(1,7); 
-            %
-            obj.error_fields = scalar_fieldnames; 
-            obj.error_fields_x_state = statewise_fieldnames; 
-            %}
+            obj.pVal                = P_VAL; 
+            obj.nShuffles           = N_SHUFF;
             obj.errorStruct         = SAT.predict.errorStruct_new(7); % number of HH
             obj.predictionMatrices  = SAT.predict.HH_predictionMatrices();
-            obj.stateMap    = dataCell.stateMap(); 
+            obj.stateMap            = dataCell.stateMap(); 
         end
         %
         function obj = import(obj, sata, XT_CH_NO, PP_CH_NO)
