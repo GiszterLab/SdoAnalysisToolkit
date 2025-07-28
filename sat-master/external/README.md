@@ -1,12 +1,13 @@
-# SDO Analysis Toolkit (SAT) [V 2.0]
+# SDO Analysis Toolkit (SAT) [V 1.1]
 MATLAB Package for implementing Stochastic Dynamic Operator (SDO) methods for stochastic control and prediction, using time series and point process data. 
 When applied to neurophysiological data recordings, SDO methods improves upon the classical spike-triggered average when generating predictions of state near spike. 
 
-![image](./SAT_Logo2.png)
+![SDO_Logo](https://github.com/GiszterLab/SdoAnalysisToolkit/blob/main/SAT_Logo.png)
+
 
 __Prerequisites__: 
 
-- V2.0 Requires MATLAB 2019a or newer. 
+- Class-Based Implementation requires MATLAB 2019a or newer (Recommended). 
 
 __Toolboxes__: 
 - <em> Statistics and Machine Learning Toolbox </em>
