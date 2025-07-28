@@ -8,9 +8,9 @@
 % ensuring good handling, interconversion, and sampling; 
 %
 % primaryData is composed in: 
-%   - xtDataCell
-%   - ppDataCell
-%   - sdoMat
+%   - xtDataCell2
+%   - ppDataCell2
+%   - sdoMat2
 
 %_______________________________________
 % Copyright (C) 2024 Trevor S. Smith
@@ -388,7 +388,7 @@ classdef primaryData < handle & matlab.mixin.Copyable
                     % TODO: Fix this with a padding/clipping method; 
                 end
                 obj.trTimeLen(tr) = max(obj.trTimeLen(tr), obj2.trTimeLen(tr)); 
-                % This works will structures are [1xnChannels]
+                % This works will structures are [1, nChannels]
                 obj.data{1,tr} = [obj.data{1,tr}, obj2.data{1,tr}]; 
             end
             try 
@@ -464,6 +464,20 @@ classdef primaryData < handle & matlab.mixin.Copyable
             %
             values = cell(ix_x, ix_y, ix_z); % [N_CH, N_TR, ix_z]; 
             %
+            for zz = 1:ix_z
+                for tri = 1:N_USE_TR
+                    trData = obj.data{1, vars.useTrials(tri)};
+                    for chi = 1:N_USE_XT
+                        chData = trData(vars.useChannels(chi)).(vars.dataField);
+                        idx = indices{chi, tri, zz};
+                        if isempty(idx)
+                            continue
+                        end
+                        values{chi, tri, zz} = chData(idx);
+                    end
+                end
+            end
+            %{
             for zz = 1:ix_z % Each independent sample ; DIM3 IX
                 for tri = 1:N_USE_TR
                     tr = vars.useTrials(tri); 
@@ -474,15 +488,10 @@ classdef primaryData < handle & matlab.mixin.Copyable
                         ch = vars.useChannels(chi); 
                         % __ Iterative Lookup
                         values{chi,tri,zz} = obj.data{1,tr}(ch).(vars.dataField)(indices{chi,tri,zz}); 
-                        %{
-                        if (size(indices{tri},1) >1) && (size(values{chi,tri},1) == 1)
-                            % deal with transposed columns
-                            values{chi,tri} = values{chi,tri}'; 
-                        end
-                        %}
                     end
                 end
             end
+            %}
             
         end
         %------------------------------------------------------
@@ -782,21 +791,24 @@ classdef primaryData < handle & matlab.mixin.Copyable
                 vars.useChannels    = 1:obj.nChannels; 
             end
             
-            
             N_USE_CH = length(vars.useChannels); 
             N_USE_TR = length(vars.useTrials); 
 
             trLenPt = ceil(obj.trTimeLen*obj.fs+1); 
 
             N_TEN_DIM = ndims(ten); 
+            [sz_x, sz_y, sz_z] = size(ten); 
+            
+            
             if N_TEN_DIM == 3
                 [N_TEN_CH, ~, N_TEN_TR] = size(ten); 
             elseif N_TEN_DIM == 2
+                %{
                 N_TEN_TR = 1; 
                 if N_USE_CH == 1
                     %// Replace one channel across trials; 
                     N_TEN_CH = N_USE_CH; 
-                    [sz_x,sz_y] = size(ten); 
+                    %[sz_x,sz_y] = size(ten); 
                     if sz_x == N_USE_TR
                         ten = reshape(ten', 1, [], N_USE_TR); 
                     elseif sz_y == N_USE_TR
@@ -806,7 +818,7 @@ classdef primaryData < handle & matlab.mixin.Copyable
                     end
                 elseif N_USE_TR == 1
                     N_TEN_TR = N_USE_TR; 
-                    [sz_x,sz_y] = size(ten); 
+                    %[sz_x,sz_y] = size(ten); 
                     if sz_x == N_USE_CH
                         N_TEN_CH = sz_x; 
                         ten = reshape(ten, N_USE_CH, [], 1); 
@@ -817,10 +829,24 @@ classdef primaryData < handle & matlab.mixin.Copyable
                         error("Size of Input Tensor does not match expected parsing parameters"); 
                     end
                 end
+                %}
+                  % AI. Recommended. 
+                if sx == N_USE_TR
+                    ten_out = reshape(ten', 1, [], N_USE_TR);
+                elseif sy == N_USE_TR
+                    ten_out = reshape(ten, 1, [], N_USE_TR);
+                elseif sx == N_USE_CH
+                    ten_out = reshape(ten, N_USE_CH, [], 1);
+                elseif sy == N_USE_CH
+                    ten_out = reshape(ten', N_USE_CH, [], 1);
+                else
+                    error("Unrecognized 2D tensor shape.");
+                end 
+                ten = ten_out; 
             else
                 error("Size of Input Tensor does not match expected parsing parameters"); 
             end
-
+            %--------------------
             for tri = 1:N_TEN_TR
                 tr = vars.useTrials(tri); 
                 for chi = 1:N_TEN_CH
@@ -839,7 +865,6 @@ classdef primaryData < handle & matlab.mixin.Copyable
                         xt0 = zeros(1, trLenPt); 
                         xt0(1,1:xtLen) = xt; 
                         xt = xt0; 
-                        %xt = [xt, zeros(1, trLenPt-xtLen)]; 
                     end
                     obj_out.data{1,tr}(ch).(vars.datafield) = xt(1:xtLen); 
                     % -->> Regenerate min/max; 
@@ -861,10 +886,8 @@ classdef primaryData < handle & matlab.mixin.Copyable
         %--------------------------------------------------------------%
         function obj= validateData(obj)
             switch obj.dataType
-                case 'None'
+                case {'None', 'xtData'}
                     return
-                case 'xtData'
-                    1; 
                 case 'ppData'
                     obj.validate_primaryData_ppdata; 
             end

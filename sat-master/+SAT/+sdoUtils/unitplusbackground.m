@@ -20,7 +20,7 @@
 %
 % OUTPUT 
 %   sum_unit_dSdo   summed output difference SDO (unit[s] + background)
-%   sum_unit jSDo   summed output joint SDO      (
+%   sum_unit jSDo   summed output joint SDO      ()
 
 
 %_______________________________________
@@ -111,7 +111,6 @@ switch vars.method
         
         %% Less-Preferred
         %_______ Strategy 2 :: Norm then Sum
-        1; 
         n_sum_dSdo = zeros(size(bk_dSdo)); 
         n_sum_jSdo = zeros(size(bk_jSdo)); 
         

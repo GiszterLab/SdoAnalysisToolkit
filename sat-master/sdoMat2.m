@@ -29,13 +29,11 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 %__________________________________________
 
-classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCell.dependencies.primaryData
+classdef sdoMat2 < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCell.dependencies.primaryData
     properties (Access = public)
-        % >> In the rebuild, I think it makes most sense to rip fields as
-        % components of the imported data
+        % // Import from Primary
         xtData          dataCell.primaryData; 
         ppData          dataCell.primaryData;
-        %---------------------------------
         eventShuffle    dataCell.shuffler;
         stateMapping    dataCell.stateMap;
         %--------------------------------
@@ -51,12 +49,11 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
         pxConfig        dataCell.properties.pxProperties; 
         %--------------------------------------
         % || core Mix-in || 
-        config      SAT.properties.computerProperties; 
-        sdo         SAT.sdoComputer; % I can multiStack this, if I want ...
-        % N_XT, N_PP
+        config          SAT.properties.computerProperties; 
+        plotConfig      SAT.properties.plotterProperties;
+        sdo             SAT.sdoComputer; 
     end
     properties (Dependent)
-        %fs
         nTrials
         nXtChannels 
         nPpChannels
@@ -72,7 +69,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
         computedSdo
     end
     methods
-        function obj = sdoMat(N_XT, N_PP, Type, stateMapping, x0Config, x1Config, pxConfig)
+        function obj = sdoMat2(N_XT, N_PP, Type, stateMapping, x0Config, x1Config, pxConfig)
             arguments
                 N_XT = 1; 
                 N_PP = 1; 
@@ -81,7 +78,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
                 stateMapping dataCell.stateMap = dataCell.stateMap(); 
                 x0Config dataCell.properties.intervalProperties = dataCell.properties.intervalProperties(0,0,-10); 
                 x1Config dataCell.properties.intervalProperties = dataCell.properties.intervalProperties(0,0,+10); 
-                pxConfig dataCell.properties.pxProperties = dataCell.properties.pxProperties();
+                pxConfig dataCell.properties.pxProperties       = dataCell.properties.pxProperties();
             end
             % There's a LOT of stuff to construct. 
             obj.eventShuffle    = dataCell.shuffler(); 
@@ -97,7 +94,24 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             % ____ Slave properties _____
             config = SAT.properties.computerProperties(); 
             obj.config          = config; 
-            obj.sdo             = repelem(SAT.sdoComputer(Type, config), N_XT, N_PP); 
+            obj.sdo             = repelem(SAT.sdoComputer.empty, N_XT, N_PP); 
+            %
+            proto = SAT.sdoComputer(Type, config); 
+            for m = 1:N_XT
+                for u = 1:N_PP
+                    obj.sdo(m,u) = copy(proto); 
+                    % Force reconstruct
+                    %{
+                    obj.sdo(m,u).sdoMatrix = []; 
+                    obj.sdo(m,u).sdoMatrixNormed = []; 
+                    obj.sdo(m,u).jointMatrix = []; 
+                    obj.sdo(m,u).backgroundSdo = []; 
+                    %}
+                end
+            end
+            %}
+            %obj.dump = cell(N_XT, N_PP);
+            
             % __ >> this may be reorganized; 
         end
         %-------------
@@ -155,7 +169,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
         function n = get.nStates(obj)
             n = obj.stateMapping.nBins; 
         end
-        
         %---------------------------------
         %% Import (from 'sdoStruct')
         function obj = import(obj, VAR_1, VAR_2, VAR_3, VAR_4)
@@ -171,7 +184,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             end
             % RIP FIELDS: 
             switch class(VAR_1)
-                case 'xtDataCell'
+                case {'xtDataCell', 'xtDataCell2'}
                     %---------
                     if ~exist('VAR_2', 'var')
                         obj.xtData          = VAR_1.data; 
@@ -293,7 +306,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             % Avoids downstream handling. 
             
             if ~obj.definedState
-                % State needs to be defined first; 
                 obj.stateMapping.getChannelAmp(obj.xtData); 
                 obj.stateMapping.buildStateMap();
             end
@@ -301,21 +313,17 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             % __> Reading from temp onboard memory_ 
             % ___ Rebuild / Standardization / 
             
-            % --> We only want to shuffle 1x!
-            switch vars.useEvents
+            switch vars.useEvents %['times', 'shuffle']
                 case 'shuffle' % 3D data
-                    % // ppData is slaved from shuffle; 
                     obj.ppData = obj.eventShuffle.getPpData('flatten', 0); 
-                    %obj.ppData = obj.eventShuffle.getPpData('flatten', 1);  
             end
             
             % __ >> I should link these under dependencies. 
             
             if (~(obj.x0Data.calculatedIndices && obj.x1Data.calculatedIndices)) || vars.rebuild == 1
-                obj.drawIntervals();%, 'useEvents', vars.useEvents); 
+                obj.drawIntervals();%, 'useEvents', vars.useEvents); SAT.sdoComputer(Type, config)
             end
-            
-           
+                       
             % This represents ALL Combinations (usually)
             obj.x0Data.samplePrimaryData(obj.xtData, ...
                 'useTrials', vars.useTrials, 'useChannels', vars.useXtChannels);
@@ -330,7 +338,9 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             for m = 1:obj.nXtChannels
                 % --> Currently, x0/x1 only sample from one source; 
                 for u = 1:obj.nPpChannels
-                    obj.sdo(m,u).compute(obj.px0Data.subsample(m,vars.useTrials,u), obj.px1Data.subsample(m,vars.useTrials,u)); 
+                    px0 = obj.px0Data.subsample(m,vars.useTrials,u);
+                    px1 = obj.px1Data.subsample(m,vars.useTrials,u);
+                    obj.sdo(m,u) = obj.sdo(m,u).compute(px0,px1); % Value
                 end
                 disp(strcat("Finished ", num2str(m), "/", num2str(obj.nXtChannels)));
             end
@@ -353,8 +363,8 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
                 return
             end
             
-            N_USE_XT = length(useXtChannels); 
-            N_USE_PP = length(usePpChannels); 
+            N_USE_XT = numel(useXtChannels); 
+            N_USE_PP = numel(usePpChannels); 
             
             sdos = cell(1,N_USE_XT); 
             for m_i = 1:N_USE_XT
@@ -375,38 +385,40 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
         end
         
         %-----------------------------------------------------------------%
-        function [stirpd] = getStirpd(obj, useTrials, useChannels)
+        function [stirpd] = getStirpd(obj, useTrials, useXtChannels, usePpChannels)
             arguments
                 obj
-                useTrials   = 1:obj.nTrials; 
-                useChannels = 1:obj.nPpChannels; 
+                useTrials       = 1:obj.nTrials; 
+                useXtChannels   = 1:obj.nXtChannels;
+                usePpChannels   = 1:obj.nPpChannels; 
                 % --> not sure exactly how this multiplexes. 
             end
             xTmp0 = obj.x0Data.discretize(obj.stateMapping); 
             xTmp1 = obj.x1Data.discretize(obj.stateMapping); 
-            
-            hx0 = cellhcat(xTmp0.data(useTrials)); 
-            hx1 = cellhcat(xTmp1.data(useTrials)); 
-            if length(useChannels) > 1
-                % --> how do we want to plot these? Separately? 
-                hx0 = cellhcat(hx0(useChannels,:)'); % cat on top of each other; flatten
-                hx1 = cellhcat(hx1(useChannels,:)'); % cat on top of each other; flatten;
-            end
+            %
+            dat_00 = xTmp0.data(useXtChannels,useTrials,usePpChannels); 
+            dat_10 = xTmp1.data(useXtChannels,useTrials,usePpChannels); 
+            hx0 = cellhcat(dat_00(:)'); % Merge down
+            hx1 = cellhcat(dat_10(:)'); % Merge down
+            %
             stirpd = pxTools.getStirpd(hx0, hx1, obj.stateMapping.nBins); 
         end
         %
-        function f = plotStirpd(obj, useTrials, useChannels)
+        function f = plotStirpd(obj, useTrials, use_XT_Channels, use_PP_Channels)
             arguments
                 obj
-                useTrials   = 1:obj.nTrials; 
-                useChannels = 1:obj.nPpChannels; 
+                useTrials       = []; 
+                use_XT_Channels = 1:obj.nXtChannels; 
+                use_PP_Channels = 1:obj.nPpChannels; 
             end
-            stirpd = obj.getStirpd(useTrials, useChannels); % pass; 
+            if isempty(useTrials); useTrials = 1:obj.nTrials; end
+            
+            stirpd = obj.getStirpd(useTrials, use_XT_Channels, use_PP_Channels); % pass; 
             if nargout > 0
                 f = figure;
             end
             % NOTE: There are other things we can pass into this function.
-            pxTools.plot.stirpd(stirpd,abs(obj.x0Data.dura_nPoints) );
+            pxTools.plot.stirpd(stirpd,abs(obj.x0Data.config.dura_nPoints) );
         end
 
         %% Operate
@@ -438,7 +450,7 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
                 'type', MATTYPE, ...
                 'backgroundSubraction', obj.backgroundSubtraction); 
             
-            nmCell = fieldnames(HStruct); 
+            nmCell  = fieldnames(HStruct); 
             nFields = length(nmCell); 
             matCell = cell(1, nFields); 
             for f = 1:nFields
@@ -468,34 +480,16 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
        
         
         %% Plot (Overload)
-        function plot(obj, XT_CH_NO, PP_CH_NO, options)
+        % MASTER 'plot all' method; 
+        function plot(obj, XT_CH_NO, PP_CH_NO)
             arguments
                 obj
                 XT_CH_NO = 1; 
                 PP_CH_NO = 1; 
-                options.saveFig         {mustBeNumericOrLogical} = 0; 
-                options.saveFormat      {mustBeMember(options.saveFormat, {'png', 'svg'})} = 'png'; 
-                options.outputDirectory = []; 
-                options.filter          = 1; 
             end
-            % MASTER 'plot all' method; 
             % ____
-            %{
-            if isempty(obj.stats)
-                performStats(obj);  
-            end
-            %}
             obj.sdo(XT_CH_NO, PP_CH_NO).plot()
-            %{
-            SAT.plot.plotHeader(obj, ...
-                XT_CH_NO, PP_CH_NO, ...
-                'filter', options.filter, ...indices
-                'saveFig', options.saveFig, ....
-                'saveFormat', options.saveFormat, ...
-                'outputDirectory', options.outputDirectory); 
-           %}
-            N_PX0_PTS = round(abs(obj.px0DuraMs*obj.fs/1000));  
-            pxTools.plot.stirpd(obj.stirpd, N_PX0_PTS, 'binDuraMs', 1000/obj.fs, 'nSpikes', obj.nEvents); 
+            obj.plotStirpd(XT_CH_NO, PP_CH_NO); 
         end
         %% Export to pxtDataCell
         function pd_px1Data = getPredictionPx(obj, px0Data, vars)
@@ -507,7 +501,6 @@ classdef sdoMat < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCel
             % // Pipe from sdoComputer
             vars.dummy; 
             pd_px1Data = obj.pxAssigner(px0Data); 
-
         end
         
     end

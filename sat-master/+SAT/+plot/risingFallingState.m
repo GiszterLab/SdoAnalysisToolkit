@@ -16,6 +16,10 @@
 %       'outputDirectory': string/char. If not passed here, query user for
 %           save position
 
+
+% NOTE: 'Old' method recomputes the stat, which can vary from
+% the values in sdoStruct. 
+
 % Copyright (C) 2023  Trevor S. Smith
 %  Drexel University College of Medicine
 % 
@@ -48,7 +52,7 @@ SAVE_DIR    = pR.outputDirectory;
 % __ Extract common vals; 
 
 SIG_PVAL    = sdoStruct(XT_CH_NO).stats{PP_CH_NO}.pVal; 
-N_BINS       = length(sdoStruct(XT_CH_NO).bkgrndSDO); 
+N_BINS      = length(sdoStruct(XT_CH_NO).bkgrndSDO); 
 
 %//Plots the rising State vs. Shuffle AND the associated significance values
 
@@ -56,26 +60,26 @@ ppName0     = sdoStruct(XT_CH_NO).neuronNames{PP_CH_NO};
 ppName      = underscores2spaces(ppName0); 
 xtName      = sdoStruct(XT_CH_NO).signalType; 
 
-sigLevels   = 1:length(sdoStruct(XT_CH_NO).levels)-1; 
+stRng       = 1:N_BINS; 
 
-stRng = 1:N_BINS; 
+USE_STATES = 1; 
+if USE_STATES == 1
+    sigLevels   = stRng; 
+else
+    sigLevels   = [0; sdoStruct(XT_CH_NO).levels(2:end-1)];%= 1:N_BINS; 
+end
 
 mainTitle   = strcat(ppName, '\rightarrow', xtName); 
 
 % __>> We can stream this from the new stats struct; 
 
-unitVal = matTriangle_up_down_difference(sdoStruct(XT_CH_NO).sdos{PP_CH_NO}); 
-%shuff_px0 = unit_px0+
+% We were running the (re)parameterization of the SDO in the sdo struct; 
+unitVal = matTriangle_up_down(sdoStruct(XT_CH_NO).sdos{PP_CH_NO}, 'difference'); 
 
 [~,~,rdSdo,~] = SAT.sdoUtils.get_UnitBkgdShuff_Matrices(sdoStruct, XT_CH_NO, PP_CH_NO);
-shufVal = matTriangle_up_down_difference(rdSdo.Shuff); 
-
-%matTriangle_up_down_difference(dSdo.(x1) );
+shufVal = matTriangle_up_down(rdSdo.Shuff, 'difference'); 
 
 % ___ TODO: Add these in here from new stats struct; 
-
-%unitVal     = sdo(XT_CH_NO).stats{PP_CH_NO}.changeMeasureContSDO;
-%shufVal     = sdo(XT_CH_NO).stats{PP_CH_NO}.changeMeasureShuffContSDO;
 
 meanShuff    = mean(shufVal,3); 
 stdShuff     = std( shufVal, 0,3); 
@@ -95,7 +99,22 @@ else
     SIG_PVAL    = 0; 
 end
 %% Stats-Sig
-[~, ssqrd, stat]=sigSSquaredCalculator(shufVal,unitVal,SIG_PVAL); 
+OLD = 0; 
+METHOD = 'normed'; %{'raw', 'normed'}
+if OLD
+    [~, ssqrd, stat]=sigSSquaredCalculator(shufVal,unitVal,SIG_PVAL); 
+else
+    comp = sdoStruct(XT_CH_NO).stats{PP_CH_NO}.comparisons;
+    switch METHOD
+        case 'normed'
+            ssqrd   = comp.Unit_v_Shuff.sse_upDown_px0Normed; 
+            stat    = comp.Unit_v_MeanShuff.sse_upDown_px0Normed;
+        case 'raw'
+            ssqrd   = comp.Unit_v_Shuff.sse_upDown_raw; 
+            stat    = comp.Unit_v_MeanShuff.sse_upDown_raw; 
+    end
+end
+    
 figure; 
 %_____________ Rising/Falling State
 subplot(1,2,1);

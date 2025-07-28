@@ -1,7 +1,7 @@
 %% (Plot) px0Sig 
 % Plot the distribution of states at time of spike relative to the
 % distribution of states for the shuffles. For use within the SDO Analysis
-% Toolkit.
+% Toolkit. This is effectively a test of spike tuning
 %
 % PREREQUISITES:
 %   computeSDO()
@@ -34,17 +34,17 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 function px0Sig(sdoStruct, XT_CH_NO, PP_CH_NO, varargin)
-p = inputParser; 
-addParameter(p, 'saveFig', 0); 
-addParameter(p, 'saveFormat', 'png');
-addParameter(p, 'outputDirectory', []); 
-parse(p, varargin{:}); 
-pR = p.Results; 
+    p = inputParser; 
+    addParameter(p, 'saveFig', 0); 
+    addParameter(p, 'saveFormat', 'png');
+    addParameter(p, 'outputDirectory', []); 
+    parse(p, varargin{:}); 
+    pR = p.Results; 
 
-SAVE_FIG    = pR.saveFig; 
-SAVE_FMT    = pR.saveFormat; 
-SAVE_DIR    = pR.outputDirectory; 
-%________
+    SAVE_FIG    = pR.saveFig; 
+    SAVE_FMT    = pR.saveFormat; 
+    SAVE_DIR    = pR.outputDirectory; 
+    %________
 
     SIG_PVAL    = sdoStruct(XT_CH_NO).stats{PP_CH_NO}.pVal; 
     N_BINS      = length(sdoStruct(XT_CH_NO).bkgrndSDO); 
@@ -119,11 +119,11 @@ SAVE_DIR    = pR.outputDirectory;
         SAT.plot.getCommonCdfPlot(0,0,0); 
     end
 
-        xlabel('KL Deviation from baseline  1D dist.')
-        ylabel('CDF(null dist. by shuffled spks)')
+    xlabel('KL Deviation from baseline  1D dist.')
+    ylabel('CDF(null dist. by shuffled spks)')
    %% SuperTitle
    
-   suptitle2(strcat(ppName, " on ", xtName)); 
+   suptitle2(strcat("Spike Tuning: ", ppName, " on ", xtName)); 
  
    %% Save Module; 
 

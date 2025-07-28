@@ -31,40 +31,44 @@
 
 classdef analyzer < handle & matlab.mixin.Copyable
     properties
-        unitSDO         sdoMat   % This is the master input data component; 
-        shuffleSDO      sdoMat
-        backgroundSDO   sdoMat
+        unitSDO         sdoMat2   % This is the master input data component; 
+        shuffleSDO      sdoMat2
+        backgroundSDO   sdoMat2
         %
         stateMapping    dataCell.stateMap % MASTER --> Slave downstream; 
-        %
-        sdoConfig       SAT.properties.computerProperties
         % __ These pass through __ 
         x0Config        dataCell.properties.intervalProperties 
         x1Config        dataCell.properties.intervalProperties 
         pxConfig        dataCell.properties.pxProperties
         %
         % Core Properties
-        predictionError         SAT.predict.predictionError2
-        sdoStruct             = []; % dummy for deprecated struct; 
-        nBackgroundPts        = 10000; % per-trial  
-        nShuffles             = 1000; % One-way-push
+        sdoConfig       SAT.properties.computerProperties
+        predictionError SAT.predict.predictionError2
         % ------------------------------
         handleTrials          = 'concat'; % DUMMY 
         %--------------------------
         % // Stats testing // 
-        pValue                = 0.05; 
-        zScore                = false; 
+        sdoStruct               = []; % holder for deprecated struct; 
+        sigMat                  = []; 
+        nBackgroundPts          = 10000; % per-trial  
+        % - SDO stats testing -
+        nShuffles               = 1000; % One-way-push
+        pValue                  = 0.05; 
+        nSigValues   {mustBeInteger} = 1; 
+        zScore                  = false; 
     end  
     properties (Hidden)
         configSnapshot
         stateMapListenerObj
         % // Listeners for pushing mode-specific changes //
+        %{
         ListenerObj_algo
         ListenerObj_bckSub
         ListenerObj_parComp
         ListenerObj_lowMem
         ListenerObj_verbose
         ListenerObj_trialHandle
+        %}
     end
     
     properties (Dependent)
@@ -81,10 +85,14 @@ classdef analyzer < handle & matlab.mixin.Copyable
         shuffledSpikes 
         computedBackgroundSdo
         computedShuffleSdo
-        changedProperties; 
+        computedUnitSdo
+        computedSDOs
+        changedProperties;
+        %
+        computedFullSDOStruct
     end
     
-    methods 
+    methods
         % -------- Constructor --------
         function obj = analyzer(N_XT, N_PP)
             arguments
@@ -99,6 +107,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
             %
             sdoConfig = SAT.properties.computerProperties;
             % __ Init Listeners ___ 
+            %{
             obj.ListenerObj_algo        = addlistener(sdoConfig, ...
                 'algorithm_configChanged', @(src, event)obj.syncConfig(src));
             obj.ListenerObj_bckSub      = addlistener(sdoConfig, ...
@@ -107,19 +116,23 @@ classdef analyzer < handle & matlab.mixin.Copyable
                 'parallelCompute_configChanged', @(src, event)obj.syncConfig(src));
             obj.ListenerObj_lowMem      = addlistener(sdoConfig, ...
                 'lowMemory_configChanged', @(src, event)obj.syncConfig(src));
-            obj.ListenerObj_verbose      = addlistener(sdoConfig, ...
+            obj.ListenerObj_verbose     = addlistener(sdoConfig, ...
                 'verbose_configChanged', @(src, event)obj.syncConfig(src));
-            obj.ListenerObj_trialHandle  = addlistener(sdoConfig, ...
+            obj.ListenerObj_trialHandle = addlistener(sdoConfig, ...
                 'trialHandling_configChanged', @(src, event)obj.syncConfig(src));
+            %}
             %--------------
             obj.sdoConfig = sdoConfig;
             % // Slaves // 
             obj.stateMapping    = stateMap; 
-            obj.unitSDO         = sdoMat(N_XT, N_PP,'unit', stateMap, ...
+            obj.unitSDO         = sdoMat2.empty(); 
+            obj.shuffleSDO      = sdoMat2.empty(); 
+            obj.backgroundSDO   = sdoMat2.empty(); 
+            obj.unitSDO         = sdoMat2(N_XT, N_PP,'unit', stateMap, ...
                 x0Config, x1Config, pxConfig); 
-            obj.shuffleSDO      = sdoMat(N_XT, N_PP,'shuffle', stateMap, ...
+            obj.shuffleSDO      = sdoMat2(N_XT, N_PP,'shuffle', stateMap, ...
                 x0Config, x1Config, pxConfig); 
-            obj.backgroundSDO   = sdoMat(N_XT, N_PP,'background',stateMap, ...
+            obj.backgroundSDO   = sdoMat2(N_XT, N_PP,'background',stateMap, ...
                 x0Config, x1Config, pxConfig); 
             % // add listener for dynamic updates to stateMap; 
             % __ Configs for Downstream __
@@ -138,7 +151,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
             obj.configSnapshot.x0Config = obj.x0Config;
             obj.configSnapshot.x1Config = obj.x1Config;
             obj.configSnapshot.pxConfig = obj.pxConfig;
-            obj.configSnapshot.sdoConcig= obj.sdoConfig;
+            obj.configSnapshot.sdoConfig= obj.sdoConfig;
         end
         % -- Aliasing
         function LI = get.importedData(obj)
@@ -169,6 +182,9 @@ classdef analyzer < handle & matlab.mixin.Copyable
             end
         end
         % ----
+        function LI = get.computedUnitSdo(obj)
+            LI = obj.unitSDO.computedSdo; 
+        end
         function LI = get.computedBackgroundSdo(obj)
             LI = obj.backgroundSDO.computedSdo; 
         end
@@ -188,72 +204,33 @@ classdef analyzer < handle & matlab.mixin.Copyable
         function LI = get.shuffledSpikes(obj)
             LI = obj.shuffleSDO.eventShuffle.shuffledData;
         end
-        % --> generate a compare method within lightweight class; query 
-        %{
+        %
+        function LI = get.computedSDOs(obj)
+            LI = all(obj.computedUnitSdo, obj.computedBackgroundSdo, obj.computedShuffleSdo);
+        end
+        %
         function LI = get.changedProperties(obj)
             LI = false; 
             sf = fieldnames(obj.configSnapshot); 
             for f = 1:length(sf)
-                if ~obj.(sf{f}).isChanged(obj.configSnapshot.(sf{f}))
-                    LI = true;
-                    break
+                if ~isequal(obj.(sf{f}), obj.configSnapshot.(sf{f}))
+                    LI = true; 
                 end
             end
         end
-        %}
-       %--------------------
-%}
-        %---------------
-        %% GET / SET Components
-        %---
-        %{
-        function algo = get.algorithm(obj)
-            algo = obj.unitSDO.sdo(1,1).algorithm;
-        end
-        function set.algorithm(obj, algo)
-            obj.unitSDO.sdo = deal2struct(obj.unitSDO.sdo, 'algorithm', algo); 
-            obj.shuffleSDO.sdo = deal2struct(obj.shuffleSDO.sdo, 'algorithm', algo); 
-            obj.backgroundSDO.sdo = deal2struct(obj.backgroundSDO.sdo, 'algorithm', algo); 
-        end
-        %---
-        function LI = get.backgroundSubtraction(obj)
-            LI = obj.unitSDO.sdo(1,1).backgroundSubtraction; 
-        end
-        function set.backgroundSubtraction(obj, LI)
-            obj.unitSDO.sdo = deal2struct(obj.unitSDO.sdo, 'backgroundSubtraction', LI); 
-            obj.shuffleSDO.sdo = deal2struct(obj.shuffleSDO.sdo, 'backgroundSubtraction', LI); 
-            obj.backgroundSDO.sdo = deal2struct(obj.backgroundSDO.sdo, 'backgroundSubtraction', LI); 
-        end
-        %--- 
-        function LI = get.parallelCompute(obj)
-            LI = obj.unitSDO.sdo(1,1).parallelCompute;
-        end
-        function set.parallelCompute(obj, LI)
-            obj.unitSDO.sdo = deal2struct(obj.unitSDO.sdo, 'parallelCompute', LI); 
-            obj.shuffleSDO.sdo = deal2struct(obj.shuffleSDO.sdo, 'parallelCompute', LI);
-            obj.backgroundSDO.sdo = deal2struct(obj.backgroundSDO.sdo, 'parallelCompute', LI); 
-        end
-        %---
-        function LI = get.lowMemory(obj)
-            LI = obj.unitSDO.sdo(1,1).lowMemory; 
-        end
-        function set.lowMemory(obj, LI)
-            obj.unitSDO.sdo = deal2struct(obj.unitSDO.sdo, 'lowMemory', LI); 
-            obj.shuffleSDO.sdo = deal2struct(obj.shuffleSDO.sdo, 'lowMemory', LI);
-            obj.backgroundSDO.sdo = deal2struct(obj.backgroundSDO.sdo, 'lowMemory', LI);             
-        end
-        %---
         %
-        function n = get.nShuffles(obj)
-            n = obj.shuffleSDO.eventShuffle.nShuffles;
+        function LI = get.computedFullSDOStruct(obj)
+            if ~isstruct(obj.sdoStruct); LI = 0; return; end
+            LI = ~any(cellfun(@isempty, {obj.sdoStruct(:).sdosJoint})); 
+            if LI == 0; return; end
+            for m = 1:obj.nXtChannels
+                for u = 1:obj.nPpChannels
+                    if isempty(obj.sdoStruct(m).sdosJoint{u}); LI = 0; return;end
+                end
+            end
         end
-        
-        function set.nShuffles(obj, n)
-            obj.nShuffles = n; 
-        end
-        %}
-
-        %---
+       
+       %--------------------
         % Unidirectional SET Components
         function set.nBackgroundPts(obj, n)
             obj.nBackgroundPts = n; 
@@ -263,8 +240,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
         % --------------------------
         function obj = discretize(obj)
             if ~obj.stateMapping.determinedMinMax
-                obj.stateMapping.getChannelAmp( ...
-                    obj.unitSDO.xtData); 
+                obj.stateMapping.getChannelAmp(obj.unitSDO.xtData); 
             end
             obj.buildStateMap(); 
         end
@@ -272,20 +248,33 @@ classdef analyzer < handle & matlab.mixin.Copyable
         function obj = import(obj, xtdc, ppdc, useXtChannels, usePpChannels)
             arguments
                 obj
-                xtdc    xtDataCell
-                ppdc    ppDataCell
+                xtdc  {mustBeA(xtdc, {'xtDataCell', 'xtDataCell2'})}
+                ppdc  {mustBeA(ppdc, {'ppDataCell', 'ppDataCell2'})}
                 useXtChannels = 1:xtdc.nChannels; 
                 usePpChannels = 1:ppdc.nChannels; 
             end
             %
+            if obj.importedData
+                disp("Data already imported"); return;
+            end
+            
             N_XT = length(useXtChannels); N_PP = length(usePpChannels);
             % __ Expand computers __ 
-            obj.unitSDO.sdo = repelem(SAT.sdoComputer('unit', ...
-                obj.sdoConfig), N_XT, N_PP); 
-            obj.shuffleSDO.sdo = repelem(SAT.sdoComputer('shuffle', ...
-                obj.sdoConfig), N_XT, N_PP);            
-            obj.backgroundSDO.sdo = repelem(SAT.sdoComputer('background', ...
-                obj.sdoConfig), N_XT, N_PP); 
+            % // We have to modify this to avoid pointing to the same handl
+            
+            unit_proto = obj.unitSDO.sdo; 
+            shff_proto = obj.shuffleSDO.sdo; 
+            bkgd_proto = obj.backgroundSDO.sdo; 
+            if (obj.nXtChannels < N_XT) && (obj.nPpChannels < N_PP)
+                % -- force recopy
+                for m = 1:N_XT
+                    for u = 1:N_PP
+                        obj.unitSDO.sdo(m,u)        = copy(unit_proto); 
+                        obj.shuffleSDO.sdo(m,u)     = copy(shff_proto); 
+                        obj.backgroundSDO.sdo(m,u)  = copy(bkgd_proto); 
+                    end
+                end
+            end
             %
             obj.stateMapping = xtdc.stateMap; 
             %
@@ -300,7 +289,6 @@ classdef analyzer < handle & matlab.mixin.Copyable
                 obj.stateMapping.getChannelAmp(xtdc.data); 
             end
             if ~obj.stateMapping.definedState
-                %// need state def; 
                 obj.stateMapping.buildStateMap(); 
             end           
             %
@@ -309,33 +297,27 @@ classdef analyzer < handle & matlab.mixin.Copyable
         %--------------------------
         function obj = init(obj)
             %
-            obj.shuffleSDO.eventShuffle.import(obj.shuffleSDO.ppData); 
-            obj.backgroundSDO.eventShuffle.import(obj.backgroundSDO.ppData); %init/conform
+            obj.shuffleSDO.eventShuffle.import(obj.shuffleSDO.ppData);  %init/conform
             tMax = min(obj.unitSDO.xtData.trTimeLen); 
+            %
             obj.backgroundSDO.eventShuffle.random( ...
-                obj.nTrials, obj.nXtChannels, obj.nBackgroundPts, ...
-                'maxX', tMax, 'type', 'times'); 
+                obj.nTrials, 1, obj.nBackgroundPts, ...
+                'maxX', tMax, 'type', 'times', 'link', 'channels');    
+            %
+            obj.backgroundSDO.ppData = obj.backgroundSDO.eventShuffle.getPpData; 
         end
         %-------------------------
-        
         function obj = syncConfig(obj, ~)
             % __> I think we can just push them all commonly; 
-            %A = strsplit(src, '_configChanged'); 
-            sfields = [ ...
-                "algorithm", ...
-                "backgroundSubtraction", ...
-                "parallelCompute", ...
-                "obswise", ...
-                "lowMemory", ...
-                "verbose", ...
-                "trialHandling"]; 
+            sfields = fieldnames(obj.sdoConfig); 
+            sfields = setdiff(sfields, 'obswise'); % shuff overrides this;
             for f = 1:length(sfields)
-                obj.unitSDO.config.(sfields(f))      = obj.sdoConfig.(sfields(f));
-                obj.shuffleSDO.config.(sfields(f))   = obj.sdoConfig.(sfields(f));
-                obj.backgroundSDO.config.(sfields(f))= obj.sdoConfig.(sfields(f));
+                obj.unitSDO.config.(sfields{f})      = obj.sdoConfig.(sfields{f});
+                obj.shuffleSDO.config.(sfields{f})   = obj.sdoConfig.(sfields{f});
+                obj.backgroundSDO.config.(sfields{f})= obj.sdoConfig.(sfields{f});
             end
             % // conform shuffles;
-            % psuedo-link
+            % pseudo-link
             obj.shuffleSDO.eventShuffle.nShuffles = obj.nShuffles;
         end
         %------------------------------
@@ -349,20 +331,22 @@ classdef analyzer < handle & matlab.mixin.Copyable
             syncConfig(obj); % force-push sdoCompute Properties; 
             
             OVERRIDE = 0; 
-            %{
+            
             if obj.changedProperties
                 disp("Properties Changed. Recomputing All"); 
                 OVERRIDE = 1; 
             end
-            %}
-            
-            if (~obj.computedBackgroundSdo) || OVERRIDE || strcmp(TARGET, 'background')
+            % ---- Background ---- %
+            if (~obj.computedBackgroundSdo && isempty(TARGET)) || OVERRIDE || strcmp(TARGET, 'background')
                 zArr = zeros(obj.nStates); 
                 obj.backgroundSDO.sdo = deal2struct(obj.backgroundSDO.sdo, 'backgroundSdo', zArr);  
-                %
                 tic
                 disp("Computing Background SDOs");
-                obj.backgroundSDO.compute('useEvents', 'times'); 
+                obj.backgroundSDO.compute('useEvents', 'shuffle'); 
+                % --> posthoc copy for utility; 
+                for u = 2:obj.nPpChannels
+                   obj.backgroundSDO.sdo(:,u) = obj.backgroundSDO.sdo(:,1);
+                end
                 toc; 
             end
             % __ Deal background SDOs to sdoComputers___
@@ -374,27 +358,30 @@ classdef analyzer < handle & matlab.mixin.Copyable
                         obj.backgroundSDO.sdo(m,u).sdoMatrixNormed;
                 end
             end
-            %
-            if (~obj.computedShuffleSdo) || OVERRIDE || strcmp(TARGET, 'shuffle')
+            % ---- Shuffle ---- %
+            if (~obj.computedShuffleSdo && isempty(TARGET)) || OVERRIDE || strcmp(TARGET, 'shuffle')
                 if ~obj.shuffledSpikes; obj.shuffle('shuffle'); end
                 FAST_SHUFF = 1;
-                tic;
+                
                 if FAST_SHUFF == 1
                     disp("FAST SHUFFLE")
-                    obj.shuffleSDO = SAT.sdoUtils.fastShuff(obj.shuffleSDO); 
+                    obj.shuffleSDO = SAT.sdoUtils.fastShuff(obj); 
+                    %obj.shuffleSDO = SAT.sdoUtils.fastShuff(obj.shuffleSDO); 
                 else
+                    tic;
                     disp("Computing Shuffle SDOs"); 
                     obj.shuffleSDO.compute('useEvents', 'shuffle');
+                    toc; 
                 end
-                %}
-                toc; 
             end
-            if isempty(TARGET) || strcmp(TARGET, 'unit')
+            % ----- Unit ---- %
+            if (isempty(TARGET) || strcmp(TARGET, 'unit')) 
                 disp("Computing Unit SDOs");
                 tic;
                 obj.unitSDO.compute(); 
                 toc;
             end
+            obj.saveSnapshot(); 
         end
         %-----------------------------
         function obj = shuffle(obj, TARGET)
@@ -425,14 +412,8 @@ classdef analyzer < handle & matlab.mixin.Copyable
                 vars.norm = 0; 
                 vars.target {mustBeMember(vars.target, {'unit', 'background', 'shuffle'})} = 'unit'; 
             end
-            switch vars.target
-                case 'unit'
-                    sdoStack = obj.unitSDO.getSdos(useXtChannels, usePpChannels, vars.norm); 
-                case 'background'
-                    sdoStack = obj.backgroundSDO.getSdos(useXtChannels, usePpChannels, vars.norm);
-                case 'shuffle'
-                    sdoStack = obj.shuffleSDO.getSdos(useXtChannels, usePpChannels, vars.norm);
-            end
+            FFIELD = strcat(vars.target,'SDO'); 
+            sdoStack = obj.(FFIELD).getSdos(useXtChannels, usePpChannels, vars.norm); 
         end
         
         % -------------
@@ -451,19 +432,29 @@ classdef analyzer < handle & matlab.mixin.Copyable
             HH_predict = SAT.predict.HH_predictionMatrices(); 
             HH_predict.type = vars.type; 
             HH_predict.getPredictionMatrices( obj, XT_CH_NO, PP_CH_NO);
-            
             obj.predictionMatrices = HH_predict;
         end
        %--------------------------
-       function sdoS = getSdoStruct(obj,USE_XT_CH, USE_PP_CH)
+       function obj = makeSdoStruct(obj,USE_XT_CH, USE_PP_CH)
            if ~exist('USE_XT_CH', 'var'); USE_XT_CH = []; end
            if ~exist('USE_PP_CH', 'var'); USE_PP_CH = []; end
            if isempty(USE_XT_CH);USE_XT_CH = 1:obj.nXtChannels; end
            if isempty(USE_PP_CH);USE_PP_CH = 1:obj.nPpChannels; end
            sdoS = SAT.deprecated.getSdoStructFunc(obj, USE_XT_CH, USE_PP_CH);
+           obj.sdoStruct = sdoS; 
+       end
+       function sdoS = getSdoStruct(obj,USE_XT_CH, USE_PP_CH)
+           if ~exist('USE_XT_CH', 'var'); USE_XT_CH = []; end
+           if ~exist('USE_PP_CH', 'var'); USE_PP_CH = []; end
+           if isempty(USE_XT_CH);USE_XT_CH = 1:obj.nXtChannels; end
+           if isempty(USE_PP_CH);USE_PP_CH = 1:obj.nPpChannels; end
+           if obj.computedFullSDOStruct
+               sdoS = obj.sdoStruct;
+           else
+               sdoS = SAT.deprecated.getSdoStructFunc(obj, USE_XT_CH, USE_PP_CH);
+           end
        end
        %--------------------------
-       
        function plot(obj, XT_CH_NO, PP_CH_NO, INCLUDE_STATS)
            arguments
                obj
@@ -473,10 +464,7 @@ classdef analyzer < handle & matlab.mixin.Copyable
            end
            
            obj.sdoStruct = obj.getSdoStruct(XT_CH_NO, PP_CH_NO); 
-           
            obj.sdoStruct = SAT.compute.performStats(obj.sdoStruct, XT_CH_NO, PP_CH_NO);
-           
-           %obj.unitSDO.plot(XT_CH_NO, PP_CH_NO); 
            
            % TODO: Implement a plot CONFIG element, we can
            % pass/autopopulate
@@ -486,25 +474,13 @@ classdef analyzer < handle & matlab.mixin.Copyable
                 'filter', 0, ...
                 'saveFig', 0, ...
                 'outputDirectory', []); 
-            
-            %, ...
-            %{
-                'filter', options.filter, ...indices
-                'saveFig', options.saveFig, ....
-                'saveFormat', options.saveFormat, ...
-                'outputDirectory', options.outputDirectory); 
-            %}
            
-           
+           obj.unitSDO.plotStirpd([], XT_CH_NO, PP_CH_NO)
+                     
            if INCLUDE_STATS
-               
-               
-               
                obj.computePredictionError(XT_CH_NO, PP_CH_NO); 
-               obj.computePredictionError.plot(); 
+               obj.predictionError.plot(); 
            end
-
-           
        end
        
        %---------------------------- 
@@ -515,13 +491,16 @@ classdef analyzer < handle & matlab.mixin.Copyable
                 SIG_PVAL    double = obj.pValue; %obj.sigPVal; 
                 Z_SCORE     {mustBeNumericOrLogical} = obj.zScore;  
             end
+            disp("Computing Stats...")
+            tic;
             sMat = SAT.deprecated.getSdoStructFunc(obj);
             sMat = SAT.compute.performStats(sMat); 
             % __ Test __ 
             sMat = SAT.compute.testStatSig(sMat, SIG_PVAL, Z_SCORE);
-            obj.sdoStruct = sMat; 
-            obj.sigPVal = SIG_PVAL; 
-            obj.zScore  = Z_SCORE; 
+            obj.sdoStruct   = sMat; 
+            obj.pValue      = SIG_PVAL; 
+            obj.zScore      = Z_SCORE; 
+            toc;
        end
        % 
        function data = getData(obj, USE_XT_CH, USE_PP_CH, target, element) 
@@ -530,38 +509,10 @@ classdef analyzer < handle & matlab.mixin.Copyable
                USE_XT_CH = 1:obj.nXtChannels;
                USE_PP_CH = 1:obj.nPpChannels;
                target   {mustBeMember(target, {'x0Data', 'x1Data','px0Data', 'px1Data'})} = 'x0Data'; 
-               element {mustBeMember(element, {'unitSDO'})} = 'unitSDO';
+               element  {mustBeMember(element, {'unitSDO'})} = 'unitSDO';
            end
            data = obj.(element).(target).subsample(USE_XT_CH, 1:obj.nTrials, USE_PP_CH);
        end
-       %{
-       function xData = getxData(obj, USE_XT_CH, USE_PP_CH, target, element)
-           arguments
-               obj
-               USE_XT_CH
-               USE_PP_CH
-               target   {mustBeMember(target, {'x0', 'x1'})} = 'x0'; 
-               element  {mustBeMember(element, {'unitSDO'})} = 'unitSDO';
-           end
-          switch target
-               case 'x0'
-                   TARGET = 'x0Data'; 
-               case 'x1'
-                   TARGET = 'x1Data';              
-           end
-           
-           
-           switch target
-               case 'x0'
-                   xData = obj.(element).x0Data.subsample(...
-                       USE_XT_CH, 1:obj.nTrials, USE_PP_CH);
-               case 'x1'
-                      xData = obj.(element).x1Data.subsample(...
-                       USE_XT_CH, 1:obj.nTrials, USE_PP_CH);    
-           end
-       end
-       %}
-       
        %
        function obj = computePredictionError(obj, XT_CH_NO, PP_CH_NO)
            % // import x0/1 px0/1
@@ -571,7 +522,19 @@ classdef analyzer < handle & matlab.mixin.Copyable
            obj.predictionError.import(obj, XT_CH_NO, PP_CH_NO); 
            obj.predictionError.predictPxError(); 
            obj.predictionError = obj.predictionError.computeError(); 
-          
        end
+       % ---- 
+       function obj = findSigSdos(obj, SIG_THRESH)
+            arguments
+                obj
+                SIG_THRESH {mustBeInteger} = obj.nSigValues; 
+            end
+            if ~obj.computedFullSDOStruct
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            obj.sigMat = SAT.sdoUtils.findSigSdos(obj.sdoStruct, SIG_THRESH);
+        end
+       
     end 
 end

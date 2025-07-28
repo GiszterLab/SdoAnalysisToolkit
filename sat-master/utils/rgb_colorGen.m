@@ -123,23 +123,6 @@ switch method
             cArray = [cLo; cHi]; 
         end
 
-        %{
-        %// This is TOO DARK
-        xR = [1,0,0]; 
-        xB = [0,0,1]; 
-        %N_COLORS
-        dX = (xB-xR)/(N_COLORS/2); 
-        dMat = repmat(dX, N_COLORS,1); 
-        mat = repmat([1,0,-1], N_COLORS,1);
-        cMat = cumsum(dMat); 
-        tMat = cMat+mat;
-        tMat(tMat <0) = 0; 
-        tMat(tMat>1) = 1; 
-        LI = (all(tMat==0, 2));  
-        tMat(LI,:) = 1; 
-        cArray = tMat; 
-        %}
-
 end
 
 end

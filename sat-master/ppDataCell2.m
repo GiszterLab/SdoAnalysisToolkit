@@ -21,7 +21,7 @@
 %__________________________________________
 
 
-classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCell.dependencies.primaryData
+classdef ppDataCell2 < handle & matlab.mixin.Copyable %& dataCellSuperClass & dataCell.dependencies.primaryData
     properties
         data        dataCell.primaryData
         shuffler    dataCell.shuffler
@@ -39,6 +39,16 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
     end   
     %
     methods
+        %% __ CONSTRUCTOR
+        function obj = ppDataCell2(N_TRIALS, N_CHANNELS)
+            arguments
+                N_TRIALS    {mustBeInteger} = 0; 
+                N_CHANNELS  {mustBeInteger} = 0; 
+            end
+            obj.data         = dataCell.primaryData('ppData', N_TRIALS, N_CHANNELS);
+            obj.shuffler     = dataCell.shuffler; 
+        end
+        
         %% Dependencies
          % Wrapper pipe
         %-------------------------------
@@ -72,16 +82,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable %& dataCellSuperClass & dat
             if ~isempty(obj.shuffler)
                 LI = obj.shuffler.shuffledData; 
             end
-        end
-
-        %% __ CONSTRUCTOR
-        function obj = ppDataCell(N_TRIALS, N_CHANNELS)
-            arguments
-                N_TRIALS    {mustBeInteger} = 0; 
-                N_CHANNELS  {mustBeInteger} = 0; 
-            end
-            obj.data        = dataCell.primaryData('ppData', N_TRIALS, N_CHANNELS);
-            obj.shuffler     = dataCell.shuffler; 
         end
 
         %% Operation Methods 

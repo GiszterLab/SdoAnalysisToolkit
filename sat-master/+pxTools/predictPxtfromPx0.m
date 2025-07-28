@@ -50,6 +50,8 @@ if ~exist('N_INTERVALS', 'var')
     N_INTERVALS = 1; 
 end
 
+warning("predictPxtFromPx0 is deprecated. Use 'getPxTE' instead"); 
+
 N_BINS = size(mat,1); 
 
 WHOLE_INTERVALS = ismembertol(N_INTERVALS, round(N_INTERVALS)); 
@@ -85,24 +87,6 @@ switch matType
         nMat = normpdfcol2unity(scMat); 
         pxt = nMat*px0; 
     case 'L'
-        %{
-
-        % linear operator; L+1 = M; 
-        %// All effects of dpx can be summed, then projected
-        N_STEPS = floor(N_INTERVALS); 
-        dt = N_INTERVALS - N_STEPS;  
-        L = SAT.sdoUtils.conformsdo(mat);
-        
-        %
-        L_STEPS = (L+eye(N_BINS))^N_STEPS; 
-        Ldt = (L*dt+eye(N_BINS)); 
-        %// convolve partials; 
-        sumLdt = L_STEPS * Ldt; 
-        nMat = normpdfcol2unity(sumLdt); 
-        %
-        %arr = expm(L*N_INTERVALS); 
-        %nMat = normpdfcol2unity(arr); 
-        %}
         % __ Call to set function; 
         pxt = SAT.sdoUtils.sdo_pxt(mat, px0, N_INTERVALS, 1); 
         

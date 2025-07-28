@@ -44,7 +44,6 @@ if vars.backgroundSubtraction == 1
         case 'M'
             mat = M; 
     end
-    
 
 else
     switch vars.type

@@ -25,7 +25,7 @@
 %__________________________________________
 
 
-classdef xtDataCell < handle & matlab.mixin.Copyable 
+classdef xtDataCell2 < handle & matlab.mixin.Copyable 
     %% 'Inherited Properties'
     properties
         data            dataCell.primaryData
@@ -47,6 +47,16 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
     end
         
     methods
+        %% __ CONSTRUCTOR
+        function obj = xtDataCell2(N_TRIALS, N_CHANNELS)
+            arguments
+                N_TRIALS    {mustBeInteger} = 0; 
+                N_CHANNELS  {mustBeInteger} = 0; 
+            end            
+            obj.data            = dataCell.primaryData('xtData',N_TRIALS, N_CHANNELS); 
+            obj.stateMap        = dataCell.stateMap(); 
+            obj.linearTransform = dataCell.linearTransformer(N_CHANNELS); 
+        end
         %% Dependent/Dynamic Properties; 
         function LI = get.discretizedData(obj)
             LI = false; 
@@ -73,17 +83,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable
         %------------------------------
         function LI = get.definedState(obj)
             LI = obj.stateMap.definedState; 
-        end
-
-        %% __ CONSTRUCTOR
-        function obj = xtDataCell(N_TRIALS, N_CHANNELS)
-            arguments
-                N_TRIALS    {mustBeInteger} = 0; 
-                N_CHANNELS  {mustBeInteger} = 0; 
-            end            
-            obj.data            = dataCell.primaryData('xtData',N_TRIALS, N_CHANNELS); 
-            obj.stateMap        = dataCell.stateMap(); 
-            obj.linearTransform = dataCell.linearTransformer(N_CHANNELS); 
         end
         %% __ Populate/Import
         function obj = import(obj,dataHolder, FIELDNAME)

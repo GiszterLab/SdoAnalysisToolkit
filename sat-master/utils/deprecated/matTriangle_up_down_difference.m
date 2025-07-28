@@ -42,6 +42,7 @@ function [netDiff] = matTriangle_up_down_difference(sdo)
 
 % upper/lower triangles, sans diagonal
 
+warning("matTriangle_up_down_difference is deprecated"); 
 
 sz_dim = size(sdo); 
 N_DIM = length(sz_dim); 

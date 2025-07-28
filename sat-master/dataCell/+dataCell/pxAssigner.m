@@ -73,12 +73,7 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
         end
         %-----------------------------------
         function mat = get.nObservations(obj)
-            mat = zeros(obj.nChannels, obj.nTrials); 
-            for ch = 1:obj.nChannels
-                for tr = 1:obj.nTrials
-                    mat(ch,tr) = size(obj.data{ch,tr},2); 
-                end
-            end
+            mat = cellfun(@(x) size(x,2), obj.data);
         end
             
         %-----------------------------------
@@ -133,11 +128,14 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
                 return
             end
             G = pxTools.getH0Array(obj.nStates, obj.G_smoothFWidth_Pts, obj.G_smoothFStdev_Pts); 
+            obj.data = cellfun(@(x) G*x, obj.data); 
+            %{
             for tr = 1:obj.nTrials
                 for ch = 1:obj.nChannels
                     obj.data{ch,tr} = G*obj.data{ch,tr}; 
                 end
             end
+            %}
         end
         %----------------------------------------------------------------
         function obj = hcat(obj)

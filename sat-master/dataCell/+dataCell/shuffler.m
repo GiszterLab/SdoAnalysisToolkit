@@ -24,7 +24,6 @@ classdef shuffler < handle & matlab.mixin.Copyable
     properties
         data        = {}; % [INPUT] for holding data; 
         shuffleData = {}; % [OUTPUT] {nTrials, nChannels} of [nShuffles, dat]
-        %
         nShuffles   {mustBeInteger} = 1000; 
         shuffMethod char    {mustBeMember(shuffMethod, {'isi', 'cif', 'random'})} = 'isi'; 
         shuffTau    double  = 0.2; 
@@ -101,22 +100,37 @@ classdef shuffler < handle & matlab.mixin.Copyable
                 nChannels
                 nEvents
                 vars.maxX  = nEvents; % either in X (if index) or T (if times)
-                vars.type {mustBeMember(vars.type, {'times', 'index'})} = 'index'; 
+                vars.type {mustBeMember(vars.type, {'times', 'index', 'all'})} = 'index'; 
+                vars.link {mustBeMember(vars.link, {'none', 'trials', 'channels', 'both'})} = 'none';  
                 vars.seed = []; 
             end
             % TODO: Implement a seed pass for reproducibility; 
-            randCell = cell(nChannels, nTrials); 
-            
             switch vars.type
                 case 'index'
-                    randCell = cellfun(@(~) ...
-                        sort(randi(vars.maxX, [1,nEvents])), randCell, ...
-                        'UniformOutput', 0); 
+                    func = @(~) sort(randi(vars.maxX, [1,nEvents])); 
                 case 'times'
-                    randCell = cellfun(@(~) ...
-                        sort(rand(1, nEvents)*vars.maxX), randCell, ...
-                        'UniformOutput', 0); 
+                    func = @(~) sort(rand(1, nEvents)*vars.maxX); 
+                case 'all'
+                    func = @(~) 1:vars.maxX; 
             end
+            
+            switch vars.link
+                case 'none' 
+                    randCell = cellfun(func, cell(nChannels, nTrials), ...
+                        'UniformOutput', 0); 
+                case 'trials'
+                    randCell0= cellfun(func, cell(nChannels,1), ...
+                        'UniformOutput', 0); 
+                    randCell = repelem(randCell0, 1, nTrials); 
+                case 'channels'
+                    randCell0= cellfun(func, cell(1, nTrials), ...
+                        'UniformOutput', 0); 
+                    randCell = repelem(randCell0, nChannels, 1); 
+                case 'both'
+                    ix = func; 
+                    randCell = repelem(ix, nChannels, nTrials); 
+            end
+            
             % Not sure if I should override the property here. 
             obj.shuffleData = randCell; 
         end

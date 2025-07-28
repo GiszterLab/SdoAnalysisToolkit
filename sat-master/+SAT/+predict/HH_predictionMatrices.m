@@ -31,15 +31,15 @@ classdef HH_predictionMatrices < handle & matlab.mixin.Copyable
         xtChannel
         ppChannel_NO
         ppChannel
-        type       {mustBeMember(type, {'M', 'L'})} = 'L';
-        staMethod {mustBeMember(staMethod, {'dpx', 'px'})} = 'px';
+        type        {mustBeMember(type, {'M', 'L'})} = 'L';
+        staMethod   {mustBeMember(staMethod, {'dpx', 'px'})} = 'px';
     end
     properties (Dependent, Hidden)
        calculatedMatrices 
     end
     methods
         function obj = HH_predictionMatrices()
-           
+           % Empty Constructor
         end
         %
         function LI = get.calculatedMatrices(obj)
@@ -56,7 +56,7 @@ classdef HH_predictionMatrices < handle & matlab.mixin.Copyable
             pd_pxData = copy(pxData); 
             
             L = obj.predictionMatrices(:,:,useIX);
-            
+
             sdoPredict = @(px) L*px+px; % linear update
             
             pd_pxData.data = cellfun(sdoPredict, pd_pxData.data, 'UniformOutput', 0); 
@@ -64,12 +64,13 @@ classdef HH_predictionMatrices < handle & matlab.mixin.Copyable
         end        
         %
         % Alternatively; call-out to existing function w/ bundle to depre
-        function obj = getPredictionMatrices(obj, sata, XT_CH_NO, PP_CH_NO)
+        function obj = getPredictionMatrices(obj, sata, XT_CH_NO, PP_CH_NO, vars)
             arguments
                 obj
                 sata SAT.analyzer
                 XT_CH_NO = 1; 
                 PP_CH_NO = 1; 
+                vars.backgroundSubtraction = 0; 
             end
             % __>> Full Matrix Names here for 'nice names'
             fullNames = {...
@@ -82,6 +83,11 @@ classdef HH_predictionMatrices < handle & matlab.mixin.Copyable
                 'Unit SDO + Background SDO'}; 
             
                sFields = {'t0t1', 'gauss', 'STA', 'bck', 'mkv', 'staBck', 'SDO'};
+               %
+            H_StructS = SAT.predict.getPredictionMatrices2(sata, [], [], XT_CH_NO, PP_CH_NO, ...
+                'backgroundSubtraction', vars.backgroundSubtraction); 
+               
+               %{
             for h = 1:length(sFields) 
                 H_StructS.(sFields{h}) = {}; 
             end
@@ -151,7 +157,7 @@ classdef HH_predictionMatrices < handle & matlab.mixin.Copyable
             else
                H_StructS.(sFields{7}) =  sata.unitSDO.sdo(XT_CH_NO, PP_CH_NO).sdoMatrixNormed; 
             end
-
+            %}
             
             %%  -- 
             zArr = zeros(sata.nStates, sata.nStates, length(sFields)); 

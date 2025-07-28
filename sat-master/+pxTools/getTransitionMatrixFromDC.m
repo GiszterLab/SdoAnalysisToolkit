@@ -26,6 +26,8 @@ PX_FSM_STD  = pR.PX_FSM_STD;
 PX_NSHIFT   = pR.PX_NSHIFT;  
 PX_ZDELAY   = pR.PX_ZDELAY; 
 
+warning("getTransitionMatrixFromDC is deprecated"); 
+
 %// Demo different state maps
 [~, xtData] = pxTools.getXtStateMap(xtData, N_BINS, ... 
     'mapMode', XT_MAP_MODE); 

@@ -156,6 +156,8 @@ end
     
 %// evaluate timeseries data at PP times
 
+warning("getTrialwisePxt is deprecated!"); 
+
 for tr=TR_LIST   
     pxt0Cell{1,tr} = cell(MAX_XT, MAX_PP); 
     pxt1Cell{1,tr} = cell(MAX_XT, MAX_PP); 

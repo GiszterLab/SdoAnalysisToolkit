@@ -46,6 +46,8 @@ function [netSum] = matTriangle_up_down_sum(M)
 % upper/lower triangles, sans diagonal
 
 
+warning("matTriangle_up_down_sum is deprecated"); 
+
 sz_dim = size(M); 
 N_DIM = length(sz_dim); 
 

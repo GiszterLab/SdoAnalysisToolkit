@@ -7,6 +7,8 @@
 % >> TODO: Full synthesis of the predictionMatrix class w/ the error
 % element (No reason to really be separate). 
 
+% --> Note that here, we are measuring the H1-H7 PREDICTION Error; 
+
 %_______________________________________
 % Copyright (C) 2024 Trevor S. Smith
 % Drexel University College of Medicine
@@ -29,20 +31,21 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
         %------------------
         obs_x0Data      dataCell.intervalSampler
         obs_x1Data      dataCell.intervalSampler
-        pd_x1DataCell   cell % {1, 7}; % cell of dataCell.intervalSampler
+        pd_x1DataCell   cell % {1,7};   % cell of dataCell.intervalSampler
         %
         obs_px0Data     dataCell.pxAssigner
         obs_px1Data     dataCell.pxAssigner
-        pd_px1DataCell  cell % {1,7};  cell of dataCell.intervalSampler
+        pd_px1DataCell  cell % {1,7};  % cell of dataCell.intervalSampler
         %
         stateMap        dataCell.stateMap
-        %
         %-----------------
+        groundTruth 
         %
-        groundTruth % DEPRECATE
+        nPlotShuffles   % DEPRECATE
         %
-        errorStruct
+        errorStruct     % Deprecate
         pVal = 0.05; 
+        plotterParams       SAT.properties.plotterProperties
         params              SAT.properties.computerProperties
         predictionMatrices  SAT.predict.HH_predictionMatrices
     end
@@ -59,10 +62,11 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
         calculatedMatrices
     end
     methods
-        % __ calculate the prediction error 
+        % __ CONSTRUCTOR calculate the prediction error 
         function obj = predictionError2(P_VAL, N_SHUFF)
+            %
             obj.pVal                = P_VAL; 
-            obj.nShuffles           = N_SHUFF;
+            obj.nPlotShuffles       = N_SHUFF;
             obj.errorStruct         = SAT.predict.errorStruct_new(7); % number of HH
             obj.predictionMatrices  = SAT.predict.HH_predictionMatrices();
             obj.stateMap            = dataCell.stateMap(); 
@@ -76,16 +80,18 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
                 PP_CH_NO
             end
             % -- Pull from SDO.Analyzer
-            obj.obs_x0Data = sata.getxData(...
-                XT_CH_NO, PP_CH_NO, 'x0');   
-            obj.obs_x1Data = sata.getxData(...
-                XT_CH_NO, PP_CH_NO, 'x1');               
-            obj.obs_px0Data = sata.getPxData( ...
-                XT_CH_NO, PP_CH_NO, 'px0'); 
-            obj.obs_px1Data = sata.getPxData( ...
-                XT_CH_NO, PP_CH_NO, 'px1'); 
+            obj.obs_x0Data = sata.getData(...
+                XT_CH_NO, PP_CH_NO, 'x0Data');   
+            obj.obs_x1Data = sata.getData(...
+                XT_CH_NO, PP_CH_NO, 'x1Data');               
+            obj.obs_px0Data = sata.getData( ...
+                XT_CH_NO, PP_CH_NO, 'px0Data'); 
+            obj.obs_px1Data = sata.getData( ...
+                XT_CH_NO, PP_CH_NO, 'px1Data'); 
             %
-            obj.predictionMatrices.getPredictionMatrices(sata, XT_CH_NO, PP_CH_NO);
+            obj.params = sata.sdoConfig;
+            obj.predictionMatrices.getPredictionMatrices(sata, XT_CH_NO, PP_CH_NO, ...
+                'backgroundSubtraction', obj.params.backgroundSubtraction);
             %
             obj.stateMap = sata.stateMapping.subsample([], XT_CH_NO); 
         end
@@ -125,23 +131,16 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
             end
             % method for predicting post-state; 
             L = obj.hypothesisMatrices(:,:,useIX); 
-            pd_px = L*pxDataRaw+pxDataRaw; 
+            pd_px = L*pxDataRaw+pxDataRaw; %Linear update
             pd_px = normpdfcol2unity(pd_px); 
         end
         %
         function obj = predictPxError(obj) 
-            for s = 1:7
-                obj.pd_px1DataCell{s} = ...
-                    obj.predictionMatrices.predictPx( obj.obs_px0Data, s); 
+            for hh = 1:obj.nHypotheses
+                obj.pd_px1DataCell{hh} = ...
+                    obj.predictionMatrices.predictPx(obj.obs_px0Data, hh); 
             end
-            
         end
-       %
-       
-       function obj = bungleSDOStruct(obj)
-           1; 
-           % TODO: For best parsing w/ deprecated code
-       end
        
         % Input prediction error?
         
@@ -151,35 +150,21 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
             arguments
                 obj
             end
-            
-            % Rebuild
-            
             % TODO: State assignment px ---> X
             
             STATE_ASSIGNMENT = 'max'; 
             
             N_BINS      = obj.obs_px0Data.nStates(1); 
             
-            xx_x0Data = obj.obs_x0Data.discretize(obj.stateMap); 
-            %{
-            xx_x1Data = obj.obs_x1Data.discretize(obj.stateMap); 
-            
-            obs_x0_data = xx_x0Data.data; 
-            obs_x1_data = xx_x1Data.data;
-            %}
-            obs_px1_data = obj.obs_px1Data.data;
-            obs_px0_data = obj.obs_px0Data.data; 
+            xx_x0Data       = obj.obs_x0Data.discretize(obj.stateMap); 
+            obs_px1_data    = obj.obs_px1Data.data;
+            obs_px0_data    = obj.obs_px0Data.data; 
             if iscell(obs_px0_data)
                 if size(obs_px0_data,2) > 1
-                    %{
-                    obs_x0_data = cellhcat(obs_x0_data); 
-                    obs_x1_data = cellhcat(obs_x1_data); 
-                    %}
                     % // We could just just take xs instead...
                     obs_px0_data = cellhcat(obs_px0_data); 
                     obs_px1_data = cellhcat(obs_px1_data); 
                     xx_x0Data    = cellhcat(xx_x0Data.data); 
-                    %
                 end
                 obs_x0_data = pxTools.getXfromPx(obs_px0_data, STATE_ASSIGNMENT); 
                 obs_x1_data = pxTools.getXfromPx(obs_px1_data, STATE_ASSIGNMENT);                 
@@ -187,8 +172,7 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
             
             for hh = 1:obj.nHypotheses
                 PX_NAME = obj.predictionMatrices.mini_matrix_names{hh};
-                dat0 = obj.pd_px1DataCell{hh}; 
-                dat = dat0.data; 
+                dat = obj.pd_px1DataCell{hh}.data; 
                 % Flatten? 
                 if iscell(dat)
                     if size(dat,2) > 1
@@ -197,9 +181,10 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
                 end
                 %
                 pd_px1Arr.(PX_NAME) = dat;
-                pd_x1Arr.(PX_NAME) = pxTools.getXfromPx(dat, STATE_ASSIGNMENT); 
+                pd_x1Arr.(PX_NAME)  = pxTools.getXfromPx(dat, STATE_ASSIGNMENT); 
             end
            
+            nXtPts = abs(obj.obs_x0Data.config.dura_nPoints);
             errorS = SAT.predict.calcPredictionError(...
                 obs_x0_data, ...
                 obs_x1_data, ...
@@ -208,21 +193,13 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
                 pd_px1Arr, ...
                 N_BINS, ...
                 'refName', 'x0', ...
-                'nXtPts', size(obs_x0_data,2)); 
-                
-             1; 
-
+                'nXtPts', nXtPts); 
 
             % ======================================
           
             % Add Ground Truth (X1) for organization; --> We can use the X0
             % from no-change [H1] to infer px0, x0. 
             % //  Redundant; 
-            %{
-            obj.groundTruth.px = obs_px.data;
-            obj.groundTruth.xs = obs_px.xs;  %x0StateArr; %This is actually Xs
-            obj.groundTruth.x1 = obs_px.data_x; % this is the pre-spike state. 
-            %}
             obj.errorStruct = errorS; 
             % DEPRECATE
             %
@@ -256,7 +233,8 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
                 %fNames = obj.testName; 
                 fNames = obj.predictionMatrices.mini_matrix_names; 
             end
-             obj.plotProperties = SAT.predict.assignPlotterProperties(fNames); 
+            obj.plotterParams = SAT.properties.plotterProperties(); 
+            obj.plotterParams.makeLineSpec(fNames); 
         end
 
         %___________ Test Significance; 
@@ -271,9 +249,6 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
             % Need to break out the enhanced plotters vs. the significance.
             % 
 
-            % --> Ideally, test for significance before breaking out
-            % plotters. 
-
             [err_pop, err_xwise] = SAT.predict.testSig2(obj.errorStruct, ...
                 obj.error_fields, ...
                 obj.error_fields_x_state, ...
@@ -286,13 +261,6 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
         end
 
         %_____________
-        
-        function plotMatrix(obj)
-            
-            obj.predictionMatrices.plot(); 
-            
-        end
-
         function plot(obj,vars)
             arguments
                 obj
@@ -309,44 +277,43 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
                 case 'x1'
                     ref_x = obj.groundTruth.x1; 
             end
-
             %TODO: Add better validation for save dir; 
-
             SAT.predict.plotErrorStruct(obj.errorStruct, ...
                 "alpha",    obj.pVal, ...
                 "fill",     0, ...
-                "nShuffles", obj.nShuffles, ... 
+                "nShuffles",    obj.nPlotShuffles, ... 
                 'saveDirectory', vars.saveDirectory, ...
                 'saveFig',        vars.saveFig, ...
                 'saveFormat',       vars.saveFormat, ...
-                'plotProperties', obj.plotProperties, ...
+                'plotProperties', obj.plotterParams.lineSpec, ...
                 'x1', ref_x); 
         end
         
         %------------------------------------------------------------------
-        function plotMatrices(obj, type, useMatrices)
+        function plotMatrices(obj, type, useMatrices, names)
             arguments
                 obj
                 type {mustBeMember(type, {'L', 'M'})} = 'L'; 
-                useMatrices = 1:length(obj.errorStruct); 
+                useMatrices = []; 
+                names = {}; 
             end
-
+            if ~obj.calculatedMatrices; return; end
+            if isempty(useMatrices); useMatrices = 1:obj.nHypotheses; end
+            if isempty(names)
+                names = obj.predictionMatrices.mini_matrix_names; 
+            end
             % __ Will require our external functions... 
             
             mats = obj.hypothesisMatrices; 
-            try
-                figure; 
-                switch type
-                    case 'L'
-                        plotSdoStack(mats(:,:,useMatrices));
-                    case 'M'
-                        for z = 1:size(mats,3)
-                            mats(:,:,z) = mats(:,:,z)+eye(length(mats)); 
-                        end
-                        plotSdoStack(mats(:,:,useMatrices)); 
-                end
-            catch
-                disp("Not Fully Implemented Yet"); 
+            figure; 
+            switch type
+                case 'L'
+                    SAT.plot.plotSdoStack(mats(:,:,useMatrices), names);
+                case 'M'
+                    for z = 1:size(mats,3)
+                        mats(:,:,z) = mats(:,:,z)+eye(length(mats), names); 
+                    end
+                    SAT.plot.plotSdoStack(mats(:,:,useMatrices), names); 
             end
         end
 

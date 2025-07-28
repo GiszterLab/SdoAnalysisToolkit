@@ -3,7 +3,10 @@
 % are aligned on the Y = X, for easier interpretation. 
 %
 % INPUTS
-%   L_STACK = [N_STATES, N_STATES,N_OBS] matrix of SDOs, indexed by DIM3.
+%   - L_STACK   = [N_STATES, N_STATES,N_OBS] matrix of SDOs, indexed by DIM3.
+%   - names     = {1,N_OBS} list of names (cell)
+% OUTPUTS
+%   - f         = figure handle
 
 %_______________________________________
 % Copyright (C) 2025 Trevor S. Smith
@@ -70,10 +73,10 @@ colormap(ax, cMap);
 
 % Cross diviing lines; 
 for cc = 1:N_COLS-1
-    xline(cc*N_STATES, 'LineStyle', ':', 'color', 'k'); 
+    xline(cc*N_STATES+0.5, 'LineStyle', ':', 'color', 'k'); 
 end
 for rr = 1:N_ROWS-1
-    yline(rr*N_STATES, 'LineStyle', ':', 'color', 'k'); 
+    yline(rr*N_STATES+0.5, 'LineStyle', ':', 'color', 'k'); 
 end
 
 %  __ apply diagonal lines; 
@@ -88,6 +91,11 @@ x0 = [ zeros(1, N_ROWS) N_STATES:N_STATES:(N_ROWS-1)*N_STATES];
 x1 = [(N_STATES:N_STATES:N_STATES*N_ROWS) (N_STATES*N_ROWS-N_STATES:-N_STATES:N_STATES)];
 y0 = x1; 
 y1 = x0; 
+
+x0 = x0+0.5; 
+x1 = x1+0.5; 
+y0 = y0+0.5; 
+y1 = y1+0.5; 
 
 for d = 1:length(y1) %diagonals; 
     line([x0(d) x1(d)], [y0(d) y1(d)], 'LineStyle', '--', 'lineWidth', 0.5, 'color', 'k'); 

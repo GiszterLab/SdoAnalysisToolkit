@@ -77,9 +77,9 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
             arguments
                 obj
                 data dataCell.primaryData % SPIKES
-                useTrials   = 1:data.nTrials;
-                useChannels = 1:data.nChannels; 
-                vars.dataField = data.dataField; 
+                useTrials       = 1:data.nTrials;
+                useChannels     = 1:data.nChannels; 
+                vars.dataField  = data.dataField; 
                 vars.input {mustBeMember(vars.input, {'times', 'indices'})} = 'times'; 
             end
             if ~strcmp(data.dataType, 'ppData')
@@ -123,11 +123,22 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
                 disp("Calculate indices first")
                 return
             end
-            %  
-            obj.conform(data, 'type', 'indices'); 
-            
+            %  >> This can miss the conform if we don't already have data.
+            if obj.n_XT_Channels > 1
+                obj.conform(data, 'type', 'indices');                 
+            end
             % multiplex indices; 
             IX = repelem(permute(obj.indices(:,vars.useTrials), [3,2,1]), length(vars.useChannels), 1, 1); 
+            
+            if obj.n_XT_Channels < 1
+                % Call w/ cell func; 
+                T = round(min(data.trTimeLen)*data.fs); 
+                func_1 = @(x) max(x, 1); 
+                func_2 = @(x) min(x, T); 
+                func = @(x) func_2(func_1(x)); 
+                %
+                IX = cellfun(func, IX, 'uniformOutput', 0); 
+            end
             
             obj.data = data.getValuesAtIndices( IX, ...    
                 'useChannels',  vars.useChannels, ...
@@ -150,7 +161,11 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
                 return
             end
             obj_out.data = obj_out.data(useXtChannels,useTrials,usePpChannels); 
+            if obj.calculatedIndices
+                obj_out.indices = obj_out.indices(usePpChannels, useTrials);
+            end
             obj_out.sensor_xt = obj_out.sensor_xt(useXtChannels); 
+            obj_out.sensor_idx= obj_out.sensor_idx(usePpChannels); 
         end        
         
         %----------------- These are 'raw' overrides for shuffle -------
@@ -197,7 +212,7 @@ classdef intervalSampler < handle & matlab.mixin.Copyable
             % implementation. 
             obj.config.fs = data.fs; 
             for tr = 1:obj.nTrials
-                for ch = 1:obj.n_XT_Channels
+                for ch = 1: min(obj.n_XT_Channels, size(obj.indices,1))
                     switch vars.type
                         case 'indices'
                             % include interval start/ends

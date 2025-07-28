@@ -37,7 +37,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
         nPpChannels     {mustBeInteger}= 0; 
         % __ PXT PARAMS
         px0DuraMs       = -10; 
-        px1DuraMs       = 10; 
+        px1DuraMs       = +10; 
         zDelay          {mustBeInteger}= 0; 
         nShift          {mustBeInteger}= 1; 
         filterWid       = 0; 
