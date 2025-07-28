@@ -119,6 +119,15 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                     'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
                     'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
                     'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
+              %
+                %catch
+                    %{
+                    %in case I forget to update the public release
+                obj.sdoStruct = SAT.compute.populateSDOArray2(xtdc, ppdc, ... 
+                    'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
+                    'pxShift', obj.nShift, 'pxDelay', obj.zDelay); %, 'useTrials', useTrials); 
+                end
+                    %}
             end
           %}
             %}

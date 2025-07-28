@@ -104,11 +104,8 @@ if sz0x == 1 && (sz0y>1)
     cl = cl';
     [sz0y, sz0x] = size(cl);
 end
-<<<<<<< HEAD
-=======
 
 Nx_Base = []; 
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 if (sz0x == 1) || (sz0y == 1 )
     %// output as a doubles array
     celltype = ['Nx1_' handl]; 
@@ -118,18 +115,12 @@ if (sz0x == 1) || (sz0y == 1 )
     cl = cl(cl_IX); 
     % update;
     [sz0y, sz0x] = size(cl); 
-<<<<<<< HEAD
-=======
     Nx_Base = 'Nx1'; 
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
     
 else
     %// output as a cell array
     celltype = ['NxK_' handl]; 
-<<<<<<< HEAD
-=======
     Nx_Base = 'NxK'; 
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 end
 
 %-- Num Rows [Expected consistent] 
@@ -140,15 +131,10 @@ ew = cellfun(@size, cl, repelem( {2}, sz0y, sz0x) ); %'expected width'
 el = reshape(el, sz0y, sz0x); 
 ew = reshape(ew, sz0y, sz0x); 
 
-<<<<<<< HEAD
-switch celltype
-    case {'Nx1_double', 'Nx1_cell', 'Nx1_logical', 'Nx1_char'}
-=======
 switch Nx_Base
 %switch celltype
     case 'Nx1'
     %case {'Nx1_double', 'Nx1_int16', 'Nx1_cell', 'Nx1_logical', 'Nx1_char'}
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
         el2 = max(mode(mode(el)),1); %double-dimension median; expected consistent       
         if ~all(el(el>0) == el(find(el>0,1)))
             %// mismatch in expectation; 
@@ -164,12 +150,8 @@ switch Nx_Base
             el = reshape(el, sz0y, sz0x); 
             ew = reshape(ew, sz0y, sz0x); 
         end
-<<<<<<< HEAD
-    case {'NxK_double', 'NxK_logical', 'NxK_cell'}
-=======
     case 'NxK'
         %case {'NxK_double', 'NxK_logical', 'NxK_cell'}
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
         %// back-patch from cellvcat
         LI = (el>0) & ~isnan(el); 
         el2 = zeros(sz0y,1); 
@@ -197,17 +179,7 @@ switch Nx_Base
 end
 
 % __ Checkpoint__
-<<<<<<< HEAD
-chkpt = all(round(sum(el,1)./sum(el>0,1)) == el2); 
-if ~chkpt == 1
-    val = round(sum(el,1)./sum(el>0,1)); 
-    if ~all(val(~isnan(val)) == el2(~isnan(val)))
-        %disp("Warning: Input Cell Array is not conformable to horzcat"); 
-       % return
-    end
-end
 
-=======
 % TEMP; turn off; 
 %
 chkpt = all(round(sum(el,1)./sum(el>0,1)) == el2); 
@@ -223,7 +195,6 @@ if ~chkpt == 1
     end
 end
 %
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 %% Concatenate Data based on Type
 
 switch celltype
@@ -238,9 +209,7 @@ switch celltype
             else
                 LI = true(1, sz0x); 
             end
-<<<<<<< HEAD
             arr{row} = horzcat(cl{row,LI});
-=======
             % ---------- Patch in for cat'ing 3D arrays (2025.7.10)----
             try
                 arr{row} = horzcat(cl{row,LI});
@@ -267,7 +236,6 @@ switch celltype
                 end
             end
             %-----------------------------------------------------------
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
         end
         offset = cell(sz0y,1);        
         %_______

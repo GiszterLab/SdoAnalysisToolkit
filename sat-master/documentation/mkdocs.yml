@@ -1,0 +1,60 @@
+site_name: SDO Analysis Toolkit
+
+# Custom theming
+theme:
+  name: material #mkdocs #readthedocs #material
+  palette:
+    - scheme: default
+      primary: black
+      accent: red
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+     # Secondary Mode? 
+    - scheme: slate
+      primary: white #indigo
+      accent: red
+      # Primary mode?
+      toggle:
+       icon: material/brightness-7
+       name: switch to dark mode
+  font:
+    text: rockwell #Roboto
+    code: courier #Roboto Mono
+
+
+# External plugins for material for mkdocs --> We using this for mermaid
+plugins:
+- search
+- mermaid2
+
+extra_css:
+  - stylesheets/custom.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+# Whatever type of fancy decorators we want for the markdown rendering
+markdown_extensions:
+  - attr_list
+  - pymdownx.betterem
+  - abbr 
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_div_format
+
+use_directory_urls: false
+
+# Put lists here that you want to show up on the navigation screen. 
+# If you want them to show up on the landing page, then they should be added on the index.md file
+nav: 
+- Home: index.md
+- Installation: installation/overview.md
+- Analysis: analysis/overview.md
+- Custom Classes: classes/overview.md
+- Code Library: functions/overview.md

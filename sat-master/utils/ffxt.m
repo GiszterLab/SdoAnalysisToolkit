@@ -42,8 +42,6 @@ if sz_y == 1 && sz_x > 1
     [~, sz_x] = size(xt); 
 end
 
-<<<<<<< HEAD
-=======
 [b_x,b_y] = size(b); 
 % filtfilt has an aneurysm if length(b) == 6
 if (b_x == 1) && (b_y==6)
@@ -52,7 +50,6 @@ elseif (b_x == 6) && (b_x == 1)
     b = [0; b; 0];
 end
 
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 %{
 if sz_y > 1
     %// normal colwise filtering; 

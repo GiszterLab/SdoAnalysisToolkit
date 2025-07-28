@@ -35,7 +35,7 @@ A quick-run MATLAB live script is included in the folder, as 'sdoAnalysis_demo.m
 
 3. For generating the figures from the paper, Download/Clone the Full Demo Data (~400 MB) from https://github.com/GiszterLab/SdoAnalysisToolkit_DemoData
 
-=======
+
 4. Run 'ssta_vs_sdo.m' as a standalone function to produce plots which can show the insufficiently of the simple spike-triggered average within the trial dataset. [NOTE: This doesn't *actually* generate any SDOs, rather it perfoms a spike-triggered average, mean-split spike-triggered average, and the probability of state over time bins (STIRPD)]
 
 5. Run 'sdoAnalysis_demo.mlx' (function-calls) or 'sdoAnalysis_demo_OOP.m' (class-methods) for performing the complete SDO trial analysis. 

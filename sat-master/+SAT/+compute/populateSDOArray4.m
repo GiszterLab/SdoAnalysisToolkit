@@ -176,6 +176,7 @@ end
 
 
 if vars.condenseShuffles
+    % estimate parametric statistics w/o retaining bootstraps
     disp("NOTE: Condensing Shuffles may greatly increase compute time."); 
 end
 
@@ -258,9 +259,12 @@ for m = 1:N_XT_CHANNELS
         end
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
+=======
+>>>>>>> documentation
         pxt0_Bkgd = pxt0Cell{1,tr}{m}; 
         pxt1_Bkgd = pxt1Cell{1,tr}{m}; 
 

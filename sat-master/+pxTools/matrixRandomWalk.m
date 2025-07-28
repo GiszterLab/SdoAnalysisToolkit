@@ -37,68 +37,68 @@
 
 function [randWalkMat] = matrixRandomWalk(mat, N_STEPS, N_SIM, varargin) 
 
-NBINS = size(mat,1);
+    NBINS = size(mat,1);
 
-p = inputParser; 
-addOptional(p, 'startVal', 'None'); 
-parse(p, varargin{:}); 
-pR = p.Results; 
+    p = inputParser; 
+    addOptional(p, 'startVal', 'None'); 
+    parse(p, varargin{:}); 
+    pR = p.Results; 
 
-SEED = pR.startVal; 
+    SEED = pR.startVal; 
 
-seedMap = zeros(NBINS,1);
-x0Class = class(SEED); 
-switch x0Class
-    case {'string', 'char'}
-        cnvrt = str2double(SEED);
-        if isnan(cnvrt)
-        %if isempty(cnvrt) 
-            %// assume empty reference; randomly assign
-            %seedMap = (0:NBINS-1)/NBINS;
-            seedMap = 1:NBINS/NBINS; 
-        else
-            %// assume single state; 
-            seedMap(cnvrt:end) = 1;
-        end
-    case 'double'
-        if length(SEED) == 1
-            %// assume single state; 
-            seedMap(SEED:end) = 1;
-        else
-            %// assume input = distribution; 
-            seedMap = cumsum(SEED); 
-        end
-end
-
-%// norm to 1, if not already
-mat = mat./repmat(sum(mat,1),NBINS,1); 
-
-matCDF = cumsum(mat, 1); 
-
-randWalkMat = zeros(N_SIM, N_STEPS); 
-
-%//perform all random draws at once; itterate over state assignment
-randVals = rand(N_SIM, N_STEPS); 
-randSeed = rand(N_SIM,1); 
-
-%// assign seeds
-seedVals = ones(N_SIM,1);
-for ss = 1:N_SIM
-    seedVals(ss) = find(seedMap >= randSeed(ss),1); 
-end
-
-randWalkMat(:,1) = seedVals; 
-
-%// assign simulated state
-for ss = 1:N_SIM 
-    xp = randWalkMat(ss,1);
-    for pp = 2:N_STEPS 
-        rp = randVals(ss,pp); 
-        xp = find(matCDF(:,xp) >= rp,1);  
-        randWalkMat(ss,pp) = xp; 
+    seedMap = zeros(NBINS,1);
+    x0Class = class(SEED); 
+    switch x0Class
+        case {'string', 'char'}
+            cnvrt = str2double(SEED);
+            if isnan(cnvrt)
+            %if isempty(cnvrt) 
+                %// assume empty reference; randomly assign
+                %seedMap = (0:NBINS-1)/NBINS;
+                seedMap = 1:NBINS/NBINS; 
+            else
+                %// assume single state; 
+                seedMap(cnvrt:end) = 1;
+            end
+        case 'double'
+            if length(SEED) == 1
+                %// assume single state; 
+                seedMap(SEED:end) = 1;
+            else
+                %// assume input = distribution; 
+                seedMap = cumsum(SEED); 
+            end
     end
 
-end
+    %// norm to 1, if not already
+    mat = mat./repmat(sum(mat,1),NBINS,1); 
+
+    matCDF = cumsum(mat, 1); 
+
+    randWalkMat = zeros(N_SIM, N_STEPS); 
+
+    %//perform all random draws at once; itterate over state assignment
+    randVals = rand(N_SIM, N_STEPS); 
+    randSeed = rand(N_SIM,1); 
+
+    %// assign seeds
+    seedVals = ones(N_SIM,1);
+    for ss = 1:N_SIM
+        seedVals(ss) = find(seedMap >= randSeed(ss),1); 
+    end
+
+    randWalkMat(:,1) = seedVals; 
+
+    %// assign simulated state
+    for ss = 1:N_SIM 
+        xp = randWalkMat(ss,1);
+        for pp = 2:N_STEPS 
+            rp = randVals(ss,pp); 
+            xp = find(matCDF(:,xp) >= rp,1);  
+            randWalkMat(ss,pp) = xp; 
+        end
+
+    end
 
 end
 
