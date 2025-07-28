@@ -1,3 +1,4 @@
+
 # SDO Analysis Toolkit (SAT) [V 2.0]
 MATLAB Package for implementing Stochastic Dynamic Operator (SDO) methods for stochastic control and prediction, using time series and point process data. 
 When applied to neurophysiological data recordings, SDO methods improves upon the classical spike-triggered average when generating predictions of state near spike. 
@@ -7,6 +8,8 @@ When applied to neurophysiological data recordings, SDO methods improves upon th
 __Prerequisites__: 
 
 - V2.0 Requires MATLAB 2019a or newer. 
+=======
+
 
 __Toolboxes__: 
 - <em> Statistics and Machine Learning Toolbox </em>
@@ -32,7 +35,8 @@ A quick-run MATLAB live script is included in the folder, as 'sdoAnalysis_demo.m
 
 3. For generating the figures from the paper, Download/Clone the Full Demo Data (~400 MB) from https://github.com/GiszterLab/SdoAnalysisToolkit_DemoData
 
-4. Run 'ssta_vs_sdo.m' as a standalone function to produce plots which compare the STA vs. SDO methods within the trial dataset. 
+=======
+4. Run 'ssta_vs_sdo.m' as a standalone function to produce plots which can show the insufficiently of the simple spike-triggered average within the trial dataset. [NOTE: This doesn't *actually* generate any SDOs, rather it perfoms a spike-triggered average, mean-split spike-triggered average, and the probability of state over time bins (STIRPD)]
 
 5. Run 'sdoAnalysis_demo.mlx' (function-calls) or 'sdoAnalysis_demo_OOP.m' (class-methods) for performing the complete SDO trial analysis. 
   1. When prompted, select 'xtData.mat' from within the '\sat-master\demoData\' folder. 

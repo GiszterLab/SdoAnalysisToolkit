@@ -27,19 +27,31 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function [bootSDO] = sdo_bootstrap(px0, px1, N_BOOTSRAPS)
+function [bootSDO] = sdo_bootstrap(px0, px1, N_BOOTSTRAPS)
+
+USE_NEW = 1; 
+try 
+    SAT.compute.sdo3(px0(:,1),px1(:,1))
+catch
+    USE_NEW = 0; 
+end
 
 [N_STATES, N_SPIKES] = size(px0); 
 
 bootSDO = zeros(N_STATES,N_STATES,N_SPIKES); 
 
-for bb = 1:N_BOOTSRAPS
+for bb = 1:N_BOOTSRTAPS
     LI = randi(N_SPIKES, 1,N_SPIKES); 
     %
     p0 = px0(:,LI); 
     p1 = px1(:,LI); 
     % V3 Algorithm
-    bootSDO(:,:,bb) = ((p1*p0')-diag(sum(p0,2)))/(N_SPIKES-1); 
+    if USE_NEW
+        bootSDO(:,:,bb) = SAT.compute.sdo3(p0,p1); 
+    else
+        % Direct call; not preferred
+        bootSDO(:,:,bb) = ((p1*p0')-diag(sum(p0,2)))/(N_SPIKES-1); 
+    end
 end
 
 

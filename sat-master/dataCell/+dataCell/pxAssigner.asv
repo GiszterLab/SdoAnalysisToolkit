@@ -1,0 +1,91 @@
+%% (OOP) V2
+
+% Support class for probability-based methods 
+% (Replaces probalistic inheritance). 
+%
+% How to assign probability distributions to intervals of signal. 
+
+% TO ADD; Kernel-level operations on the distributions; splining/gaussians
+
+classdef pxAssigner
+    properties
+        data    =[];
+        weighting = 'equal';
+        sensor
+        % __ For filter Kernel______
+        G_smoothFWidth_Pts = 0; 
+        G_smoothFStdev_Pts = 0; 
+    end
+    properties (Hidden)
+        filteredDistributions   = 0; 
+    end
+    properties(Dependent, Hidden)
+        sampledData
+        nChannels
+        nTrials
+    end
+    
+    methods
+        function LI = get.sampledData(obj)
+            LI = ~isempty(obj.data); 
+        end
+        %----------------------------------
+        function n = get.nChannels(obj) 
+            n = size(obj.data,1); 
+        end
+        function n = get.nTrials(obj)
+            n = size(obj.data,2); 
+        end
+        
+        % TODO: I should probably pare this back a bit
+        
+        % >> This is kind of weird that we define state upstream in xtdc,
+        % but then have to reasample it here...
+        
+        function obj = assignPx(obj, stateMap, intervalData)
+            arguments
+                obj
+                stateMap        dataCell.stateMap
+                intervalData    dataCell.intervalSampler
+            end
+            if ~stateMap.definedState
+                disp("state map not yet defined"); 
+            end
+            
+            xOut = cell(intervalData.n_XT_Channels, intervalData.nTrials); 
+            for tr = 1:intervalData.nTrials
+                for ch = 1:intervalData.n_XT_Channels
+                    
+                    % TODO: Better validate which rows are are looking at;
+                    % indices; 
+                    
+                    xOut{ch, tr} =  stateMap.discretizeSignalRaw(intervalData.data{ch,tr}, ch, tr); 
+                end                
+            end
+            % _______ >> assign px
+            
+            % TODO: Pare back this library a bit; 
+            
+            pxOut = cell(intervalData.n_XT_Channels, intervalData.nTrials); 
+            for tr = 1:intervalData.nTrials
+                for ch = 1:intervalData.n_XT_Channels
+                    pxOut = pxTools.getPxFromX(xOut{ch,tr}, stateMap.nBins, obj.weighting); 
+                end
+            end
+            obj.data   = pxOut; 
+            obj.sensor = intervalData.sensor(); %for now, simple copy; 
+        end
+        %----------------------------------------------------------------%
+        function obj = gaussianFilter(obj)
+            if ~
+            
+        end
+        
+    end
+    
+end
+
+function CH_IDX = getChannelIndex(obj, NAME)
+[CH_IDX] = find(ismember(cellfun(@char, obj.sensor, ...
+    'uniformOutput',0), cellfun(@char, NAME, 'uniformOutput',0))); 
+end

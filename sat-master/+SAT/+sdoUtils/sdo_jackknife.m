@@ -32,6 +32,13 @@
 function [jackSDO] = sdo_jackknife(px0, px1)
 
 
+USE_NEW = 1; 
+try 
+    SAT.compute.sdo3(px0(:,1),px1(:,1))
+catch
+    USE_NEW = 0; 
+end
+
 [N_STATES, N_SPIKES] = size(px0); 
 
 
@@ -44,7 +51,11 @@ for ss = 1:N_SPIKES
     p0 = px0(:,LI); 
     p1 = px1(:,LI); 
     % V3 Algorithm
-    jackSDO(:,:,ss) = ((p1*p0')-diag(sum(p0,2)))/(N_SPIKES-1); 
+    if USE_NEW
+        jackSDO(:,:ss) = SAT.compute.sdo3(p0,p1); 
+    else
+        jackSDO(:,:,ss) = ((p1*p0')-diag(sum(p0,2)))/(N_SPIKES-1); 
+    end
 end
 
 

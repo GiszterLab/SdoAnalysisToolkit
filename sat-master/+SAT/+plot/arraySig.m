@@ -190,6 +190,11 @@ else
     [~,T, testStat]=sigSSquaredCalculator(SDOShuff, dSDO, SIG_PVAL, Z_TRANSFORM); 
 end
 
+if Z_TRANSFORM
+   T = T/(N_BINS.^2); 
+   testStat = testStat/(N_BINS.^2); 
+end
+
 SAT.plot.getCommonCdfPlot(T, testStat, SIG_PVAL); 
 pbaspect([1,1,1]);         
 

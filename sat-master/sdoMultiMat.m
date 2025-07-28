@@ -25,6 +25,9 @@
 
 % 2.2.2024 - Upgrade to the V5 (asymmetric) estimation script, parallel compute
 
+% 1.3.2025 - Added option for background subtraction which can help better
+% disassociate spike-effects from background dynamics
+
 %// caution should be taken w/ inherited methods from the superclass; 
 classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
     properties
@@ -34,7 +37,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
         nPpChannels     {mustBeInteger}= 0; 
         % __ PXT PARAMS
         px0DuraMs       = -10; 
-        px1DuraMs       = 10; 
+        px1DuraMs       = +10; 
         zDelay          {mustBeInteger}= 0; 
         nShift          {mustBeInteger}= 1; 
         filterWid       = 0; 
@@ -45,6 +48,8 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
         nSigValues      {mustBeInteger}= 1; 
         zScore          = false; 
         sigMat          = []; 
+        %_____
+        backgroundSubtraction = 0; % New, patch through
         %_____
         sdoMatCell      = {}; %// Reserved; 
         sdoStruct       = {}; 
@@ -70,7 +75,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 vars.condenseShuffles = 0; 
                 vars.method {mustBeMember(vars.method, {'original', 'asymmetric', 'optimized'})} = 'original';%'asymmetric'; 
                 vars.parallelCompute = 0;
-                vars.backgroundSubtraction = 0; % NOT yet fully implemented; default = 0; 
+                vars.backgroundSubtraction = 0; % default = 0; 
                 %useTrials = []; 
             end
             %___ Just run the SDO Pipeline for all combinations using common params
@@ -84,7 +89,6 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             end
 
             obj.fs = xtdc.fs; 
-
             SIG_FACTOR = xtdc.fs/1000; 
             
             %Maybe we eventually use fractions of neurons or trials, but
@@ -92,27 +96,29 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             obj.nEventsUsed = sum(ppdc.nTrialEvents, 2); 
     
             % // 12.8.2023 Update
-            if vars.backgroundSubtraction == 1
+            if (vars.backgroundSubtraction == 1) || (obj.backgroundSubtraction == 1)
                 % Experimental; 
-            obj.sdoStruct = SAT.compute.populateSDOArray4(xtdc, ppdc, ... 
-                'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
-                'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
-                'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
-            else
+                %{
+                obj.sdoStruct = SAT.compute.populateSDOArray4_lowMemory(xtdc, ppdc, ... 
+                    'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
+                    'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
+                    'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
+                %}
 
-            try 
-            obj.sdoStruct = SAT.compute.populateSDOArray3(xtdc, ppdc, ... 
-                'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
-                'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
-                'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
-          %
-            catch
-                1; 
-                %in case I forget to update the public release
-            obj.sdoStruct = SAT.compute.populateSDOArray2(xtdc, ppdc, ... 
-                'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
-                'pxShift', obj.nShift, 'pxDelay', obj.zDelay); %, 'useTrials', useTrials); 
-            end
+                1; %TEMPORARY
+                %
+                obj.sdoStruct = SAT.compute.populateSDOArray4(xtdc, ppdc, ... 
+                    'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
+                    'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
+                    'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
+                %}
+                obj.backgroundSubtraction = 1; 
+            else
+                %try 
+                obj.sdoStruct = SAT.compute.populateSDOArray3(xtdc, ppdc, ... 
+                    'px0nPoints', obj.px1DuraMs*SIG_FACTOR, 'px1nPoints', obj.px1DuraMs*SIG_FACTOR, ...
+                    'pxShift', obj.nShift, 'pxDelay', obj.zDelay, ...
+                    'method', vars.method, 'parallelCompute', vars.parallelCompute); %, 'useTrials', useTrials); 
             end
           %}
             %}
@@ -160,8 +166,13 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 obj
                 SIG_THRESH {mustBeInteger} = obj.nSigValues; 
             end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
             obj.sigMat = SAT.sdoUtils.findSigSdos(obj.sdoStruct, SIG_THRESH);
         end
+
         %// Extract an 'sdoMat' Class from multi-Mat; 
         function sdoM = extract(obj, XT_CH_NO, PP_CH_NO)
             % Return an 'sdoMat' structure from the 'sdoMultiMat'
@@ -191,6 +202,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 useXtChannels = 1; 
                 usePpChannels = 1; 
             end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            
             N_USE_XT = length(useXtChannels); 
             N_USE_PP = length(usePpChannels); 
             nBins = length(obj.sdoStruct(1).bkgrndSDO); %non-optimal call; 
@@ -204,11 +220,10 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 end
             end
             if N_USE_XT == 1
-                % unwrap
-                sdos = sdos{1};
+                sdos = sdos{1};% unwrap
             end
         end
-        %___ Optimization (ad-hoc)
+        %___ Optimization w/ Solver (ad-hoc)
         % Order 2 is faster; Order 4 is smoother
         function obj = optimize(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO, vars)
             arguments
@@ -236,6 +251,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 vars.testSignificance = 1; 
             end
 
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            
             % __ This is the efficient 'internal' based prediction using
             % classes; 
             
@@ -291,6 +311,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
             % stored in the sdoMultiMat Class. 
             
             % // Get pre and post-spike distributions/classes from data
+            
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
             
             nUsePpChannels = length(USE_PP_CH);
             nUseXtChannels = length(USE_XT_CH); 
@@ -353,6 +378,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 usePpChannels = 1; 
                 background = 0; 
             end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            
             N_USE_XT = length(useXtChannels); 
             N_USE_PP = length(usePpChannels); 
 
@@ -388,6 +418,10 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 usePpChannels = 1; 
                 vars.matField  {mustBeMember(vars.matField, {'sdos', 'sdosJoint', 'drift', 'bkgrndSDO'})} = 'sdos'; 
                 vars.norm      {mustBeNumericOrLogical} = 0;  
+            end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
             end
             N_USE_XT = length(useXtChannels); 
             N_USE_PP = length(usePpChannels); 
@@ -452,6 +486,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 options.filter          = 1; 
 
             end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            
             n_xt = length(XT_CH_NO); 
             n_pp = length(PP_CH_NO); 
             for m = 1:n_xt 
@@ -474,6 +513,11 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                 useXtChannels = 1; 
                 usePpChannels = 1; 
             end
+            if ~obj.populatedStructure
+                disp("SDO Structures have not been generated. Please use the 'compute' method first"); 
+                return
+            end
+            
             N_USE_XT = length(useXtChannels); 
             N_USE_PP = length(usePpChannels); 
 

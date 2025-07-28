@@ -1,13 +1,30 @@
 % Written specifically to work w/ the Object classes
 
-% Makes the 'SAT.predict.plotter' redundant
+% Makes the 'SAT.predict.plotter.m' redundant
+
+%_______________________________________
+% Copyright (C) 2023 Trevor S. Smith
+% Drexel University College of Medicine
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 function plotErrorStruct(errorStruct, vars)
 arguments
     errorStruct
-    vars.fill = 0; 
-    vars.alpha = 0.05; 
-    vars.nShuffles = 1000;
+    vars.fill       = 0; 
+    vars.alpha      = 0.05; 
+    vars.nShuffles  = 1000;
     %
     vars.saveDirectory = []; 
     vars.saveFig = 0; 
@@ -72,7 +89,7 @@ SAT.predict.plot.relative_error_rates(...
     'saveFig',          SAVE_FIG,...
     'saveFormat',       SAVE_FMT,...
     'outputDirectory',  SAVE_DIR...    
-    );  %varargin)
+    );
 
 %
 PXFIELD = 'KLD';
@@ -103,7 +120,6 @@ SAT.predict.plot.pxDistance(errorStruct,PXFIELD3, ...
 
 if INCLUDE_STATS 
    eFields = {'L0_running', 'L1_running', 'KLD', 'logLikelihood', 'DStat'}; 
-    %eFields = {'L0_running', 'L1_running', 'KLD', 'logLikelihood'}; 
    N_E_FIELDS = length(eFields);
    for f = 1:N_E_FIELDS
        SAT.predict.testSig(errorStruct, ...

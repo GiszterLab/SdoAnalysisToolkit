@@ -1,0 +1,202 @@
+%% P(x,t) Data Structure (OOP) - V2
+% Data Class for holding measured probability data (pX(t)). Designed for
+% use within the SDO Analysis Toolkit.
+%
+% 1) pxtDataCells may be derived from xtdc + ppdc
+% 2) pxtDataCells may be derived from predictions from sdoMat
+
+% NOTE: In V2, this class has been largely gutted with the composition
+% classes; it exists now largely as an instance of recorded code. 
+
+% --> Need to allow to xtData and ppData to "not" exist, and
+
+% --> I think it makes sense to make this something of a basal class, with
+% the multiplexing from multiple Matrices handled by a different class. 
+% --> The multiple predicted distributions could be in a different setup. 
+
+%_______________________________________
+% Copyright (C) 2023 Trevor S. Smith
+% Drexel University College of Medicine
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
+%__________________________________________
+
+
+classdef pxtDataCell < handle & matlab.mixin.Copyable % & dataCellSuperClass &dataCell.dependencies.probabilityData
+    properties (Access = public)
+        % __   % just rip-it and stick-it ____
+        xtData          dataCell.primaryData
+        ppData          dataCell.primaryData % Or some sort of event
+        % __ This is the primary element ___ 
+        interval        dataCell.intervalSampler
+        pxAssignment    dataCell.pxAssigner
+            
+        %________________________________-
+        errorStruct     = {}; % TODO; this should just be spun out in a macro; 
+        dofPxCorrect    = 0; % Experimental rescaling of H1-H3; 
+    end
+    properties (Dependent)
+        nStates
+        nEvents
+        xtChannel
+        ppChannel
+        stateMap     
+    end
+    properties (Dependent, Hidden)
+        generatedErrorStruct
+    end
+        
+    methods
+        %% Dependencies
+        function LI = get.generatedErrorStruct(obj)
+            if ~isempty(obj.errorStruct)
+                LI = true; 
+            else
+                LI = false;
+            end
+        end
+        %-------------------------------------------%
+        function nStates = get.nStates(obj)
+            nStates = obj.xtData.nStates; 
+        end
+        %------------------------------
+        function stateMap = get.stateMap(obj)
+            stateMap = obj.xtData.stateMap; 
+        end
+        
+        %% IMPORT: (Get Data from xtDC and ppDC)
+        function obj = import(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO)
+            arguments
+                obj
+                xtdc        xtDataCell
+                ppdc        ppDataCell
+                XT_CH_NO    {mustBeInteger} = 1; 
+                PP_CH_NO    {mustBeInteger} = 1; 
+
+            end
+            obj.xtData      = xtdc.data.subsample(1:xtdc.nTrials, XT_CH_NO); 
+            obj.ppData      = ppdc.data.subsample(1:ppdc.nTrials, PP_CH_NO);  
+        end
+      
+        %% OPERATE
+        % --> This is retiane dfrom older version.l 
+        % __ BIT-WISE FUNCTION OPERATION
+        function obj = bsxop(obj, pxtdc, funcHandle, DATAFIELD) 
+            arguments
+                obj
+                pxtdc pxtDataCell 
+                funcHandle function_handle 
+                DATAFIELD char = 'data'; 
+            end
+
+            if isa(obj.(DATAFIELD), 'cell')
+                ISCELL = 1; 
+            else
+                ISCELL = 0; 
+            end
+            % __ EXTRACT; OPERATE; REPACKAGE
+            % __ Extract
+            if ISCELL
+                pxtTen1 = cellvcat(obj.(DATAFIELD));
+                pxtTen2 = cellvcat(pxtdc.(DATAFIELD));
+            else
+                pxtTen1 = obj.(DATAFIELD); 
+                pxtTen2 = pxtdc.(DATAFIELD); 
+            end
+            % __ Operate
+            pxtNet  = bsxfun(funcHandle, pxtTen1, pxtTen2); 
+            % __ Repackage; 
+            if ISCELL
+                pxtCell  = mat2cell(pxtNet, obj.nStates, obj.nEvents); 
+                obj.(DATAFIELD) = pxtCell; 
+            else
+                obj.(DATAFIELD) = pxtNet;
+            end
+        end
+        
+        %% COMPARE
+        function obj = comparePxt(obj,px1)
+            arguments
+                obj
+                px1 pxtDataCell
+            end
+            % __ Bungle pxtData to fit prior expectations; 
+
+            errorS = SAT.predict.predictionError(); 
+            errorS.computeError(obj, px1); 
+
+            obj.errorStruct = errorS; 
+            if obj.dofPxCorrect == 1
+                obj.errorStruct = SAT.predict.dofPxCorrectError(obj.errorStruct, 1); 
+            end
+            %obj.generatedErrorStruct = true; 
+        end
+        
+        %% Direct Plotter Method
+        function plot(obj, DATA_FIELD) %overload
+            arguments
+                obj
+                DATA_FIELD char = 'data'; 
+            end
+
+            % __ may be unstable for shuffles;
+            % --> CDFs may be preferable to direct heatmaps; 
+            
+            if isa(obj.(DATA_FIELD), 'cell')
+                ISCELL = 1; 
+            else
+                ISCELL = 0; 
+            end
+            
+            % // Unsure how to handle all shuffles ... 
+            N_ELEM = length(obj.(DATA_FIELD)); 
+            
+            if ISCELL
+                for elm = 1:N_ELEM    
+                    figure; 
+                    if ISCELL 
+                        imagesc(obj.(DATA_FIELD){elm}); 
+                        title(strcat("P(x,t):", obj.pxtNames{elm})); 
+                        axis xy
+                        xlabel("Position")
+                        ylabel("Event State");     
+                    end
+                end
+            else
+                imagesc(obj.(DATA_FIELD)); 
+                title(strcat("P(x,t:", obj.pxtNames));  
+                axis xy
+                xlabel("Position")
+                ylabel("Event State"); 
+                %caxis; 
+            end
+        end
+        
+
+        % __ Error Plotter; 
+        function plotError(obj)
+            if ~obj.generatedErrorStruct
+                disp("Error Structure not generated."); 
+                return
+            end
+            % Sort of redundant now
+            obj.errorStruct.plot(); 
+
+        end
+        %}
+        
+    end
+    
+    
+end

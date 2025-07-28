@@ -51,9 +51,29 @@ if ~exist('f', 'var')
     f = gcf; 
 end
 
+<<<<<<< HEAD
 if isempty(fDIM)
     fDIM = [0, 0, 1920, 1200]; 
 end
+=======
+SET_AUTO = isempty(fDIM); 
+%{
+if isempty(fDIM) 
+    fDIM = [0, 0, 1920, 1200]; 
+end
+%}
+
+
+if isempty(SAVE_DIR)
+    SAVE_DIR = uigetdir([],"Select a Folder to save images to");
+end
+
+name = fullfile(SAVE_DIR, strcat(fName, ".", SAVE_FMT)); 
+
+if SET_AUTO
+   figure('units','normalized','outerposition',[0 0 1 1])
+else
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 
 if all(fDIM == 0)
     RESIZE = 0; 
@@ -61,11 +81,14 @@ else
     RESIZE = 1; 
 end
 
+<<<<<<< HEAD
 if isempty(SAVE_DIR)
     SAVE_DIR = uigetdir([],"Select a Folder to save images to");
 end
 
 name = fullfile(SAVE_DIR, strcat(fName, ".", SAVE_FMT)); 
+=======
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 if RESIZE
     try
         set(f, 'Position', fDIM); 
@@ -77,12 +100,23 @@ if RESIZE
         set(f, 'Position', fDIM); 
     end
 end
+<<<<<<< HEAD
     
+=======
+
+end
+
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 switch SAVE_FMT
     %// 'painters' format used to maximize editable capabilities in
     %inkscape
     case 'png'
         print(f, name, '-dpng'); 
+<<<<<<< HEAD
+=======
+    case 'pdf'
+        print(f, name, '-dpdf', '-bestfit');   
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
     case 'svg'
         print(f, '-painters', name, '-dsvg');
     case 'fig'

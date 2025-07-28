@@ -1,9 +1,19 @@
-%% P(x,t) Data Structure 
+%% P(x,t) Data Structure (OOP) - V2
 % Data Class for holding measured probability data (pX(t)). Designed for
 % use within the SDO Analysis Toolkit.
 %
 % 1) pxtDataCells may be derived from xtdc + ppdc
 % 2) pxtDataCells may be derived from predictions from sdoMat
+
+% NOTE: In V2, this class has been largely gutted with the composition
+% classes; it exists now largely as an instance of recorded code. 
+
+% --> Need to allow to xtData and ppData to "not" exist, and to spin off
+% pxtData from 
+
+% --> I think it makes sense to make this something of a basal class, with
+% the multiplexing from multiple Matrices handled by a different class. 
+% --> The multiple predicted distributions could be in a different setup. 
 
 %_______________________________________
 % Copyright (C) 2023 Trevor S. Smith
@@ -23,56 +33,30 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 %__________________________________________
 
-
-classdef pxtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass &dataCell.dependencies.probabilityData
+classdef pxtDataCell < handle & matlab.mixin.Copyable % & dataCellSuperClass &dataCell.dependencies.probabilityData
     properties (Access = public)
-        %// Initialize w/ Default Parameters; 
-        xtName          char = []; 
-        ppName          char = [];
-        xtChName        char = []; 
-        ppChName        char = [];
-        % __ 
-        pxtSampling     = 'ppWise'; % Reserved for Future Use; 
-        pxtNames        = {}; %HH String
-        nPxtTypes       {mustBeInteger} = 0; % Number HH; 
-        nEvents         {mustBeInteger} = 0; 
-        nShuffles       {mustBeInteger} = 0; 
-        % __ Meta data
-        xtMetaData      = []; 
-        ppMetaData      = []; 
-        xtProperties    = []; %reserved
-        ppProperties    = []; %reserved
-        % __ Gen params (Default)
-        duraMs          double = 10; 
-        nShift          {mustBeInteger} = 1; 
-        zDelay          {mustBeInteger} = 0; 
-        filterWid       double = 0; 
-        filterStd       double = 0; 
-        % ___ Inherited (Default)
-        %nStates         {mustBeInteger} = 20; %inherited from above; 
-        fs              double {mustBeNonnegative} = 0; 
-        stateMapping    = zeros(1,21);
-        % ___ 
-        backgroundPx    = zeros(20,1);
-        backgroundMkv   = zeros(20); 
-        markovMatrix    = zeros(20); 
-        %
-        dataMatrices    = {}; % Containing the actual SDOs/Markovs; 
-        %
-        xs              = []; % State-at-spike; 
-        data            = {}; %{nPxTypes x 1} cell of doubles;  Probability
-        data_x          = {}; %{nPxTypes x 1} cell of doubles;  Single State
-        shuffData       = {}; %{nPxTypes x NShuff} cell of doubles; 
-        % ___
-        %stirpd          = zeros(20); %half-stirpd; inherited
-        % ___ 
-        stateAssignment char {mustBeMember(stateAssignment,{'max','mean','median'})} = 'max'; 
-        errorStruct     = {}; 
+        % __   % just rip-it and stick-it ____
+        xtData          dataCell.primaryData
+        ppData          dataCell.primaryData % Or some sort of event
+        % __ This is the primary element ___ 
+        interval        dataCell.intervalSampler
+        pxAssignment    dataCell.pxAssigner
+            
+        %________________________________-
+        errorStruct     = {}; % TODO; this should just be spun out in a macro; 
         dofPxCorrect    = 0; % Experimental rescaling of H1-H3; 
     end
     properties (Dependent)
+        nStates
+        nEvents
+        xtChannel
+        ppChannel
+        stateMap     
+    end
+    properties (Dependent, Hidden)
         generatedErrorStruct
     end
+        
     methods
         %% Dependencies
         function LI = get.generatedErrorStruct(obj)
@@ -82,158 +66,31 @@ classdef pxtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass &data
                 LI = false;
             end
         end
+        %-------------------------------------------%
+        function nStates = get.nStates(obj)
+            nStates = obj.xtData.nStates; 
+        end
+        %------------------------------
+        function stateMap = get.stateMap(obj)
+            stateMap = obj.xtData.stateMap; 
+        end
+        
         %% IMPORT: (Get Data from xtDC and ppDC)
-        function obj = import(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO, vars)
+        function obj = import(obj, xtdc, ppdc, XT_CH_NO, PP_CH_NO)
             arguments
                 obj
                 xtdc        xtDataCell
                 ppdc        ppDataCell
                 XT_CH_NO    {mustBeInteger} = 1; 
                 PP_CH_NO    {mustBeInteger} = 1; 
-                vars.includeShuffles = 1; 
-                vars.calculateStirpd = 1; 
             end
-            % __ Sample Data; 
-            obj.xtName          = xtdc.dataField; 
-            obj.ppName          = ppdc.dataField; 
-            obj.xtChName        = xtdc.sensor{XT_CH_NO}; 
-            obj.ppChName        = ppdc.sensor{PP_CH_NO}; 
-            %obj.xtProperties    = xtdc.metadata; 
-            %obj.ppProperties    = ppdc.metadata; 
-
-            %__ Append Params; 
-            params.xt.xtDataName            = ''; 
-            params.xt.DataFieldname         = xtdc.dataField; 
-            params.xt.IDFieldname           = 'sensor'; 
-            params.xt.MapMethod             = xtdc.mapMethod; 
-            params.xt.MaxMode               = xtdc.maxMode; 
-            params.pp.ppDataName            = ''; 
-            params.pp.IDFieldname           = 'sensor';
-            %params.px.px0DurationMs         = obj.px0DuraMs; 
-            %params.px.px1DurationMs         = obj.px1DuraMs; 
-            params.px.px0DurationMs         = obj.duraMs; 
-            params.px.px1DurationMs         = obj.duraMs; 
-            params.px.smoothingFilterWidth  = obj.filterWid; 
-            params.px.smoothingFilterStd    = obj.filterStd; 
-            % __ Depreciate one of these; Both here for redundancy
-            params.px.x1StartShift          = obj.nShift; 
-            params.px.x0x1Delay             = obj.zDelay; 
-            params.px.nShift                = obj.nShift; 
-            params.px.zDelay                = obj.zDelay; 
-            %___________
-            obj.xtProperties = params.xt; 
-            obj.ppProperties = params.pp; 
-            %__________
-            obj.xtMetaData      = xtdc.metadata; 
-            obj.ppMetaData      = ppdc.metadata; 
-            % __ Inherit; 
-            obj.nStates         = xtdc.nBins; 
-            if ~ppdc.shuffledSpikes
-                ppdc.shuffle; 
-            end
-            obj.nShuffles       = ppdc.nShuffles; 
-            obj.fs              = xtdc.fs; 
-            if ~xtdc.discretizedData
-                xtdc.discretize; 
-            end
-            obj.stateMapping    = xtdc.data{1,1}(XT_CH_NO).signalLevels; %WARNING:: temporary 
-            
-            N_STATES = length(obj.stateMapping)-1; 
-            if obj.duraMs > 0
-                N_PX0_PTS = 0; 
-                N_PX1_PTS = round((obj.fs/1000)*obj.duraMs);
-            else
-                N_PX0_PTS = abs(round((obj.fs/1000)*obj.duraMs));
-                N_PX1_PTS = 0; 
-            end
-            
-            xData = squeeze(getTensor(xtdc, XT_CH_NO, 'DATAFIELD', 'stateSignal', 'CONFORM_METHOD', 'pad')); 
-            XT_LEN = size(xData,1); 
-
-            spikeIdx = ppdc.getRasterIndices(xtdc.fs, 1:xtdc.nTrials, PP_CH_NO); 
-
-            xs_val = xtdc.getValuesAtIndices(spikeIdx, 'dataField', 'stateSignal', 'useChannels',XT_CH_NO); % directly reference state-at-spike; 
-            if iscell(xs_val)  
-                obj.xs = cellhcat(xs_val); 
-            else
-                obj.xs = xs_val; 
-            end
-
-
-            if vars.includeShuffles
-                shuffIdx = ppdc.getRasterIndices(xtdc.fs, 1:xtdc.nTrials, PP_CH_NO, 'dataField', 'shuffle'); 
-            end
-            % __ Calculate Offset
-            IDX_OFF = num2cell(0:XT_LEN:(xtdc.nTrials-1)*XT_LEN, 1); 
-            spikeOff = cellfun(@plus, IDX_OFF, spikeIdx, 'UniformOutput', false); 
-            st = cellhcat(spikeOff); 
-
-            if vars.includeShuffles
-                shuffOff = cellfun(@plus, IDX_OFF, shuffIdx, 'UniformOutput', false);  
-                stSS= cellhcat(shuffOff); 
-            end
-
-            xt = reshape(xData, 1, []);
-
-            [pxt_0, pxt_1, ix_t0, ix_t1] = pxTools.getPxtFromXt(xt, st, 1:N_STATES+1, ...
-                 'navg',        [N_PX0_PTS, N_PX1_PTS], ... 
-                 'smoothwid',   obj.filterWid, ...
-                 'smoothstd',   obj.filterStd, ... 
-                 'n_shift',     obj.nShift, ....  
-                 'z_delay',     obj.zDelay);
-
-            if vars.includeShuffles
-                [pxt0SS, pxt1SS] = pxTools.getPxtFromXt(xt, stSS, 1:N_STATES+1, ...
-                     'navg',        [N_PX0_PTS, N_PX1_PTS], ... 
-                     'smoothwid',   obj.filterWid, ...
-                     'smoothstd',   obj.filterStd, ... 
-                     'n_shift',     obj.nShift, ....  
-                     'z_delay',     obj.zDelay);
-            else
-                pxt0SS = []; 
-                pxt1SS = []; 
-            end
-            
-            if obj.duraMs < 0
-                pxtData     = pxt_0; 
-                pxtShuff    = pxt0SS; 
-                mkvData     = xData(ix_t0); 
-                pxName      = 't0_actual';
-                II          = N_PX0_PTS + obj.zDelay; 
-            else
-                pxtData     = pxt_1; 
-                pxtShuff    = pxt1SS; 
-                pxName      = 't1_actual'; 
-                mkvData     = xData(ix_t1); 
-                II          = N_PX1_PTS + obj.zDelay; 
-            end
-            %___ 
-            obj.pxtNames        = pxName; 
-            obj.nPxtTypes       = 1;
-            obj.backgroundPx    = histcounts(xt, N_STATES)/length(xt); 
-            obj.data            = pxtData; 
-            obj.data_x          = pxTools.getXfromPx(pxtData, obj.stateAssignment); 
-            obj.shuffData       = pxtShuff;  
-            obj.markovMatrix    = pxTools.getMarkovFromXt(mkvData, N_STATES); 
-            obj.backgroundMkv   = pxTools.getMarkovFromXt([xt(1:end-II); xt(II+1:end)], N_STATES); 
-            [~, obj.nEvents]    = size(pxtData); 
-            %
-            obj.dataMatrices = {obj.markovMatrix}; 
-            %
-            if vars.calculateStirpd
-                obj.calculateStirpd(xtdc, ppdc, XT_CH_NO, PP_CH_NO, ...
-                    'dataField', 'stateSignal', 'n_shift', obj.nShift-1, ... 
-                    'z_delay', obj.zDelay, 't0_nPoints', N_PX0_PTS, ... 
-                    't1_nPoints', N_PX1_PTS, 'fs', obj.fs);  
-            end
-
+            disp(strcat("Importing xtCh#", num2str(XT_CH_NO), " ppCh#", num2str(PP_CH_NO))); 
+            obj.xtData      = xtdc.data.subsample(1:xtdc.nTrials, XT_CH_NO); 
+            obj.ppData      = ppdc.data.subsample(1:ppdc.nTrials, PP_CH_NO);  
         end
-       
-        %%
-
-
+      
         %% OPERATE
-        
+        % --> This is retiane dfrom older version.l 
         % __ BIT-WISE FUNCTION OPERATION
         function obj = bsxop(obj, pxtdc, funcHandle, DATAFIELD) 
             arguments
@@ -275,44 +132,6 @@ classdef pxtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass &data
                 px1 pxtDataCell
             end
             % __ Bungle pxtData to fit prior expectations; 
-            %{
-            errorSAll = []; 
-            
-            errorSAll = cell(1, px1.nPxtTypes); 
-
-            for gg = 1:px1.nPxtTypes
-                if isa(px1.data, 'cell')
-                   PX_NAME = px1.pxtNames{gg}; 
-                   x1PxArr.(px1.pxtNames{gg})   = px1.data{gg}; 
-                   x1StateArr.(px1.pxtNames{gg})= pxTools.getXfromPx(px1.data{gg}, px1.stateAssignment);  
-                else
-                   x1PxArr.(px1.pxtNames)   = px1.data; 
-                   PX_NAME = px1.pxtNames; 
-                   x1StateArr.(px1.pxtNames)= pxTools.getXfromPx(px1.data, px1.stateAssignment);  
-                end
-                %__________
-                for hh = 1:obj.nPxtTypes
-                   pdPxArr.(obj.pxtNames{hh})       = obj.data{hh}; 
-                   pdStateArr.(obj.pxtNames{hh})    = pxTools.getXfromPx(obj.data{hh}, obj.stateAssignment);  
-                end
-                
-                N_BINS   = obj.nStates; 
-                N_XT_PTS = obj.nEvents;  
-                
-                %// Temp hack-around; 
-                x1StateArr   = x1StateArr.(px1.pxtNames); 
-                x0StateArr   = x1StateArr; 
-                x1PxArr      = x1PxArr.(px1.pxtNames); 
-                
-                errorS = SAT.predict.calcPredictionError(x0StateArr, x1StateArr, pdStateArr, x1PxArr, pdPxArr, N_BINS, ...
-                'refName', PX_NAME, ... 
-                'nXtPts', N_XT_PTS); 
-                
-                % __ concat; 
-                errorSAll = [errorSAll errorS]; 
-            end
-            obj.errorStruct = errorSAll; 
-            %}
 
             errorS = SAT.predict.predictionError(); 
             errorS.computeError(obj, px1); 
@@ -365,7 +184,6 @@ classdef pxtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass &data
         end
         
 
-        %
         % __ Error Plotter; 
         function plotError(obj)
             if ~obj.generatedErrorStruct

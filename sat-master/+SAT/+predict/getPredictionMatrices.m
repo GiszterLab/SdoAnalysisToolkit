@@ -4,6 +4,24 @@
 % Used as a single common method to call and create these elements; 
 % 
 
+%_______________________________________
+% Copyright (C) 2024 Trevor S. Smith
+% Drexel University College of Medicine
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
 function H_Struct = getPredictionMatrices(sdo, xtdc, ppdc, XT_CH_NO, PP_CH_NO, vars)
 arguments
     sdo % either sdoStruct, sdoMat, sdoMultiMat
@@ -13,6 +31,7 @@ arguments
     PP_CH_NO = 1; 
     vars.type {mustBeMember(vars.type, {'M', 'L'})} = 'L'; 
     vars.staMethod {mustBeMember(vars.staMethod, {'dpx', 'px'})} = 'px'; 
+    vars.backgroundSubraction = 0; % New
 end
 
 sField = {'t0t1', 'gauss', 'STA', 'bck', 'mkv', 'staBck', 'SDO'};
@@ -84,7 +103,7 @@ xt0 = discretize(at0, sigLevels);
 %___ H1
 H_Struct.(sField{1}) = SAT.predict.matrices.getH1(nStates, "type",vars.type); 
 
-%__ H2
+%__ H2 (Diffusion)
 
 h2_fStd = max(1, filterStd); %Make sure to have at least SOME filter
 h2_fWid = max(1, filterWid); %Make sure to have at least SOME filter
@@ -114,6 +133,7 @@ H_Struct.(sField{6}) = SAT.predict.matrices.getH6(at0, at1, sdoStruct, XT_CH_NO,
 
 % __ H7 Spike-triggered SDO
 H_Struct.(sField{7}) = SAT.predict.matrices.getH7(sdoStruct,XT_CH_NO, PP_CH_NO, ...
-    'type', vars.type); 
+    'type', vars.type, ...
+    'backgroundSubtraction', vars.backgroundSubraction); 
 
 end

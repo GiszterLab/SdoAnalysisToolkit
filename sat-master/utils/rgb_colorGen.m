@@ -123,6 +123,7 @@ switch method
             cArray = [cLo; cHi]; 
         end
 
+<<<<<<< HEAD
         %{
         %// This is TOO DARK
         xR = [1,0,0]; 
@@ -140,6 +141,8 @@ switch method
         cArray = tMat; 
         %}
 
+=======
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 end
 
 end

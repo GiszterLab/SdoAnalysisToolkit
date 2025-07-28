@@ -13,7 +13,7 @@ end
 % effects over a short time interval. 
 %
 % INPUTS: 
-%   - L0: Original SDO, normed to conditional form. 
+%   - L0: Original SDO, normed to conditional form. (Column Normed)
 %   - px0: Prespike/initial distributions
 %   - px1: Postspike/posterior distributions
 % NAME-VALUE PAIRS: 

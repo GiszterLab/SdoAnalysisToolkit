@@ -24,17 +24,38 @@ arguments
     XT_CH_NO
     PP_CH_NO
     vars.type {mustBeMember(vars.type, {'L', 'M'})} = 'L'; 
+    vars.backgroundSubtraction = 0; 
 end
 
 dSDO = sdoStruct(XT_CH_NO).sdos{PP_CH_NO}; 
 jSDO = sdoStruct(XT_CH_NO).sdosJoint{PP_CH_NO}; 
 
-switch vars.type
-    case 'L'
-        mat = SAT.sdoUtils.normsdo(dSDO,jSDO); 
-    case 'M'
-        mat = normpdfcol2unity(jSDO); 
+if vars.backgroundSubtraction == 1
+   %// add in background before making prediction; 
+   bkdSDO = sdoStruct(XT_CH_NO).bkgrndSDO; 
+   bkjSDO = sdoStruct(XT_CH_NO).bkgrndJointSDO; 
+   %____
+   [L,M] = SAT.sdoUtils.unitplusbackground(bkdSDO,bkjSDO, dSDO, jSDO); %, ... 
+       %'method', 1); % 3); %2); %1); 
+    % ---
+    switch vars.type
+        case 'L'
+            mat = L; 
+        case 'M'
+            mat = M; 
+    end
+
+else
+    switch vars.type
+        case 'L'
+            mat = SAT.sdoUtils.normsdo(dSDO,jSDO); 
+        case 'M'
+            mat = normpdfcol2unity(jSDO); 
+    end
+
 end
+
+
 
 
 end

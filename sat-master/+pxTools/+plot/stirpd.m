@@ -1,4 +1,6 @@
-% common plotter for the spike-triggered 
+%% pxTools.plot.stirpd
+% Common plotter for the Spike-Triggered Impulse Probability Distribution
+% (STIRPD)
 
 % Only for use with the newer components of the parameter validation. 
 
@@ -6,8 +8,9 @@
 
 %Here, we passively pass most of the parameters, and hence this is not an
 %ideal component for the end user; better to call only from the core method
-
-% stapxt == A [ N_STATES x N_OBS] method w/ p(x,t)
+% INPUTS: 
+%   - stapxt : A [ N_STATES x N_OBS] method w/ p(x,t)
+%   - N_XO_TBINS : (1) [Integer]. Point for defining pre/post. 
 
 %_______________________________________
 % Copyright (C) 2024 Trevor S. Smith
@@ -47,8 +50,9 @@ N_X1_TBINS = N_X0X1_TBINS-N_X0_TBINS;
 
 %// Here, we assume that the input is already maximally defined 
 
-   f = figure; 
-
+    if nargout > 0
+       f = figure; 
+    end
   % N_ELEM = length(stapxt); 
     
     %__ Mean State (STA in state space)

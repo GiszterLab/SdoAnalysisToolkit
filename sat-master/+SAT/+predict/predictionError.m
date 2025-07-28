@@ -227,8 +227,6 @@ classdef predictionError < handle
                     ref_x = obj.groundTruth.x1; 
             end
 
-
-
             %TODO: Add better validation for save dir; 
 
             SAT.predict.plotErrorStruct(obj.errorStruct, ...

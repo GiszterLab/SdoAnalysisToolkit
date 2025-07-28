@@ -77,6 +77,7 @@
 % Version 4 is designed for efficient extraction of spike-triggered effects
 % v. background effects. 
 
+% TODO: Optimize for low-memory/ large-datasets, at the cost of speed
 
 % NOTE: The version 3 algorithm used here is optimized, so that the
 % calculation of the SDO is not directly between each time bin in pre-spike
@@ -131,7 +132,7 @@ arguments
     %vars.maxBackgroundDraws = 10e9; 
     vars.parallelCompute = 0; 
     vars.backgroundSubtraction = 1; 
-    vars.backgroundSubtractionMethod = 'subtract'; 
+    vars.backgroundSubtractionMethod = 'subtract'; % Dummy; 
 end
 
 %Note that these are self-referential
@@ -210,6 +211,10 @@ for m = 1:N_XT_CHANNELS
         %
         cat_xv0     = cellhcat(obs_xv0); 
         cat_xv1     = cellhcat(obs_xv1);  
+        if isempty(cat_xv0) || isempty(cat_xv1)
+            sdo(m).stirpd{u} = zeros(N_BINS, N_PX0_PTS+N_PX1_PTS); 
+            continue; 
+        end
         sdo(m).stirpd{u} = pxTools.getStirpd(cat_xv0, cat_xv1, N_BINS); 
     end
 end
@@ -252,7 +257,10 @@ for m = 1:N_XT_CHANNELS
             continue; 
         end
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
         pxt0_Bkgd = pxt0Cell{1,tr}{m}; 
         pxt1_Bkgd = pxt1Cell{1,tr}{m}; 
 
@@ -318,7 +326,7 @@ for m = 1:N_XT_CHANNELS
             shuffUnitTrPx1 = pxt1Cell{1,tr}{m}(:,flatTrShuffSpikes); 
 
             if vars.backgroundSubtraction == 1
-                %/ Subtract off backgrounds; predict spike-triggered
+                %// Subtract off backgrounds; predict spike-triggered
                 %responses as the residuals from backgrounds
 
                 % Expected background; 
@@ -327,7 +335,7 @@ for m = 1:N_XT_CHANNELS
                 % __ TODO: Swap this by method
                 L0pdPx1 = L0*shuffUnitTrPx0+shuffUnitTrPx0; 
 
-                shuffUnitTrPx0 = L0pdPx1; % OVERRIDE observations; 
+                shuffUnitTrPx0 = L0pdPx1; % OVERRIDE observations w/ residual
                 %L0pdPx1 = SAT.sdo_pxt(
 
             end
@@ -337,10 +345,7 @@ for m = 1:N_XT_CHANNELS
             px1ShuffSS = reshape(shuffUnitTrPx1, N_BINS, nTrialSpikes, N_SHUFF);
             %
 
-            % V4 Addition -- Background Subtraction; 
-
-
-            
+            %% V4 Addition -- Background Subtraction; 
 
             switch vars.method
                 case {'original', 'optimized'} %'original'
@@ -377,6 +382,7 @@ for m = 1:N_XT_CHANNELS
 
             end
             
+            %%
 
             switch vars.method
                 case 'original'

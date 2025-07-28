@@ -35,16 +35,10 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
         % nChannels
         % sensor
         % fs; 
+        % 
     properties
         %// List of values; 
-        %data        = []; 
-        %metadata    = []; 
-        %nTrials     {mustBeInteger} = 0; 
-        %nChannels   {mustBeInteger} = 0; 
-        %sensor      = []; 
-        %fs          double = 0; 
         trTimeLen   = []; 
-        %dataField   char = [];  
         dataSource  char = []; 
         % __ 
         nTrialEvents = 0; %counter for spikes/trial
@@ -98,6 +92,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             obj.metadata    = S(2,:); 
             obj.nTrials     = N_TRIALS; 
             obj.nChannels   = N_CHANNELS; 
+            obj.trTimeLen   = zeros(1, N_CHANNELS); 
         end
 
         %% Operation Methods 
@@ -138,7 +133,12 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                     obj.data{1,tr}(ch).fs               = obj.fs; 
                     try
                         obj.data{1,tr}(ch).(obj.dataField)  = dataHolder{1,tr}(ch).times; 
-                        obj.data{1,tr}(ch).nEvents          = dataHolder{1,tr}(ch).nEvents; 
+                
+                        if isempty(dataHolder{1,tr}(ch).nEvents) && ~(isempty(dataHolder{1,tr}(ch).times))
+                            obj.data{1,tr}(ch).nEvents          = length(obj.data{1,tr}(ch).(obj.dataField)); 
+                        else
+                            obj.data{1,tr}(ch).nEvents          = dataHolder{1,tr}(ch).nEvents; 
+                        end
                         obj.data{1,tr}(ch).envelope         = dataHolder{1,tr}(ch).envelope; 
                     catch
                         %// depreciated naming
@@ -176,6 +176,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
 
         % Added 8.29.2024
         function obj = concat(obj, useTrials)
+            % Concatenate and flatten multiple trials; 
             arguments
                 obj
                 useTrials = 1:obj.nTrials;
@@ -204,6 +205,58 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             ppdc = subsample@dataCellSuperClass(obj, useTrials, useChannels); 
             ppdc.nTrialEvents = obj.nTrialEvents(useChannels, useTrials); 
             obj = ppdc;
+        end
+
+
+
+        function [obj] = combine(obj, dcList) %varargin)
+            arguments
+                obj
+                dcList % i.e. a [bracked] list 
+            end
+
+            % Pump to static; 
+            ppdcCells = cell(1, length(dcList)+1); 
+            ppdcCells{1} = obj; 
+            for c = 1:length(dcList)
+                ppdcCells{c+1} = dcList(c); 
+            end
+
+            out = ppDataCell.combinePpDataCells(ppdcCells);
+            
+            names = fieldnames(out); 
+            names = setdiff(names, 'dataSource'); %exclusion; 
+            obj.copyProperties(out, names);  % force override for some reason
+        end
+        
+        % Used for thresholding imperfect data; 
+        function obj = setMinimumISI(obj, minISI)
+            arguments
+                obj 
+                minISI {mustBeNumeric} = 0.001; % 1 ms; 
+            end
+            counter = 0; 
+            for tr = 1:obj.nTrials
+                for n = 1:obj.nChannels
+                    % per trial, if we need
+                    times =  [obj.data{1,tr}(n).times]; 
+                    dt = diff(times); 
+                    %
+                    useLI = [true dt>minISI]; % Note padding; 
+                    % __ WRITEOUT___
+                    obj.data{1,tr}(n).times = times(useLI); 
+                    obj.data{1,tr}(n).envelope = obj.data{1,tr}(n).envelope(useLI,:); 
+                    if ~isempty(obj.data{1,tr}(n).shuffle)
+                        obj.data{1,tr}(n).shuffle = obj.data{1,tr}(n).shuffle(useLI,:); % not sure if this orientation is correct; 
+                    end
+                    obj.data{1,tr}(n).nEvents = nnz(useLI); 
+                    %
+                    obj.nTrialEvents(n,tr) = nnz(useLI); 
+                    %
+                    counter = counter + nnz(~useLI); 
+                end
+            end
+            disp(strcat("Removed ", num2str(counter), " short timestamps"));  
         end
         
         %% EXTRACTION Methods
@@ -274,8 +327,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
         function idxArr = getRasterIndices(obj, SAMPLE_HZ, useTrials, useChannels, vars)
             % Return an {N_CHANNELS x N_TRIALS} cell of indices
             %
-            % sample_hz, useTrials, useChannels, 'dataField' {'times',
-            % 'shuffle'}
             arguments
                 obj
                 SAMPLE_HZ   {mustBeNumeric} = obj.fs;  
@@ -309,7 +360,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 vars.t0_nPoints {mustBeInteger} = 20; 
                 vars.t1_nPoints {mustBeInteger} = 20;
                 vars.fs         = obj.fs
-                vars.useField   {mustBeMember(vars.useField, {'times', 'shuffle'})} = 'times'; 
+                vars.dataField   {mustBeMember(vars.dataField, {'times', 'shuffle'})} = 'times'; 
             end
             
             N_USE_TRIALS    = length(useTrials); 
@@ -317,7 +368,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             %// Push out to the pxTools.getPerieventIndices.m script of the same name; 
             
             % Get {N_CHANNELs x N_TRIALs} Cell array of indices; 
-            spkData = obj.getRasterIndices(vars.fs, useTrials, useChannels, 'dataField', vars.useField); 
+            spkData = obj.getRasterIndices(vars.fs, useTrials, useChannels, 'dataField', vars.dataField); 
             %
             idx0_Cell = cell(N_USE_PP, N_USE_TRIALS); 
             idx1_Cell = cell(N_USE_PP, N_USE_TRIALS); 
@@ -336,8 +387,65 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
         end       
         %_____________________________________________________
+        % || X-Correlogram for inferring spike lags || 
 
+        function [xCrlgm] = getCorrelogram(obj, vars)
+        arguments
+            obj
+            vars.useChannels    = 1:obj.nChannels
+            vars.useTrials      = 1:obj.nTrials; 
+            vars.leadDura       = 0.20; 
+            vars.lagDura        = 0.20; 
+            vars.dt             = 0.005; % Seconds; 
+            vars.norm           = 1; 
+            vars.plot           = 0; 
+        end
 
+        nUseChannels = length(vars.useChannels); 
+        xpsth_cell  = cell(nUseChannels); 
+
+        for ri = 1:nUseChannels
+            rr = vars.useChannels(ri); 
+            for qi = 1:nUseChannels
+                qq = vars.useChannels(qi); 
+                %
+                if ri == qi
+                    % This should just a normal autocorrelogram; 
+                    AUTO = 1; 
+                else
+                    AUTO = 0; 
+                end
+                %/ spiketimes here are unique and ordinal; 
+                ref_st = obj.getConcatEventTimes(vars.useTrials, rr); 
+                que_st = obj.getConcatEventTimes(vars.useTrials, qq); 
+                ref_st = ref_st{1}; %strip
+                que_st = que_st{1}; %strip
+
+                xhist = dataCell.calculate.spikeCorrelogram(ref_st, que_st, ...
+                    'dt', vars.dt, ...
+                    'leadDura', vars.leadDura, ...
+                    'lagDura', vars.lagDura, ...
+                    'autoISI', AUTO, ...
+                    'norm',   vars.norm); 
+                xpsth_cell{ri,qi} = xhist; 
+            end
+        end
+        
+        if nUseChannels == 1 
+            xCrlgm = xhist; 
+        else
+            xCrlgm = xpsth_cell; 
+        end
+
+        if vars.plot
+            ppDataCell.plotCorrelogram(xCrlgm, ...
+                'leadDura', vars.leadDura, 'lagDura', vars.lagDura, ...
+                'dt', vars.dt); 
+        end
+        
+        end
+        %_____________________________________________________
+        
         %// Set the maximal time length to each trial
         function obj = setMaxTrTime(obj, trTimeLen)
             if length(trTimeLen) == 1
@@ -391,7 +499,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             % ___ 
 
             if ~(obj.nTrials == ppdc.nTrials)
-                disp("EventDataCells do not have compatible sizes"); 
+                disp("ppDataCells do not have compatible sizes"); 
                 return
             end
 
@@ -413,15 +521,11 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
             %}
             obj.fs = newFs; 
-
             obj.nTrialEvents = [obj.nTrialEvents; ppdc.nTrialEvents]; 
-            obj.trTimeLen = max(obj.trTimeLen, ppdc.trTimeLen);
-            obj.sensor    = [obj.sensor, ppdc.sensor]; 
-            %obj.eventType = [obj.eventType, ppdc.eventType]; 
-            %obj.nEventTypes = length(obj.eventType); 
-
+            obj.trTimeLen   = max(obj.trTimeLen, ppdc.trTimeLen);
+            obj.sensor      = [obj.sensor, ppdc.sensor]; 
+            obj.nChannels   = obj.nChannels + ppdc.nChannels;  
         end
-
 
         %% Extraction Methods 
 
@@ -555,6 +659,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             yticks(-N_USE_CHANNELS+1:0); 
             yticklabels(flip(obj.sensor(useChannels))); 
             xlabel("Time (S)");     
+            title("Plotted Event Times"); 
         end
         function plotWaves(obj, useTrials, useRows, PLOT_ALL)
             arguments
@@ -566,37 +671,29 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             % __ Add pre-check here to exclude completely-empty channels
             try 
                 useRows = intersect(useRows, find(sum(obj.nTrialEvents, 2))); 
+                plot_spikeWaveforms(obj.data, useTrials, useRows, PLOT_ALL, 'useField', 'envelope');
             catch
-                1; 
+                return
             end
-            plot_spikeWaveforms(obj.data, useTrials, useRows, PLOT_ALL, 'useField', 'envelope');
         end
         function plotISI(obj, useTrials, useRows, method)
             arguments
                 obj
                 useTrials   {mustBeNumeric} = 1:obj.nTrials; 
                 useRows     {mustBeNumeric} = 1:obj.nChannels; 
-                method {mustBeMember(method, {'linear', 'log'})} = 'linear'; 
+                method      {mustBeMember(method, {'linear', 'log'})} = 'linear'; 
             end
             plot_spikeISI(obj.data, useTrials, useRows, 'useField', obj.dataField, 'type', method); 
         end
+        
         %__ Plot all
         function plot(obj, useTrials, useRows, PLOT_ALL)
             arguments
                 obj
                 useTrials {mustBeNumeric} = 1:obj.nTrials; 
-                useRows  {mustBeNumeric} = 1:obj.nChannels; 
+                useRows   {mustBeNumeric} = 1:obj.nChannels; 
                 PLOT_ALL  = 0; 
             end   
-
-            %{
-            try 
-                useChannels = intersect(useChannels, find(sum(obj.nTrialEvents, 2))); 
-            catch
-                1;
-            end
-            %}
-
             plotSpikes(obj, useTrials, useRows, PLOT_ALL); 
             plotWaves( obj, useTrials, useRows, PLOT_ALL); 
         end
@@ -642,8 +739,53 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 end
             end
         end
+        %___________________________________________
 
 
 
     end  
+    methods (Static)
+        function [dcCombine] = combinePpDataCells(dataCellCell)
+            nDC = length(dataCellCell); 
+            for c = 1:nDC
+                if ~isa(dataCellCell{c}, 'xtDataCell')
+                    disp("Error: Unlike DataCells provided")
+                    dcCombine = []; 
+                    return
+                end
+            end
+            dcCombine = dataCell.manipulate.combineDataCells(dataCellCell); 
+        end
+        % 
+        function f = plotCorrelogram(xCrlgm, vars)
+            arguments
+                xCrlgm % data; either cell or vector; 
+                vars.leadDura = []; 
+                vars.lagDura = []; 
+                vars.dt = []; 
+            end
+            
+            if ~iscell(xCrlgm)
+                xCrlgm = {xCrlgm}; %wrap; 
+            end
+            if isempty(vars.leadDura) || isempty(vars.lagDura)
+                % if not specified, assume equal-width
+                %nPts = length(xCrlgrm); 
+                tVect = (1:length(xCrlgm)) - length(xCrlGrm)/2; 
+            else
+                tVect = (-vars.leadDura:vars.dt:vars.lagDura); 
+            end
+            nComps = length(xCrlgm); 
+            %
+            f = figure; 
+            tiledlayout(nComps, nComps); 
+            for r = 1:nComps
+                for c = 1:nComps 
+                    nexttile; 
+                    area(tVect, xCrlgm{r,c}); 
+                end
+            end
+        end
+    end
+
 end

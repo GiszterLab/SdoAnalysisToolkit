@@ -41,6 +41,8 @@
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 %__________________________________________
 
+% 2025.03.21 - Better handling for when trying to run stats on missing data
+
 function [sdoStruct] = testStatSig(sdoStruct, SIG_PVAL, Z_SCORE)
 if ~exist('Z_SCORE', 'var')
     Z_SCORE = 0; 
@@ -86,6 +88,14 @@ for m = 1:N_XT_CHANNELS
             shuff_stat  = permute(ss.Shuff_v_MeanShuff.(test), [2,3,1]); %flatten
             unit_stat   = ss.Unit_v_MeanShuff.(test);      
             bkgd_stat   = ss.Bkgd_v_MeanShuff.(test); 
+            if all(isnan(unit_stat)) || all(isnan(bkgd_stat))
+                % Not observed/ empty
+                H_Unit.(test) = 0; 
+                H_Bkgd.(test) = 0; 
+                continue; 
+            end
+            
+            
             %___ P-Value bonferroni correction for statewise tests; 
             nTestStates = size(shuff_stat,1); 
             bonFerrpVal = SIG_PVAL/nTestStates;
@@ -160,11 +170,17 @@ for m = 1:N_XT_CHANNELS
 
         for row = 1:nStates
             for col = 1:nStates
+                sqDat = squeeze(se_pxx_Shuff_MeanShuff(row,col,:)); 
+                if all(isnan(sqDat)) % no data --> 
+                    H_mat(row,col,1) = 0; 
+                    H_mat(row,col,1) = 0; 
+                    continue; 
+                end
                 if fit_dist == 1
-                    pd = fitdist(squeeze(se_pxx_Shuff_MeanShuff(row,col,:)), 'Half Normal'); 
+                    pd = fitdist(sqDat, 'Half Normal'); 
                     critVal = pd.icdf(1-bonFerrpVal); 
                 else
-                   [vals, idx] = ecdf(squeeze(se_pxx_Shuff_MeanShuff(row,col,:))); 
+                   [vals, idx] = ecdf(sqDat); 
                    ix = find(vals > 1-bonFerrpVal, 1); 
                    critVal(x) = idx(ix);     
                 end
@@ -236,16 +252,3 @@ for m = 1:N_XT_CHANNELS
 end
 
 end
-
-%CUT: 
-% __ Alternative stat test; normal
-                %{
-                pd = fitdist(squeeze(rdShuff(row,col,:)), 'Normal'); 
-                critVals = pd.icdf([bonFerrpVal, 1-bonFerrpVal]); % i.e. two-tailed. 
-                if (dUnit(row,col) > critVals(2)) || (dUnit(row,col) < critVals(1))
-                    H_mat(row,col,1) = 1; 
-                end
-                if (rdBkgd(row,col) > critVals(2)) || (rdBkgd(row,col) < critVals(1))
-                    H_mat(row,col,2) = 1; 
-                end
-                %}

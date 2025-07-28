@@ -2,6 +2,11 @@
 % Common plotter module used in MAB's code to plot significance of 
 % test statistic vs. distribution of shuffled test statistics. For use
 % within the SDO Analysis Toolkit.
+% 
+% INPUTS
+%   - shuffStat = [1,NSHUFF]    Distribution of shuffle/null stats
+%   - testStat  = [1,1]         Unit-value; 
+%   - SIG_PVAL  = [1,1]         Significance-threshold pvalue
 
 % Copyright (C) 2023  Trevor S. Smith
 %  Drexel University College of Medicine
@@ -38,7 +43,7 @@ else
     prob = (1-SIG_PVAL); 
 end
 
-[CDF, X] = ecdf(shuffStat); 
+[CDF, X] = ecdf(shuffStat(:)); 
 
 Ind = find(X>=testStat,1); %Indexed position of the test stat vs. shuff dist
 

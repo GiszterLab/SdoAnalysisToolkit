@@ -1,9 +1,25 @@
+<<<<<<< HEAD
+=======
+%% SigSSquaredCalculator (Sig-SumSquaredError)
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 %
 % Used to calculate the sum-squared error between each shuffle and the mean
 % of the shuffles, vs. the spike-triggered unit and the mean of the
 % shuffles. Signfificance is provided as the relative magnitude of the test
 % statistic vs. the PVal
 %
+<<<<<<< HEAD
+=======
+% INPUTS
+%   - shuff [1xNxN_SHUFF]   array of null statistics
+%   - unit  [1xNx1]         array of test statistisc
+%   - sigPval (numeric)     threshold for significance
+%   - Z_TRANSFORM           [0/1] whether to normalize data; 
+% OUTPUTS
+%   - isSig         [0/1] - Whether is sig (1)
+%   - ssqrd         [1,N_SHUFF] Sum of squared error values
+%   - stat          [1,1] Unit stat. 
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 
 % Copyright (C) 2023 Trevor S. Smith
 % Drexel University College of Medicine
@@ -27,16 +43,27 @@ if ~exist('Z_TRANSFORM', 'var')
 end
 
 isSig=0;
+<<<<<<< HEAD
 %pVal=normcdf(zScore);
+=======
+
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 %//if the dim of shuff is greater than 2-D this means it s 1 x nbins x
 %numShuffles:
 % We want to get random shuffles
 
+<<<<<<< HEAD
 [X_DIM, Y_DIM, Z_DIM] = size(shuff); 
 
 N_POP_DIM = (X_DIM>1)+(Y_DIM>1); 
 
 
+=======
+[X_DIM, Y_DIM, N_SHUFF] = size(shuff); 
+
+N_POP_DIM = (X_DIM>1)+(Y_DIM>1); 
+
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 if isempty(shuff)
     %// allow plot even if N_SHUFF = 0
     shuff = zeros(size(unit)); 
@@ -47,12 +74,21 @@ meanShuff = mean(shuff,3);
 if Z_TRANSFORM
     % // Z-Transform
     % z = x-u/s; 
+<<<<<<< HEAD
     meanShuffZ = repmat(meanShuff, 1,1, Z_DIM); 
     stdShuff = std(shuff,[],3); 
     %// Need to compensate for unobserved for denominator
     stdShuff(stdShuff == 0) = 1; 
     
     stdShuffZ = repmat(stdShuff,1,1,Z_DIM); 
+=======
+    meanShuffZ  = repmat(meanShuff, 1,1, N_SHUFF); 
+    stdShuff    = std(shuff,[],3); 
+    %// Need to compensate for unobserved for denominator
+    stdShuff(stdShuff == 0) = 1; 
+    
+    stdShuffZ = repmat(stdShuff,1,1,N_SHUFF); 
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
     
     zShuff = (shuff-meanShuffZ)./stdShuffZ; 
     %
@@ -73,7 +109,11 @@ stat=sum((unit-meanShuff).^2);
 
 %% compute the distribution of our statistic stat Here
 
+<<<<<<< HEAD
 meanArr = repmat(meanShuff, 1,1,Z_DIM); 
+=======
+meanArr = repmat(meanShuff, 1,1,N_SHUFF); 
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 
 ssqrd = squeeze( sum( (shuff-meanArr).^2) ); 
 
@@ -83,12 +123,19 @@ if N_POP_DIM == 2
     ssqrd = sum(ssqrd); 
 end
 
+<<<<<<< HEAD
 %ssqrd=sum((bsxfun(@plus,shuff,-meanshuff)).^2,2);
 
 [CDF, X]=ecdf(ssqrd(:)); % cumulative dist
 % see if the stat is above the threshold set by pValue pVal
 prob = 1-SIG_PVAL;
 [CDFi, XInd] = min(abs(CDF-prob));
+=======
+[CDF, X]=ecdf(ssqrd(:)); % cumulative dist
+% see if the stat is above the threshold set by pValue pVal
+prob = 1-SIG_PVAL;
+[~, XInd] = min(abs(CDF-prob));
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
 Xi=X(XInd);
 if stat>=Xi
     isSig=1; % it is significant
@@ -96,7 +143,11 @@ end
 
 % // 
 
+<<<<<<< HEAD
 if nargout == 1; 
+=======
+if nargout == 1 
+>>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
     ssqrd   = []; 
     stat    = []; 
 end

@@ -1,8 +1,19 @@
-
+%% pxTools.getStirpd
 % using columnwise observations of state, generate the Spike-triggered
 % impulse response probability distribution (STIRPD)
+%
+% for faster/modular generation
+%
+% INPUTS: 
+%   [x0_vals] = [k,n] array of INTEGER state values [prespike]
+%   [x1_vals] = [k,m] array of INTEGER state values [postspike]
+%           - if left [], will plot only one half; 
+%   max_x     = (1) [Numeric]: Max value of state to query/plot; 
+% OUTPUTS: 
+%   stirpd  = [k,n+m] array of positional p(x,t). 
 
-% for faster generation
+
+% Trevor S. Smith, 2025
 
 function stirpd = getStirpd(x0_vals, x1_vals, max_x)
 

@@ -62,6 +62,7 @@ arrType = pR.type;
     
     if PX_FSM_STD > 0 
         rollPdf = normpdf(-N_BINS+2:N_BINS, 1, PX_FSM_STD); 
+        rollPdf = rollPdf/sum(rollPdf); 
         % --> Subsample and roll; 
         for bin = 1:N_BINS
             temp = circshift(rollPdf, bin-1);

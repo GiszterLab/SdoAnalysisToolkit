@@ -70,13 +70,6 @@ N_PP_CHANNELS = length(USE_PP_CHANNELS);
 %
 sFields = {'Unit', 'Bkgd', 'Shuff', 'MeanShuff'};
 nFields = length(sFields); 
-%{
-sTmplt = struct( ...
-    'Unit', cell(1,1), ...
-    'Bkgd', cell(1,1), ...
-    'Shuff', cell(1,1), ...
-    'MeanShuff',cell(1,1));
-%}
 ii = 1; 
 x_sFields = cell(nFields.^2, 1); 
 for x1_i = 1:nFields
@@ -125,11 +118,11 @@ for m = 1:N_XT_CHANNELS
                     
                     % _______ Test SDOs Matrices for State-Dependent Biases
                     % __ Reparameterized
-                    upDown_px0Normed_x1     = matTriangle_up_down_difference(rdSdo.(x1) );
-                    upDown_px0Normed_x2     = matTriangle_up_down_difference(rdSdo.(x2) ); 
+                    upDown_px0Normed_x1     = matTriangle_up_down(rdSdo.(x1), 'difference' );
+                    upDown_px0Normed_x2     = matTriangle_up_down(rdSdo.(x2), 'difference' ); 
                     % __ "raw" 
-                    upDown_raw_x1           = matTriangle_up_down_difference(dSdo.(x1) );
-                    upDown_raw_x2           = matTriangle_up_down_difference(dSdo.(x2) );                     
+                    upDown_raw_x1           = matTriangle_up_down(dSdo.(x1), 'difference' );
+                    upDown_raw_x2           = matTriangle_up_down(dSdo.(x2), 'difference' );  
                     %
                     statStruct.(refField).se_upDown_xWise_raw = ...
                         (upDown_raw_x1 - upDown_raw_x2).^2; % Squared error
@@ -141,132 +134,6 @@ for m = 1:N_XT_CHANNELS
                         sum((upDown_px0Normed_x1 - upDown_px0Normed_x2).^2 ); % sum-of-squared Error
             end
         end
-        1; 
-
-          
-
-    %{
-
-
-            [k_px0_unit_x_bkgd, ~, ~] = SAT.compute.KLDMeasures(jSdo_Unit, rjSdo_Bkgd); 
-
-            [KNeuronBk, KPx0NeuronBk, KCondNeuronBk] = SAT.compute.KLDMeasures(...
-                jSdo_Unit, rjSdo_Bkgd); 
-            %
-            changeMeasureContSDO        = matTriangle_up_down_difference(dSdo_Unit); 
-            changeMeasureBkgdContSDO    = matTriangle_up_down_difference(rdSdo_Bkgd); 
-            changeMeasureShuffContSDO   = matTriangle_up_down_difference(rdSdo_Shuff);
-            %}
-        %end
-%{
-            %
-            [KShuffBk, KPx0ShuffBk, KCondShuffBk] = SAT.compute.KLDMeasures(...
-                rjSdo_Shuff, rjSdo_Bkgd); 
-            %
-            [KNeuronAvgShuff, KPx0NeuronAvgShuff, KCondAvgShuff] = SAT.compute.KLDMeasures(...
-                jSdo_Unit, rjSdo_Shuff_mean); 
-            %
-            [KShuffAvgShuff, KPx0ShuffAvgShuff, KCondShuffAvgShuff] = SAT.compute.KLDMeasures(...
-                jSdo_Shuff, rjSdo_Shuff_mean); 
-        else
-%}
-        % __ R Cond; 
-        %{
-
-        %__________________________________________________________________
-        %% spike v. background (common)
-        
-         %// test distance of neuron to background
-        [KNeuronBk, KPx0NeuronBk, KCondNeuronBk] = SAT.compute.KLDMeasures(...
-            jSdo_Unit, jSdo_Bkgd); 
-            %{
-            sdoStruct(m_i).sdosJoint{u_i},...
-            sdoStruct(m_i).bkgrndJointSDO);        
-            %}
-        
-        %changeMeasureContSDO        = matTriangle_up_down_difference(sdoStruct(m_i).sdos{u_i});
-        changeMeasureContSDO        = matTriangle_up_down_difference(dSdo_Unit); 
-
-        changeMeasureBkgdContSDO        = matTriangle_up_down_difference(dSdo_Bkgd); 
-        %% N shuffles > 0
-        if HAS_SHUFFLES
-            
-            %meanJointShuffSDO = mean(sdoStruct(m_i).shuffles{1,u_i}.SDOJointShuff,3);
-            %_____
-
-            %// distance of each spike-shuffled SDO from background SDO
-            [KShuffBk, KPx0ShuffBk, KCondShuffBk] = SAT.compute.KLDMeasures(...
-                jSdo_Shuff, jSdo_Bkgd); 
-                %{
-                sdoStruct(m_i).shuffles{1,u_i}.SDOJointShuff,...
-                sdoStruct(m_i).bkgrndJointSDO); 
-                %}
-            %// distance of neuron sdo from mean of spike-shuffled SDO
-            [KNeuronAvgShuff, KPx0NeuronAvgShuff, KCondAvgShuff] = SAT.compute.KLDMeasures(...
-                jSdo_Unit, jSdo_Shuff_mean); 
-                %{
-                sdoStruct(m_i).sdosJoint{1,u_i},...
-                meanJointShuffSDO);
-                %}
-            %// distance of each spike-shuffled sdo from mean of shuffled SDO
-            [KShuffAvgShuff, KPx0ShuffAvgShuff, KCondShuffAvgShuff] = SAT.compute.KLDMeasures(...
-                jSdo_Shuff, jSdo_Shuff_mean); 
-                %{
-                sdoStruct(m_i).shuffles{1,u_i}.SDOJointShuff,...
-                meanJointShuffSDO);
-                %}
-            %
-
-            %changeMeasureShuffContSDO   = matTriangle_up_down_difference(sdoStruct(m_i).shuffles{u_i}.SDOShuff);
-            changeMeasureShuffContSDO   = matTriangle_up_down_difference(dSdo_Shuff);
-        else
-            %// Dummy
-            %meanJointShuffSDO   = []; 
-            KShuffBk            = []; 
-            KPx0ShuffBk         = [];
-            KCondShuffBk        = []; 
-            KNeuronAvgShuff     = []; 
-            KPx0NeuronAvgShuff  = []; 
-            KCondAvgShuff       = []; 
-            KShuffAvgShuff      = []; 
-            KPx0ShuffAvgShuff   = []; 
-            KCondShuffAvgShuff  = []; 
-            changeMeasureShuffContSDO = []; 
-        end
-        %end
-        %_______
-        %// Fill MAB Fields --> Rename these after correcting stats?
-
-        sss = sdoStruct(m_i).stats{1,u_i}; %pass; 
-        %{
-        if REPARAMETERIZE
-            sss.parameterization            = 'px0'; 
-        else
-            sss.parameterization            = 'none'; 
-        end
-        %}
-        %
-        sss.changeMeasureContSDO        = changeMeasureContSDO; 
-        sss.changeMeasureShuffContSDO   = changeMeasureShuffContSDO; 
-        sss.changeMeasuresBkgdContSDO   = changeMeasureBkgdContSDO; 
-        sss.KL2D_neuron_bk              = KNeuronBk; 
-        sss.KL2D_shuff_bk               = KShuffBk; 
-        sss.KLcurr_neuron_bk            = KPx0NeuronBk; 
-        sss.KLcurr_shuff_bk             = KPx0ShuffBk; 
-        sss.KLcond_neuron_bk            = KCondNeuronBk; 
-        sss.KLcond_shuff_bk             = KCondShuffBk; 
-        sss.KL2D_neuron_meanshuff       = KNeuronAvgShuff; 
-        sss.KL2D_shuff_meanshuff        = KShuffAvgShuff; 
-        sss.KLcurr_neuron_meanshuff     = KPx0NeuronAvgShuff; 
-        sss.KLcurr_shuff_meanshuff      = KPx0ShuffAvgShuff; 
-        sss.KLcond_neuron_meanshuff     = KCondAvgShuff; 
-        sss.KLcond_shuff_meanshuff      = KCondShuffAvgShuff; 
-        %sss.meanShuffSDO                = meanDeltaShuffSDO; 
-        %sss.meanJointShuffSDO           = meanJointShuffSDO; 
-        %___
-
-        sdoStruct(m_i).stats{1,u_i} = sss; %pass back; 
-        %}
         sdoStruct(m_i).stats{1,u_i}.comparisons = statStruct; 
     end
 end

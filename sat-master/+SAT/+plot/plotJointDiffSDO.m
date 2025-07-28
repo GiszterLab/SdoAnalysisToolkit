@@ -182,7 +182,13 @@ for c = 1:nCols
 
         %____
         colormap(ax(z,c), cMap); 
-        clim([minVal, maxVal]);
+        if ~isMATLABReleaseOlderThan('R2022a')
+            % default
+            clim([minVal, maxVal]);
+        else
+            %depreciated MATLAB
+            caxis([minVal, maxVal]); 
+        end
         colorbar
         if z == 1
             suffix = ''; 

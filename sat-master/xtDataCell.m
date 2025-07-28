@@ -32,8 +32,9 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
         %sensor              = []; 
         %fs                  double {mustBeNonnegative} = 0
         %dataField           = []; 
+        
     properties
-        trTimeLen           = []; 
+        trTimeLen           = [];
         dataSource          = []; 
         % __ Ranging / Discretization Vars; 
         channelAmpMax       = []; %holder for [ch x tr] dynamic max amplitude
@@ -67,13 +68,14 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 N_CHANNELS  {mustBeInteger} = 0; 
             end
             S = dataCell.constructors.getXtDataHolder(N_TRIALS, N_CHANNELS); 
-            obj.weightMatrix = eye(N_CHANNELS); 
-            obj.data        = S(1,:); 
-            obj.metadata    = S(2,:); 
-            obj.nTrials     = N_TRIALS; 
-            obj.nChannels   = N_CHANNELS; 
-            obj.channelAmpMax = zeros(N_CHANNELS, N_TRIALS); 
-            obj.channelAmpMin = zeros(N_CHANNELS, N_TRIALS); 
+            obj.weightMatrix    = eye(N_CHANNELS); 
+            obj.data            = S(1,:); 
+            obj.metadata        = S(2,:); 
+            obj.nTrials         = N_TRIALS; 
+            obj.nChannels       = N_CHANNELS; 
+            obj.channelAmpMax   = zeros(N_CHANNELS, N_TRIALS); 
+            obj.channelAmpMin   = zeros(N_CHANNELS, N_TRIALS); 
+            obj.trTimeLen       = zeros(1, N_TRIALS); 
         end
         %% __ Populate/Import
         function obj = import(obj,dataHolder, FIELDNAME)
@@ -206,15 +208,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             xtData = getTensor(obj); 
             xtData2 = xtData; 
             for tr = 1:obj.nTrials 
-                %{
-                for m = 1:obj.nChannels
-                    % __ callAFilter 
-                    %// callAFilter filters on [1xN] Doubles OR [NxM]
-                    xt  = squeeze(xtData(m,:,tr)); 
-                    fxt = callAfilter(xt, FILTERTYPE, obj.fs,  'nPoints', N_POINTS, 'auxVar', F_VAR); 
-                    xtData2(m,:,tr) = fxt; 
-                end
-                %}
                 % --> upgraded callAfilter
                 xt = squeeze(xtData(:,:,tr)); 
                 fxt = callAfilter(xt,FILTERTYPE, obj.fs, 'nPoints', N_POINTS, 'auxVar', F_VAR); 
@@ -314,7 +307,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             % of form [Components] = [Weight]*[xtData], where xtData is a
             % 'nChannels' by 'nObservations' array
           
-            nm_cell = cell(1, obj.nChannels); 
+            %nm_cell = cell(1, obj.nChannels); 
             switch METHOD
                 % -- Temporary; ts-ICA has trialwise optimization -- 
                 case {'ica'}
@@ -371,20 +364,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 nm_cell{ch} = strcat('CA_', num2str(ch)); 
             end
             obj.sensor = nm_cell; 
-
-
-        end
-
-        function obj = applyWeightVectorTransform(obj, W, level)
-            % // DEPRECIATED NOMECLATURE
-            arguments
-                obj
-                W = obj.weightMatrix; 
-                level {mustBeNumericOrLogical} = 1; 
-            end
-            
-            disp("Depreciated Nomeclature. Use 'applyLinearTransform' Instead"); 
-            obj = applyLinearTranform(obj, W, level); 
 
         end
         
@@ -499,10 +478,46 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             if ~obj.sampledData 
                 disp("No Data sampled in xtDataCell"); 
                 return
-            end   
+            end
+            N_USE_TRIALS = length(useTrials); 
+            timedat = cell(1, N_USE_TRIALS); 
+            for tri = 1:N_USE_TRIALS
+                tr = useTrials(tri); 
+                timedat{tri} = obj.data{1,tr}(1).times; 
+            end
             obj = subsample@dataCellSuperClass(obj, useTrials, useChannels); 
             obj.channelAmpMax = obj.channelAmpMax(useChannels, useTrials); 
             obj.channelAmpMin = obj.channelAmpMin(useChannels, useTrials); 
+            % Fix call for missing times; 
+            
+            % Subsampling; 
+            yarr = obj.weightMatrix(useChannels,:); 
+            obj.weightMatrix = yarr(:,useChannels); % square subsample
+            %
+            % Ensure we contain times; 
+            for tri = 1:N_USE_TRIALS
+                obj.data{1,tri}(1).times = timedat{tri}; 
+            end
+        end
+
+        function [obj] = combine(obj, dcList) %varargin)
+            arguments
+                obj
+                dcList % i.e. a [bracked] list 
+            end
+
+            % Pump to static; 
+            xtdcCells = cell(1, length(dcList)+1); 
+            xtdcCells{1} = obj; 
+            for c = 1:length(dcList)
+                xtdcCells{c+1} = dcList(c); 
+            end
+
+            out = xtDataCell.combineXtDataCells(xtdcCells);
+            
+            names = fieldnames(out); 
+            names = setdiff(names, 'dataSource'); %exclusion; 
+            obj.copyProperties(out, names);  % force override for some reason
         end
 
         % __ Extract data from 'data' using indexed positions. 
@@ -540,13 +555,13 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             values = cell(N_USE_XT_CH, N_USE_TRIALS);
             for tri = 1:N_USE_TRIALS
                 tr = vars.useTrials(tri); 
-                if isempty(indices{tr})
+                if isempty(indices{tri})
                     continue
                 end
                 for chi = 1:N_USE_XT_CH
                     ch = vars.useChannels(chi); 
                     % __ Iterative Lookup
-                    values{chi,tri} = obj.data{1,tr}(ch).(vars.dataField)(indices{tr}); 
+                    values{chi,tri} = obj.data{1,tr}(ch).(vars.dataField)(indices{tri}); 
                     if (size(indices{tri},1) >1) && (size(values{chi,tri},1) == 1)
                         % deal with transposed columns
                         values{chi,tri} = values{chi,tri}'; 
@@ -555,6 +570,54 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
            
         end
+        
+        function obj = merge(obj, xtdc, vars)
+            arguments
+                obj 
+                xtdc xtDataCell
+                vars.pad = 'nan'; 
+            end
+            % _____
+            
+            if ~(obj.nTrials == xtdc.nTrials)
+                disp("xtDataCells do not have compatible sizes"); 
+            end
+            if ~(obj.fs == xtdc.fs)
+                xtdc.resample(obj.fs); 
+                1;
+            end
+            
+           
+            
+            for tr = 1:obj.nTrials
+                if ~(obj.trTimeLen(tr) == xtdc.trTimeLen(tr))
+                    tMax = max(obj.trTimeLen(tr), xtdc.trTimeLen(tr)); 
+                    nPts = tMax*obj.fs+1; 
+                    if (length(obj.data{1,tr}(1).envelope) == nPts)
+                        for ch = 1:obj.nTrials
+                            %TODO: Finish this loop
+                            1; 
+                        end
+                    end  
+                end
+                obj.data{1,tr} = [obj.data{1,tr}, xtdc.data{1,tr}]; 
+                try
+                    obj.metadata{1,tr} = [obj.metadata{1,tr} xtdc.metadata{1,tr}]; 
+                catch
+                    1; 
+                end
+            end
+            obj.channelAmpMax = [obj.channelAmpMax; xtdc.channelAmpMax]; 
+            obj.channelAmpMin = [obj.channelAmpMin; xtdc.channelAmpMin];
+            mat = zeros(obj.nChannels+xtdc.nChannels);
+            mat(1:obj.nChannels,1:obj.nChannels) = obj.weightMatrix; 
+            mat(obj.nChannels+1:end, obj.nChannels+1:end) = xtdc.weightMatrix;
+            obj.weightMatrix = mat; 
+            obj.nChannels = obj.nChannels+xtdc.nChannels;
+            obj.sensor = [obj.sensor; xtdc.sensor]; 
+            
+        end
+                
 
         %% __ Write xtdata to a CSV file
         % __>> Allow for a tidy data format. 
@@ -580,6 +643,10 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             DATAFIELD = vars.datafield; 
             N_PLOT_TRIALS = length(useTrials); 
             N_PLOT_ROWS = length(useChannels); 
+            if ~isfield(obj.data{1,useTrials(1)}, DATAFIELD)
+                disp(strcat(DATAFIELD, " is not a valid fieldname.")); 
+            end
+            
             if N_PLOT_TRIALS > 1
                 dataCellArr = cellstructhcat(obj.data(1,useTrials), DATAFIELD); 
             else
@@ -691,6 +758,29 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             ylabel(strcat("Channel Offset = ", num2str(offset))); 
             title("Co-Plotted X(t) Data")
         end
+        % ___ Implementation of the 'combine' function; 
+        % For sanity, we will pass in a {1, nDataCells} cell rather than
+        % maintain varargin; 
+        function [dcCombine] = combineXtDataCells(dataCellCell)
+            nDC = length(dataCellCell); 
+            for c = 1:nDC
+                if ~isa(dataCellCell{c}, 'xtDataCell')
+                    disp("Error: Unlike DataCells provided")
+                    dcCombine = []; 
+                    return
+                end
+            end
+            dcCombine = dataCell.manipulate.combineDataCells(dataCellCell); 
+        end
 
+    end
+end
+
+%% Auxillary Functions
+% These are functions ONLY to be called within the validation of this
+% class, but are not accessible outside of this class
+function validateBounds(x, lowerBound, upperBound)
+    if any(x < lowerBound) || any(x > upperBound)
+        error('Each element must be between %d and %d.', lowerBound, upperBound);
     end
 end
