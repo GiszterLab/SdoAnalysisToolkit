@@ -151,10 +151,7 @@ classdef dataCellSuperClass < handle
                         yMax = max(nChObs, [], 'all'); 
                     end
                     ten = zeros(N_USE_CH, maxLen, N_TRIALS, yMax); 
-<<<<<<< HEAD
-                    %ten = zeros(N_USE_CH, maxLen, N_TRIALS); 
-=======
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
+
                 case {'nanpad'}
                     TRIM = 0; 
                     maxLen = max(nElem, [], 'all'); 
@@ -164,10 +161,7 @@ classdef dataCellSuperClass < handle
                         yMax = max(nChObs, [], 'all'); 
                     end
                     ten = nan*ones(N_USE_CH, maxLen, N_TRIALS, yMax); 
-<<<<<<< HEAD
-                    %ten = nan*ones(N_USE_CH, maxLen, N_TRIALS); 
-=======
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
+                    
                 case {'Trim', 'trim'}
                     TRIM = 1; 
                     %// Trim signals to shortest trial
@@ -178,18 +172,10 @@ classdef dataCellSuperClass < handle
                         yMax = min(min(nChObs, [], 'all'),1); 
                     end                    
                     ten = zeros(N_USE_CH, minLen, N_TRIALS, yMax);  
-<<<<<<< HEAD
-                    %ten = zeros(N_USE_CH, minLen, N_TRIALS); 
-=======
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
             end
 
            % Handle differences in Y/ # Observations; 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
             for tri = 1:N_TRIALS
                 tr = useTrials(tri); 
 %                if yMax < 2
@@ -231,10 +217,6 @@ classdef dataCellSuperClass < handle
                 if szZ > 1
                     %for z = 1:szZ
                     ten(:,1:tLast,tri,1:szZ) = xtData(:,1:tLast,:); 
-<<<<<<< HEAD
-                    %ten(:,1:tLast,tri,1:szZ) = xtData(:,1:tLast,:); 
-=======
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
                 else
                     ten(:,1:tLast,tri,1) = xtData(:,1:tLast); 
                 end

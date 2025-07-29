@@ -511,7 +511,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                         'outputDirectory', options.outputDirectory); 
                     %
                 end
-                obj.plotStirpd(XT_CH_NO(m), PP_CH_NO); 
+                obj.plotStirpd(XT_CH_NO(m), PP_CH_NO(u)); 
             end
         end
         % __ Quick -plots; 
@@ -546,7 +546,8 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                     %
                     titleStr = strcat(obj.sdoStruct(m).neuronNames{u}, '\rightarrow', obj.sdoStruct(m).signalType); 
 
-                    pxTools.plot.stirpd(obj.sdoStruct(m).stirpd{u}, ...
+                    figure;
+                     pxTools.plot.stirpd(obj.sdoStruct(m).stirpd{u}, ...
                         N_PX0_PTS, 'binDuraMs', 1000/obj.fs, ...
                         'nSpikes', obj.sdoStruct(m).stats{u}.nEvents, ... 
                         'titleStr', titleStr); 
@@ -556,6 +557,7 @@ classdef sdoMultiMat < handle & matlab.mixin.Copyable   %& dataCellSuperClass
                     f.Colormap = bone; 
                     colorbar; 
                     close(n+1);
+                    %close(n); 
                     ii = ii+1; 
                 end
                 sgtitle("STA-P(x)"); 

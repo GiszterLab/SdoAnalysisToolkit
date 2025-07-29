@@ -28,6 +28,7 @@
 %       with a N_INTERVALS = 2 will predict event:event+20 ms). 
 %       - If N_INTERVALS is not an integer, prediction will estimate L, and
 %       use L for an arbitrary prediction interval. 
+%       --> Each element will be computed independently. 
 
 % Copyright (C) 2023 Trevor S. Smith
 % Drexel University College of Medicine
@@ -50,7 +51,7 @@ if ~exist('N_INTERVALS', 'var')
     N_INTERVALS = 1; 
 end
 
-warning("predictPxtFromPx0 is deprecated. Use 'getPxTE' instead"); 
+%warning("predictPxtFromPx0 is deprecated. Use 'getPxTE' instead"); 
 
 N_BINS = size(mat,1); 
 

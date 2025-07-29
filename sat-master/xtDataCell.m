@@ -23,7 +23,7 @@
 %__________________________________________
 
 
-classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell.dependencies.primaryData
+classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataCellSuperClass & dataCell.dependencies.primaryData
     %% 'Inherited Properties'
         %data                = []; 
         %metadata            = []; 
@@ -464,7 +464,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 return
             end    
 
-            ten = getTensor@dataCellSuperClass(obj, useChannels, useTrials, ...
+            ten = getTensor@dataCell.deprecated.dataCellSuperClass(obj, useChannels, useTrials, ...
                 'DATAFIELD', vars.DATAFIELD, 'CONFORM_METHOD', vars.CONFORM_METHOD); 
         end
 
@@ -485,7 +485,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
                 tr = useTrials(tri); 
                 timedat{tri} = obj.data{1,tr}(1).times; 
             end
-            obj = subsample@dataCellSuperClass(obj, useTrials, useChannels); 
+            obj = subsample@dataCell.deprecated.dataCellSuperClass(obj, useTrials, useChannels); 
             obj.channelAmpMax = obj.channelAmpMax(useChannels, useTrials); 
             obj.channelAmpMin = obj.channelAmpMin(useChannels, useTrials); 
             % Fix call for missing times; 

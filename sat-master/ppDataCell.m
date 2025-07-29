@@ -26,7 +26,7 @@
 %__________________________________________
 
 
-classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell.dependencies.primaryData
+classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataCellSuperClass & dataCell.dependencies.primaryData
         %% 'Inherited Properties'
         % data
         % metadata
@@ -202,7 +202,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCellSuperClass & data
             end
 
             %// added concrete implementation for extra fields
-            ppdc = subsample@dataCellSuperClass(obj, useTrials, useChannels); 
+            ppdc = subsample@dataCell.deprecated.dataCellSuperClass(obj, useTrials, useChannels); 
             ppdc.nTrialEvents = obj.nTrialEvents(useChannels, useTrials); 
             obj = ppdc;
         end

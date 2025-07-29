@@ -180,8 +180,6 @@ if vars.condenseShuffles
     disp("NOTE: Condensing Shuffles may greatly increase compute time."); 
 end
 
-nUseTrials = length(vars.useTrials); 
-
 
 %% PreCastArr
 
@@ -223,7 +221,7 @@ toc
 
 disp("Populating SDOs"); 
 %// nUnits x nTrials cells
-[obsPxt0Cell, obsPxt1Cell] = pxTools.getTrialwisePxt( ...
+[obsPxt0Cell, obsPxt1Cell] = pxTools.deprecated.getTrialwisePxt( ...
         xtData, ppData, ...
         vars.useTrials, 1:N_XT_CHANNELS, ...
         'xtDataField', xtdc.dataField,...
@@ -237,7 +235,7 @@ disp("Populating SDOs");
 for m = 1:N_XT_CHANNELS
     tic; 
     %// eval ALL points for a xt channel first, then lookup shuffle points
-    [pxt0Cell, pxt1Cell] = pxTools.getTrialwisePxt(xtData, [], ...
+    [pxt0Cell, pxt1Cell] = pxTools.deprecated.getTrialwisePxt(xtData, [], ...
             vars.useTrials, m, ...
             'xtDataField', xtdc.dataField,...
             'pxNPoints', [N_PX0_PTS, N_PX1_PTS], ...
@@ -258,13 +256,6 @@ for m = 1:N_XT_CHANNELS
             continue; 
         end
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-=======
->>>>>>> af812038deed325230cec7f5b4f87f8dcd82c126
-=======
->>>>>>> documentation
         pxt0_Bkgd = pxt0Cell{1,tr}{m}; 
         pxt1_Bkgd = pxt1Cell{1,tr}{m}; 
 

@@ -408,8 +408,9 @@ classdef sdoMat < handle & matlab.mixin.Copyable & dataCellSuperClass & dataCell
                 else
                     pxData = px0.data; 
                 end
-               pdPx = pxTools.predictPxtfromPx0(obj.transitionMat{hh}, pxData); 
-               pxt_est.data{hh} = pdPx;  
+                pdPx = pxTools.getPxTE(pxData, obj.transitionMat{hh}, 1); 
+               %pdPx = pxTools.predictPxtfromPx0(obj.transitionMat{hh}, pxData); 
+               pxt_est.data{hh} = squeeze(pdPx);  
                pxt_est.pxtNames{hh} = obj.pxtNames{hh}; 
             end
             %______ BACK COPY_________

@@ -81,23 +81,26 @@ if nPoints < N_STEPS
     end
 end
 %% CORE x+dx update code
-N_BINS = length(px0); 
 
-pxTE = zeros(N_BINS, N_STEPS); 
+[N_BINS, N_OBS] = size(px0); 
 
-t = 1;
-pxt = px0; 
-while t <= N_STEPS
-    pxTE(:,t) = pxt; 
-    dxt = zeros(N_BINS,1); 
-    for a = 1:N_L_ARR
-        %// sum predicted differentials
-        dxt = dxt+CTRL_ON(a,t)*L{a}*pxt; 
+pxTE = zeros(N_BINS, N_STEPS, N_OBS); 
+
+for ss = 1:N_OBS
+    t = 1;
+    pxt = px0(:,ss); 
+    while t <= N_STEPS
+        pxTE(:,t,ss) = pxt; 
+        dxt = zeros(N_BINS,1); 
+        for a = 1:N_L_ARR
+            %// sum predicted differentials
+            dxt = dxt+CTRL_ON(a,t)*L{a}*pxt; 
+        end
+        %// update
+        pxt = pxt+dxt; 
+        t = t+1; 
     end
-    %// update
-    pxt = pxt+dxt; 
-    t = t+1; 
+    %pxTE(:,:,ss) = pxt; 
 end
-
 
 end
