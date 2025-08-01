@@ -3,12 +3,15 @@
 ## Utility: 
 Custom  Handle  class to import, manipulate,  and subsample trialwise point process (pp) data. 
 
+!!! note deprecated
+      This class is deprecated, and is kept for archival purposes with historical code. We recommend usage of [ppDataCell2](./m_ppDataCell2.md) instead, which may be replaced in-place.
+
 ## Overview: 
 
 
 ```mermaid
 classDiagram
-    class ppDataCell {
+    class ppDataCell2 {
         +data
         +metadata
         +nTrials

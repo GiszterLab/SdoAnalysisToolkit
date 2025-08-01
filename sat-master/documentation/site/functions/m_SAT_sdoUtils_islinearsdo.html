@@ -7,7 +7,7 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="../assets/images/favicon.png" rel="icon"/>
 <meta content="mkdocs-1.6.1, mkdocs-material-9.6.14" name="generator"/>
-<title>ppDataCell.m - SDO Analysis Toolkit</title>
+<title>SAT.sdoUtils.islinearsdo() - SDO Analysis Toolkit</title>
 <link href="../assets/stylesheets/main.342714a4.min.css" rel="stylesheet"/>
 <link href="../assets/stylesheets/palette.06af60db.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -21,7 +21,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#ppdatacellm">
+<a class="md-skip" href="#satsdoutilsislinearsdo">
           Skip to content
         </a>
 </div>
@@ -45,7 +45,7 @@
 <div class="md-header__topic" data-md-component="header-topic">
 <span class="md-ellipsis">
             
-              ppDataCell.m
+              SAT.sdoUtils.islinearsdo()
             
           </span>
 </div>
@@ -133,7 +133,7 @@
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="overview.html">
+<a class="md-nav__link" href="../classes/overview.html">
 <span class="md-ellipsis">
     Custom Classes
     
@@ -141,7 +141,7 @@
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../functions/overview.html">
+<a class="md-nav__link" href="overview.html">
 <span class="md-ellipsis">
     Code Library
     
@@ -163,13 +163,6 @@
     </label>
 <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#utility">
-<span class="md-ellipsis">
-      Utility:
-    </span>
-</a>
-</li>
-<li class="md-nav__item">
 <a class="md-nav__link" href="#overview">
 <span class="md-ellipsis">
       Overview:
@@ -177,25 +170,29 @@
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#constructor">
+<a class="md-nav__link" href="#usages">
 <span class="md-ellipsis">
-      Constructor
+      Usages:
+    </span>
+</a>
+<nav aria-label="Usages:" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#inputs">
+<span class="md-ellipsis">
+      Inputs
     </span>
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#properties">
+<a class="md-nav__link" href="#output">
 <span class="md-ellipsis">
-      Properties:
+      Output:
     </span>
 </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#selected-methods">
-<span class="md-ellipsis">
-      (Selected) Methods :
-    </span>
-</a>
+</ul>
+</nav>
 </li>
 </ul>
 </nav>
@@ -204,108 +201,78 @@
 </div>
 <div class="md-content" data-md-component="content">
 <article class="md-content__inner md-typeset">
-<h1 id="ppdatacellm"><em>ppDataCell.m</em></h1>
-<h2 id="utility">Utility:</h2>
-<p>Custom  Handle  class to import, manipulate,  and subsample trialwise point process (pp) data. </p>
-<div class="admonition note deprecated">
-<p class="admonition-title">Note</p>
-<p>This class is deprecated, and is kept for archival purposes with historical code. We recommend usage of <a href="m_ppDataCell2.html">ppDataCell2</a> instead, which may be replaced in-place.</p>
-</div>
+<h1 id="satsdoutilsislinearsdo">SAT.sdoUtils.islinearsdo()</h1>
 <h2 id="overview">Overview:</h2>
-<div class="mermaid">classDiagram
-    class ppDataCell2 {
-        +data
-        +metadata
-        +nTrials
-        +nChannels
-        +sensor
-        -discretizedData
-        +import()
-        +plot()
-    }</div>
-<h2 id="constructor">Constructor</h2>
-<p><em>Call within Matlab Terminal</em>
-<div class="highlight"><pre><span></span><code>ppdc = ppDataCell(); 
-</code></pre></div></p>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>For ease of loading data into <em>ppDataCell</em>, it is recommended to first generate an instance of the <em>ppDataHolder</em> structure, then populate accordingly: 
-<div class="highlight"><pre><span></span><code>ppdh = SAT.ppDataHolder_new(N_TRIALS, N_CHANNELS)
-</code></pre></div></p>
-<p>This may then be easily loaded as: 
-<div class="highlight"><pre><span></span><code>ppdc.import(ppdh)
-</code></pre></div></p>
+<p><em>Method for quickly confirming a matrix conforms to a definition of an SDO</em></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method should be compatible with older versions of MATLAB &lt;2019b, as it uses inputParser instead of argument parser.</p>
 </div>
-<h2 id="properties">Properties:</h2>
+<div class="mermaid">
+flowchart TD
+
+%% Define styles - CONSERVED!
+classDef dataObj fill: #EACE79,stroke:#333,stroke-width:2px; 
+classDef codeObj fill: #90B963,stroke:#333,stroke-width:2px;
+classDef classObj fill: #B1E2E9,stroke:#333,stroke-width:2px;
+classDef paramObj fill: #D6766F,stroke:#333,stroke-width:2px
+
+
+C(L)
+A[SAT.sdoUtils.islinearsdo.m]
+B[flag]
+D[REASON]
+
+C --takes--&gt;A
+A --returns--&gt;B
+A --returns--&gt;D
+
+
+%% Assign classes to Nodes
+class B,C dataObj;
+class A codeObj;
+class 00 classObj;
+class B,D paramObj;
+</div>
+<h2 id="usages">Usages:</h2>
+<div class="highlight"><pre><span></span><code>[flag, REASON] = islinearsdo(L)
+</code></pre></div>
+<h3 id="inputs">Inputs</h3>
 <ul>
-<li><code>.data</code> </li>
-<li>{1 x N_TRIALS} cell containing trialwise timeseries data. See  <code>SAT.ppDataHolder_new.m</code> Populated by  <code>.import</code>  method. </li>
-<li><code>.metadata</code> <ul>
-<li>{1 x N_TRIALS} cell containing trialwise meta data. See  <code>SAT.ppDataHolder_new.m</code> </li>
+<li><code>L</code> <ul>
+<li>'Linear Operator' to test</li>
+<li>[N_STATES, N_STATES] matrix. </li>
 </ul>
 </li>
-<li><code>nTrials</code> <ul>
-<li>[Integer]. Number of columns in  data  . </li>
-<li>Populated by  <code>.import</code>  method. </li>
 </ul>
-</li>
-<li><code>.nChannels</code> </li>
-<li>[Integer]. Number of rows (data channels) for each recording trial. <ul>
-<li>Populated by  <code>.import</code>  method. </li>
-</ul>
-</li>
-<li><code>.sensor</code> </li>
-<li>{1 x N_CHANNELS} cell containing strings of channel names. </li>
-<li><code>.fs</code> </li>
-<li>Sample frequency of timeseries data. </li>
-<li>Populated by  <code>.import</code>  method. </li>
-<li>Modified by  <code>.resample</code>  method. </li>
-<li><code>.trTimeLen</code> </li>
-<li>[1 x N_TRIALS] doubles array, corresponding to the length of each trial in <code>.data</code>. <ul>
-<li>Populated by  <code>.import</code>  method. </li>
-</ul>
-</li>
-<li><code>.dataField</code> </li>
-<li>[string]. Corresponds to fieldname in  .data  which contains time series data. </li>
-<li>Populated by  <code>.import</code>  method. </li>
-<li><code>.shuffMethod</code> </li>
-<li>{'isi'/'cif'}. Method for generating shuffle. See <code>SAT.computeSDO.m</code></li>
-<li>Default = 'isi'; </li>
-<li><code>.shuffTau</code></li>
-<li>[Numeric]. Time constant (in sec) for defining the characteristic conditional intensity function from point-process realization. </li>
-<li>Default = 0.2</li>
-<li><code>.shuffCIF</code></li>
-<li>{'gs', '-hg', 'expd', 'tb'}. </li>
-<li>Method for constructing the conditional intensity function. </li>
-<li>See <code>SAT.computeSDO.m</code></li>
-</ul>
-<h2 id="selected-methods">(Selected) Methods  :</h2>
+<h3 id="output">Output:</h3>
 <ul>
-<li>
-<p><code>.import</code> (ppData)
-    <div class="highlight"><pre><span></span><code>ppdc.import(ppData)
-</code></pre></div></p>
-<ul>
-<li>Imports  ppData  , as generated by  SAT.ppDataHolder_new.m </li>
-</ul>
-</li>
-<li>
-<p><code>.plot</code>  (useTrials, useChannels)
-    <div class="highlight"><pre><span></span><code>xtdc.plot();
-</code></pre></div></p>
-<ul>
-<li>Calls two subfunctions: <ul>
-<li><code>.plotWaves</code> -- plot spike waveformss from selected channels</li>
-<li><code>.plotSpikes</code> -- plot spike time events from selected channels. </li>
+<li><code>flag</code><ul>
+<li>Boolean [0/1]<ul>
+<li><code>0</code>: L fails to suffice assumptions</li>
+<li><code>1</code> - L satisfices assumptions of linear operators</li>
 </ul>
 </li>
 </ul>
 </li>
 <li>
-<p><code>.shuffle</code> (N_SHUFFLES, SHUFF_METHOD)</p>
+<p><code>REASON</code> </p>
+<ul>
+<li>[Integer]</li>
+<li><code>0</code>: No failures</li>
+<li><code>1</code>: Columns do not sum to 0</li>
+<li><code>2</code>: Positive Elements on the Diagonal</li>
+<li><code>3</code>: Negative Elements on the Off-Diagonal</li>
+<li><code>4</code>: Element Magnitude &gt; 1</li>
+</ul>
 </li>
-<li>Shuffles spiketimes for null hypotheses. </li>
-<li>if <code>N_SHUFFLES</code> is not provided, defaults to the <code>ppdc.nShuffles</code> property. </li>
+<li>
+<p><code>randWalkMat</code></p>
+<ul>
+<li>[N_SIM, N_STEPS] matrix</li>
+<li>Contains the discrete simulations. </li>
+</ul>
+</li>
 </ul>
 </article>
 </div>

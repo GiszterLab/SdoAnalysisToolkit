@@ -37,9 +37,9 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
     end
     properties (Dependent)
         nStates
+        nTrials
         nChannels % I think this is nXTChannels
         nReplicates
-        nTrials
         nObservations 
     end
     properties (Hidden)
@@ -129,13 +129,6 @@ classdef pxAssigner < handle & matlab.mixin.Copyable
             end
             G = pxTools.getH0Array(obj.nStates, obj.G_smoothFWidth_Pts, obj.G_smoothFStdev_Pts); 
             obj.data = cellfun(@(x) G*x, obj.data); 
-            %{
-            for tr = 1:obj.nTrials
-                for ch = 1:obj.nChannels
-                    obj.data{ch,tr} = G*obj.data{ch,tr}; 
-                end
-            end
-            %}
         end
         %----------------------------------------------------------------
         function obj = hcat(obj)

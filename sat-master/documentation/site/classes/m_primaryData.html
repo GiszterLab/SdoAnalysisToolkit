@@ -7,7 +7,7 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="../assets/images/favicon.png" rel="icon"/>
 <meta content="mkdocs-1.6.1, mkdocs-material-9.6.14" name="generator"/>
-<title>ppDataCell.m - SDO Analysis Toolkit</title>
+<title>dataCell.primaryData - SDO Analysis Toolkit</title>
 <link href="../assets/stylesheets/main.342714a4.min.css" rel="stylesheet"/>
 <link href="../assets/stylesheets/palette.06af60db.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -21,7 +21,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#ppdatacellm">
+<a class="md-skip" href="#datacellprimarydata">
           Skip to content
         </a>
 </div>
@@ -45,7 +45,7 @@
 <div class="md-header__topic" data-md-component="header-topic">
 <span class="md-ellipsis">
             
-              ppDataCell.m
+              dataCell.primaryData
             
           </span>
 </div>
@@ -165,14 +165,32 @@
 <li class="md-nav__item">
 <a class="md-nav__link" href="#utility">
 <span class="md-ellipsis">
-      Utility:
+      Utility
+    </span>
+</a>
+<nav aria-label="Utility" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#inherited-classes">
+<span class="md-ellipsis">
+      Inherited Classes
     </span>
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#overview">
+<a class="md-nav__link" href="#compositions">
 <span class="md-ellipsis">
-      Overview:
+      Compositions:
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#diagram">
+<span class="md-ellipsis">
+      Diagram
     </span>
 </a>
 </li>
@@ -186,16 +204,133 @@
 <li class="md-nav__item">
 <a class="md-nav__link" href="#properties">
 <span class="md-ellipsis">
-      Properties:
+      Properties
+    </span>
+</a>
+<nav aria-label="Properties" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#defined">
+<span class="md-ellipsis">
+      (Defined)
     </span>
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#selected-methods">
+<a class="md-nav__link" href="#composed">
 <span class="md-ellipsis">
-      (Selected) Methods :
+      (Composed)
     </span>
 </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dependent">
+<span class="md-ellipsis">
+      (Dependent)
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dependent-hidden">
+<span class="md-ellipsis">
+      (Dependent, Hidden)
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#methods">
+<span class="md-ellipsis">
+      Methods
+    </span>
+</a>
+<nav aria-label="Methods" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#importdataholder-datasource">
+<span class="md-ellipsis">
+      import(dataHolder, dataSource):
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#-method-for-importing-data-into-primarydata">
+<span class="md-ellipsis">
+      - Method for importing data into primaryData.
+    </span>
+</a>
+<nav aria-label="- Method for importing data into primaryData." class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calc_trtimelen">
+<span class="md-ellipsis">
+      calc_trTimeLen():
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#combineobj2">
+<span class="md-ellipsis">
+      combine(obj2):
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#reordertrialorder-channelorder">
+<span class="md-ellipsis">
+      reorder(trialOrder, ChannelOrder):
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#subsampletrial_idx-row_idx">
+<span class="md-ellipsis">
+      subsample(TRIAL_IDX, ROW_IDX):
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#getdatainrangetrange-usechannels-usetrials">
+<span class="md-ellipsis">
+      getDataInRange(tRange, useChannels, useTrials)
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#resampledesired_hz-datafield">
+<span class="md-ellipsis">
+      resample(DESIRED_HZ, DATAFIELD)
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#convertdatatypenewdatatype-vars">
+<span class="md-ellipsis">
+      convertDataType(newDataType, vars)
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#vcatobj2">
+<span class="md-ellipsis">
+      vcat(obj2)
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#hcatobj2">
+<span class="md-ellipsis">
+      hcat(obj2)
+    </span>
+</a>
+</li>
+</ul>
+</nav>
 </li>
 </ul>
 </nav>
@@ -204,108 +339,233 @@
 </div>
 <div class="md-content" data-md-component="content">
 <article class="md-content__inner md-typeset">
-<h1 id="ppdatacellm"><em>ppDataCell.m</em></h1>
-<h2 id="utility">Utility:</h2>
-<p>Custom  Handle  class to import, manipulate,  and subsample trialwise point process (pp) data. </p>
-<div class="admonition note deprecated">
+<h1 id="datacellprimarydata"><em>dataCell.primaryData</em></h1>
+<h2 id="utility">Utility</h2>
+<p>Support class for composing into public classes. Used to sample, hold, manipulate, and plot data. </p>
+<div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This class is deprecated, and is kept for archival purposes with historical code. We recommend usage of <a href="m_ppDataCell2.html">ppDataCell2</a> instead, which may be replaced in-place.</p>
+<p>This is not a class the end-user will have to usually directly use or define. But it is composed into public classes, and passes dependent properties to these classes. </p>
 </div>
-<h2 id="overview">Overview:</h2>
+<h3 id="inherited-classes">Inherited Classes</h3>
+<ul>
+<li><em>handle</em></li>
+<li><em>matlab.mixin.Copyable</em></li>
+</ul>
+<h3 id="compositions">Compositions:</h3>
+<ul>
+<li>xtDataCell2</li>
+<li>ppDataCell2</li>
+<li>sdoMat2</li>
+</ul>
+<h2 id="diagram">Diagram</h2>
 <div class="mermaid">classDiagram
-    class ppDataCell2 {
-        +data
-        +metadata
-        +nTrials
-        +nChannels
-        +sensor
-        -discretizedData
-        +import()
-        +plot()
-    }</div>
+    class primaryData {
+        ___Defined:___
+        +data
+        +metadata
+        +trialMeta
+        +dataType
+        +dataSource
+        +dataField
+        +trTimeStart
+        +trTimeStop
+        +trTimeLen
+        ___Dependent:___
+        +fs
+        +nTrials
+        +nChannels
+        +sensor
+        +nTrialEvents
+        -sampledData
+        -validDataField
+        -haveSensorNames
+  }</div>
 <h2 id="constructor">Constructor</h2>
-<p><em>Call within Matlab Terminal</em>
-<div class="highlight"><pre><span></span><code>ppdc = ppDataCell(); 
-</code></pre></div></p>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>For ease of loading data into <em>ppDataCell</em>, it is recommended to first generate an instance of the <em>ppDataHolder</em> structure, then populate accordingly: 
-<div class="highlight"><pre><span></span><code>ppdh = SAT.ppDataHolder_new(N_TRIALS, N_CHANNELS)
-</code></pre></div></p>
-<p>This may then be easily loaded as: 
-<div class="highlight"><pre><span></span><code>ppdc.import(ppdh)
-</code></pre></div></p>
+<p><div class="highlight"><pre><span></span><code>dataCell.primaryData(dataClass, N_TRIALS, N_CHANNELS)
+</code></pre></div>
+- <code>dataClass</code>: 
+    - Switch for the type of class: 
+        - 'ppData' --&gt; Initialize for <code>ppDataCell2</code>
+        - 'xtData' --&gt; Initialize for <code>xtDataCell2</code></p>
+<h2 id="properties">Properties</h2>
+<h3 id="defined">(Defined)</h3>
+<ul>
+<li><code>data</code>:  <ul>
+<li>{1, N_TRIALS} <em>cell</em> of structures to hold data.  </li>
+</ul>
+</li>
+<li><code>metadata</code>:<ul>
+<li>{1, N_TRIALS} <em>cell</em> of structures to hold metadata.</li>
+</ul>
+</li>
+<li><code>trialMeta</code>: </li>
+<li><code>dataType</code>:<ul>
+<li>EITHER: <ul>
+<li>'xtData'</li>
+<li>'ppData'</li>
+<li>'pxtData'</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>dataSource</code>:<ul>
+<li>Holder to save variable name during 'import'.</li>
+</ul>
+</li>
+<li><code>dataField</code>: <ul>
+<li>Which field in <code>.data</code> to default-call to. </li>
+</ul>
+</li>
+<li><code>trTimeStart</code>: <ul>
+<li>[N_CHANNELS, N_TRIALS] doubles holder for holding trialwise start times. </li>
+</ul>
+</li>
+<li><code>trTimeStop</code>: <ul>
+<li>[N_CHANNELS, N_TRIALS] doubles holder for holding trialwise end times.</li>
+</ul>
+</li>
+<li><code>trTimeLen</code>: <ul>
+<li>[N_CHANNELS, N_TRIALS] doubles houlder for holding trialwise durations. </li>
+</ul>
+</li>
+</ul>
+<h3 id="composed">(Composed)</h3>
+<p><em>None</em></p>
+<h3 id="dependent">(Dependent)</h3>
+<ul>
+<li><code>fs</code>: &lt;&lt;&lt; obj.data <ul>
+<li>Sample Frequency</li>
+</ul>
+</li>
+<li><code>nTrials</code>: &lt;&lt;&lt; obj.data<ul>
+<li>Number of trials (# columns of data)</li>
+</ul>
+</li>
+<li><code>.nChannels</code>: &lt;&lt;&lt; obj.data<ul>
+<li>Number of channels (# of rows in data{1,tr})</li>
+</ul>
+</li>
+<li><code>.sensor</code>: &lt;&lt;&lt; obj.data<ul>
+<li>"sensor" field in data{1,tr}</li>
+</ul>
+</li>
+<li><code>.nTrialEvents</code>: &lt;&lt;&lt; obj.data<ul>
+<li>[N_CHANNELS, N_TRIALS] doubles array</li>
+<li>Number of observations for each row of the data field.</li>
+</ul>
+</li>
+</ul>
+<h3 id="dependent-hidden">(Dependent, Hidden)</h3>
+<ul>
+<li><code>sampledData</code> : &lt;&lt;&lt; obj.data<ul>
+<li>[0/1]</li>
+<li>If <code>obj.data</code> is populated. </li>
+</ul>
+</li>
+<li><code>validDataField</code> : &lt;&lt;&lt; obj.data<ul>
+<li>[0/1]</li>
+<li>If <code>obj.dataField</code> is a field of <code>obj.data</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="methods">Methods</h2>
+<hr/>
+<ul>
+<li>
+<h3 id="importdataholder-datasource"><code>import</code>(dataHolder, dataSource):</h3>
+<h2 id="-method-for-importing-data-into-primarydata">- Method for importing data into primaryData.</h2>
+</li>
+</ul>
+<hr/>
+<ul>
+<li>
+<h3 id="calc_trtimelen"><code>calc_trTimeLen</code>():</h3>
+<ul>
+<li>Method for validating/setting the maximum trial length. </li>
+</ul>
+</li>
+</ul>
+<hr/>
+<ul>
+<li>
+<h3 id="combineobj2"><code>combine</code>(obj2):</h3>
+<ul>
+<li>Method to combine this instance of primaryData with a second primaryData </li>
+</ul>
+</li>
+</ul>
+<hr/>
+<ul>
+<li>
+<h3 id="reordertrialorder-channelorder"><code>reorder</code>(trialOrder, ChannelOrder):</h3>
+<ul>
+<li>Method to reorganize the .data field</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<ul>
+<li>
+<h3 id="subsampletrial_idx-row_idx"><code>subsample</code>(TRIAL_IDX, ROW_IDX):</h3>
+<ul>
+<li>Method to extract only a portion from the .data field.</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<ul>
+<li>
+<h3 id="getdatainrangetrange-usechannels-usetrials"><code>getDataInRange</code>(tRange, useChannels, useTrials)</h3>
+<ul>
+<li>Method to extract a binned region of data. </li>
+</ul>
+</li>
+</ul>
+<hr/>
+<ul>
+<li>
+<h3 id="resampledesired_hz-datafield"><code>resample</code>(DESIRED_HZ, DATAFIELD)</h3>
+<ul>
+<li>Method for changing the sample frequency (resampling). This can be upsampled or downsampled.</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<ul>
+<li>
+<h3 id="convertdatatypenewdatatype-vars"><code>convertDataType</code>(newDataType, vars)</h3>
+<ul>
+<li>Method for interconverting the data within <code>.data</code> between different classes. </li>
+</ul>
+</li>
+</ul>
+<hr/>
+<ul>
+<li>
+<h3 id="vcatobj2"><code>vcat</code>(obj2)</h3>
+<ul>
+<li>Vertical Concatenation</li>
+<li>Used to combine two <code>primaryData</code> objects together: Adds additional <strong>channels</strong> to existing trials.</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Each new channel must have the same data length as the original data.</p>
 </div>
-<h2 id="properties">Properties:</h2>
-<ul>
-<li><code>.data</code> </li>
-<li>{1 x N_TRIALS} cell containing trialwise timeseries data. See  <code>SAT.ppDataHolder_new.m</code> Populated by  <code>.import</code>  method. </li>
-<li><code>.metadata</code> <ul>
-<li>{1 x N_TRIALS} cell containing trialwise meta data. See  <code>SAT.ppDataHolder_new.m</code> </li>
-</ul>
 </li>
-<li><code>nTrials</code> <ul>
-<li>[Integer]. Number of columns in  data  . </li>
-<li>Populated by  <code>.import</code>  method. </li>
 </ul>
-</li>
-<li><code>.nChannels</code> </li>
-<li>[Integer]. Number of rows (data channels) for each recording trial. <ul>
-<li>Populated by  <code>.import</code>  method. </li>
-</ul>
-</li>
-<li><code>.sensor</code> </li>
-<li>{1 x N_CHANNELS} cell containing strings of channel names. </li>
-<li><code>.fs</code> </li>
-<li>Sample frequency of timeseries data. </li>
-<li>Populated by  <code>.import</code>  method. </li>
-<li>Modified by  <code>.resample</code>  method. </li>
-<li><code>.trTimeLen</code> </li>
-<li>[1 x N_TRIALS] doubles array, corresponding to the length of each trial in <code>.data</code>. <ul>
-<li>Populated by  <code>.import</code>  method. </li>
-</ul>
-</li>
-<li><code>.dataField</code> </li>
-<li>[string]. Corresponds to fieldname in  .data  which contains time series data. </li>
-<li>Populated by  <code>.import</code>  method. </li>
-<li><code>.shuffMethod</code> </li>
-<li>{'isi'/'cif'}. Method for generating shuffle. See <code>SAT.computeSDO.m</code></li>
-<li>Default = 'isi'; </li>
-<li><code>.shuffTau</code></li>
-<li>[Numeric]. Time constant (in sec) for defining the characteristic conditional intensity function from point-process realization. </li>
-<li>Default = 0.2</li>
-<li><code>.shuffCIF</code></li>
-<li>{'gs', '-hg', 'expd', 'tb'}. </li>
-<li>Method for constructing the conditional intensity function. </li>
-<li>See <code>SAT.computeSDO.m</code></li>
-</ul>
-<h2 id="selected-methods">(Selected) Methods  :</h2>
+<hr/>
 <ul>
 <li>
-<p><code>.import</code> (ppData)
-    <div class="highlight"><pre><span></span><code>ppdc.import(ppData)
-</code></pre></div></p>
+<h3 id="hcatobj2"><code>hcat</code>(obj2)</h3>
 <ul>
-<li>Imports  ppData  , as generated by  SAT.ppDataHolder_new.m </li>
+<li>Horizontal Concatenation </li>
+<li>Used to combine two <code>primaryData</code> objects together: Adds additional <strong>trials</strong> to data. </li>
 </ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Each trial must have the same number of channels as the original data. </p>
+</div>
 </li>
-<li>
-<p><code>.plot</code>  (useTrials, useChannels)
-    <div class="highlight"><pre><span></span><code>xtdc.plot();
-</code></pre></div></p>
-<ul>
-<li>Calls two subfunctions: <ul>
-<li><code>.plotWaves</code> -- plot spike waveformss from selected channels</li>
-<li><code>.plotSpikes</code> -- plot spike time events from selected channels. </li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><code>.shuffle</code> (N_SHUFFLES, SHUFF_METHOD)</p>
-</li>
-<li>Shuffles spiketimes for null hypotheses. </li>
-<li>if <code>N_SHUFFLES</code> is not provided, defaults to the <code>ppdc.nShuffles</code> property. </li>
 </ul>
 </article>
 </div>

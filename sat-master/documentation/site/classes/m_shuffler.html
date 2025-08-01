@@ -7,7 +7,7 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="../assets/images/favicon.png" rel="icon"/>
 <meta content="mkdocs-1.6.1, mkdocs-material-9.6.14" name="generator"/>
-<title>ppDataCell.m - SDO Analysis Toolkit</title>
+<title>dataCell.shuffler - SDO Analysis Toolkit</title>
 <link href="../assets/stylesheets/main.342714a4.min.css" rel="stylesheet"/>
 <link href="../assets/stylesheets/palette.06af60db.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -21,7 +21,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#ppdatacellm">
+<a class="md-skip" href="#datacellshuffler">
           Skip to content
         </a>
 </div>
@@ -45,7 +45,7 @@
 <div class="md-header__topic" data-md-component="header-topic">
 <span class="md-ellipsis">
             
-              ppDataCell.m
+              dataCell.shuffler
             
           </span>
 </div>
@@ -170,32 +170,64 @@
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#overview">
+<a class="md-nav__link" href="#compositions">
 <span class="md-ellipsis">
-      Overview:
+      Compositions:
     </span>
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#constructor">
+<a class="md-nav__link" href="#structure">
 <span class="md-ellipsis">
-      Constructor
+      Structure:
     </span>
 </a>
 </li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="#properties">
 <span class="md-ellipsis">
-      Properties:
+      Properties
     </span>
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#selected-methods">
+<a class="md-nav__link" href="#methods">
 <span class="md-ellipsis">
-      (Selected) Methods :
+      Methods
     </span>
 </a>
+<nav aria-label="Methods" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#importdata">
+<span class="md-ellipsis">
+      import(data):
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#randomntrials-nchannels-nevents-vars">
+<span class="md-ellipsis">
+      random(nTrials, nChannels, nEvents, vars):
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#shuffledata-vars">
+<span class="md-ellipsis">
+      shuffle(data, vars):
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#getppdatavarsflatten">
+<span class="md-ellipsis">
+      getPpData(vars.flatten):
+    </span>
+</a>
+</li>
+</ul>
+</nav>
 </li>
 </ul>
 </nav>
@@ -204,108 +236,77 @@
 </div>
 <div class="md-content" data-md-component="content">
 <article class="md-content__inner md-typeset">
-<h1 id="ppdatacellm"><em>ppDataCell.m</em></h1>
+<h1 id="datacellshuffler">dataCell.shuffler</h1>
 <h2 id="utility">Utility:</h2>
-<p>Custom  Handle  class to import, manipulate,  and subsample trialwise point process (pp) data. </p>
-<div class="admonition note deprecated">
-<p class="admonition-title">Note</p>
-<p>This class is deprecated, and is kept for archival purposes with historical code. We recommend usage of <a href="m_ppDataCell2.html">ppDataCell2</a> instead, which may be replaced in-place.</p>
-</div>
-<h2 id="overview">Overview:</h2>
+<p>Support Class for generating and sampling random shufflers. </p>
+<h2 id="compositions">Compositions:</h2>
+<ul>
+<li>ppDataCell2</li>
+<li>sdoMat2</li>
+</ul>
+<h2 id="structure">Structure:</h2>
 <div class="mermaid">classDiagram
-    class ppDataCell2 {
+    class shuffler {
+        ___Defined___
         +data
-        +metadata
-        +nTrials
-        +nChannels
-        +sensor
-        -discretizedData
+        +shuffleData
+        +nShuffles
+        +shuffMethod
+        +shuffTau
+        +shuffCIF
+        ___Dependent___
+        +importedData
+        +shuffledData
+        +nTrialEvents
+        +nChannels
+        +nTrials
+        +sensor
+        +fs
+
         +import()
-        +plot()
+        +random()
+        +shuffle()
+        +getPpData()
     }</div>
-<h2 id="constructor">Constructor</h2>
-<p><em>Call within Matlab Terminal</em>
-<div class="highlight"><pre><span></span><code>ppdc = ppDataCell(); 
-</code></pre></div></p>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>For ease of loading data into <em>ppDataCell</em>, it is recommended to first generate an instance of the <em>ppDataHolder</em> structure, then populate accordingly: 
-<div class="highlight"><pre><span></span><code>ppdh = SAT.ppDataHolder_new(N_TRIALS, N_CHANNELS)
-</code></pre></div></p>
-<p>This may then be easily loaded as: 
-<div class="highlight"><pre><span></span><code>ppdc.import(ppdh)
-</code></pre></div></p>
-</div>
-<h2 id="properties">Properties:</h2>
-<ul>
-<li><code>.data</code> </li>
-<li>{1 x N_TRIALS} cell containing trialwise timeseries data. See  <code>SAT.ppDataHolder_new.m</code> Populated by  <code>.import</code>  method. </li>
-<li><code>.metadata</code> <ul>
-<li>{1 x N_TRIALS} cell containing trialwise meta data. See  <code>SAT.ppDataHolder_new.m</code> </li>
-</ul>
-</li>
-<li><code>nTrials</code> <ul>
-<li>[Integer]. Number of columns in  data  . </li>
-<li>Populated by  <code>.import</code>  method. </li>
-</ul>
-</li>
-<li><code>.nChannels</code> </li>
-<li>[Integer]. Number of rows (data channels) for each recording trial. <ul>
-<li>Populated by  <code>.import</code>  method. </li>
-</ul>
-</li>
-<li><code>.sensor</code> </li>
-<li>{1 x N_CHANNELS} cell containing strings of channel names. </li>
-<li><code>.fs</code> </li>
-<li>Sample frequency of timeseries data. </li>
-<li>Populated by  <code>.import</code>  method. </li>
-<li>Modified by  <code>.resample</code>  method. </li>
-<li><code>.trTimeLen</code> </li>
-<li>[1 x N_TRIALS] doubles array, corresponding to the length of each trial in <code>.data</code>. <ul>
-<li>Populated by  <code>.import</code>  method. </li>
-</ul>
-</li>
-<li><code>.dataField</code> </li>
-<li>[string]. Corresponds to fieldname in  .data  which contains time series data. </li>
-<li>Populated by  <code>.import</code>  method. </li>
-<li><code>.shuffMethod</code> </li>
-<li>{'isi'/'cif'}. Method for generating shuffle. See <code>SAT.computeSDO.m</code></li>
-<li>Default = 'isi'; </li>
-<li><code>.shuffTau</code></li>
-<li>[Numeric]. Time constant (in sec) for defining the characteristic conditional intensity function from point-process realization. </li>
-<li>Default = 0.2</li>
-<li><code>.shuffCIF</code></li>
-<li>{'gs', '-hg', 'expd', 'tb'}. </li>
-<li>Method for constructing the conditional intensity function. </li>
-<li>See <code>SAT.computeSDO.m</code></li>
-</ul>
-<h2 id="selected-methods">(Selected) Methods  :</h2>
+<h2 id="properties">Properties</h2>
+<h2 id="methods">Methods</h2>
 <ul>
 <li>
-<p><code>.import</code> (ppData)
-    <div class="highlight"><pre><span></span><code>ppdc.import(ppData)
-</code></pre></div></p>
+<h3 id="importdata"><code>import</code>(data):</h3>
 <ul>
-<li>Imports  ppData  , as generated by  SAT.ppDataHolder_new.m </li>
+<li><code>data</code>: A <a href="m_primaryData.html">dataCell.primaryData</a> class. </li>
 </ul>
 </li>
 <li>
-<p><code>.plot</code>  (useTrials, useChannels)
-    <div class="highlight"><pre><span></span><code>xtdc.plot();
-</code></pre></div></p>
+<h3 id="randomntrials-nchannels-nevents-vars"><code>random</code>(nTrials, nChannels, nEvents, vars):</h3>
 <ul>
-<li>Calls two subfunctions: <ul>
-<li><code>.plotWaves</code> -- plot spike waveformss from selected channels</li>
-<li><code>.plotSpikes</code> -- plot spike time events from selected channels. </li>
+<li>vars.maxX</li>
+<li>vars.type <ul>
+<li>'times'</li>
+<li>'index'</li>
+<li>'all'</li>
 </ul>
 </li>
+<li>vars.link<ul>
+<li>'none'</li>
+<li>'trials'</li>
+<li>'channels'</li>
+<li>'both'</li>
+</ul>
+</li>
+<li>vars.seed</li>
 </ul>
 </li>
 <li>
-<p><code>.shuffle</code> (N_SHUFFLES, SHUFF_METHOD)</p>
+<h3 id="shuffledata-vars"><code>shuffle</code>(data, vars):</h3>
+<ul>
+<li>vars.useTrials </li>
+<li>vars.useChannels</li>
+</ul>
 </li>
-<li>Shuffles spiketimes for null hypotheses. </li>
-<li>if <code>N_SHUFFLES</code> is not provided, defaults to the <code>ppdc.nShuffles</code> property. </li>
+<li>
+<h3 id="getppdatavarsflatten"><code>getPpData</code>(vars.flatten):</h3>
+</li>
 </ul>
 </article>
 </div>

@@ -333,7 +333,7 @@ classdef ppDataCell2 < handle & matlab.mixin.Copyable %& dataCellSuperClass & da
                 SAMPLE_HZ {mustBeNumeric} = obj.fs;  
                 vars.rateCode = 1; % this isn't a filter; but a bin-count;  
             end
-            xtdc = xtDataCell();
+            xtdc = xtDataCell2();
             xtData = obj.data.convertDataType('xtData', 'fs', SAMPLE_HZ, ...
                 'rateCode', vars.rateCode); 
             xtdc.data = xtData; % No need to call import directly; just rip primaryData; 

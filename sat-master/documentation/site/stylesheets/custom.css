@@ -1,0 +1,7 @@
+/* Custom styling for Mermaid diagrams */
+.mermaid {
+  background-color: white; /* Or use var(--md-default-bg-color) for adaptive themes */
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto; /* Ensures horizontal scroll if diagram is wide */
+}
