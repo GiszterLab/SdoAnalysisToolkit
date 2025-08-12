@@ -71,7 +71,7 @@ ax = gca;
 
 colormap(ax, cMap); 
 
-% Cross diviing lines; 
+% Cross dividing lines; 
 for cc = 1:N_COLS-1
     xline(cc*N_STATES+0.5, 'LineStyle', ':', 'color', 'k'); 
 end
@@ -82,17 +82,20 @@ end
 %  __ apply diagonal lines; 
 
 % all intial values; 
-x0 = [ zeros(1, N_ROWS) N_STATES:N_STATES:(N_ROWS-1)*N_STATES]; 
+%x0 = [ zeros(1, N_ROWS) N_STATES:N_STATES:(N_ROWS-1)*N_STATES]; 
+
 
 %% plot sdoStack
 % Generic method for plotting 3D SDOs into a 2D Matrix; Matrix diagonals
 % are aligned on the Y = X, for easier interpretation. 
 %x0 = [(0:N_STATES:N_STATES*N_ROWS-N_STATES) (N_ROWS*N_STATES-N_STATES:-N_STATES:0)]; %(N_STATES:N_STATES: N_STATES*N_COLS-N_STATES)]; 
-x1 = [(N_STATES:N_STATES:N_STATES*N_ROWS) (N_STATES*N_ROWS-N_STATES:-N_STATES:N_STATES)];
-y0 = x1; 
-y1 = x0; 
+x0 = [zeros(1,N_ROWS), (N_STATES:N_STATES:(N_ROWS)*N_STATES)+0.5]; 
+x1 = [(N_STATES:N_STATES:N_STATES*N_ROWS) N_STATES*(N_ROWS+1)*ones(1,N_ROWS)]; %(N_STATES*N_ROWS-N_STATES:-N_STATES:0)];
+y0 = [(N_STATES:N_STATES:N_STATES*N_ROWS) N_STATES*N_ROWS*ones(1,N_ROWS)]; 
+y1 = [zeros(1, N_COLS) N_STATES:N_STATES:N_STATES*(N_ROWS-1)]; 
 
-x0 = x0+0.5; 
+
+%x0 = x0+0.5; 
 x1 = x1+0.5; 
 y0 = y0+0.5; 
 y1 = y1+0.5; 

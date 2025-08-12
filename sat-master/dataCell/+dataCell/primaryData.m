@@ -657,7 +657,7 @@ classdef primaryData < handle & matlab.mixin.Copyable
             for tr = 1:obj.nTrials 
                 % --> upgraded callAfilter
                 xt = squeeze(xtData(:,:,tr)); 
-                fxt = callAfilter(xt,FILTERTYPE, obj.fs, 'nPoints', N_POINTS, 'auxVar', F_VAR); 
+                fxt = callAfilter(xt,FILTERTYPE, N_POINTS, F_VAR, 'fs', obj.fs); 
                 xtData2(:,:,tr) = fxt(:,1:size(xt,2)); 
             end
             obj = obj.importTensor(xtData2, 'datafield', 'envelope'); 

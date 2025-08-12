@@ -150,6 +150,14 @@ classdef xtDataCell2 < handle & matlab.mixin.Copyable
            obj.data.importTensor(xt_raw); 
         end
 
+        function xtdc_out = getVersion(obj, VERSION)
+            arguments
+                obj
+                VERSION = 1; 
+            end
+            xtdc_out = dataCell.utils.versionConvert(obj, VERSION); 
+        end
+        
         % __ BIT-WISE FUNCTION OPERATION (Between or within class)
         function obj = bsxop(obj, functionHandle,xtdc) 
             arguments
