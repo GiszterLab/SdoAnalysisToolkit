@@ -3,6 +3,9 @@
 ## Utility: 
 Custom  Handle  class to Import, manipulate,  and subsample trialwise time series "_x(t)_" data. 
 
+!!! warning deprecation
+    This class is deprecated, and is no longer receiving regular updates. Use ```xtDataCell2``` instead.
+
 ## Overview: 
 
 

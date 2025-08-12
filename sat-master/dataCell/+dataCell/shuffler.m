@@ -180,7 +180,7 @@ classdef shuffler < handle & matlab.mixin.Copyable
                 obj
                 vars.flatten = 0; % flatten shuffles; 
             end
-            % extract a (shuffled) primaryData; 
+            
             % !!! This 'does' work, but it can cause downstream issues, if
             % shuffles are pegged to 'times'
             if obj.importedData

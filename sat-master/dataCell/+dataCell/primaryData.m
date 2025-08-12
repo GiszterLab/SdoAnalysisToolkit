@@ -54,7 +54,7 @@ classdef primaryData < handle & matlab.mixin.Copyable
     properties (Hidden, Dependent)
         sampledData     {mustBeNumericOrLogical}
         validDataField  {mustBeNumericOrLogical}
-        haveSensorNames {mustBeNumericOrLogical}
+        %haveSensorNames {mustBeNumericOrLogical}
     end
     
     methods
@@ -88,9 +88,11 @@ classdef primaryData < handle & matlab.mixin.Copyable
             LI = ismember(obj.dataField, fieldnames(obj.data{1,1})); 
         end
         %------------------------------%
+        %{
         function LI = get.haveSensorNames(obj)
             LI = ~isempty(obj.sensor); 
         end
+        %}
         %--------------------------------------
         function n = get.nTrialEvents(obj)
             if strcmp(obj.dataType,'xtData')
@@ -142,8 +144,8 @@ classdef primaryData < handle & matlab.mixin.Copyable
         end
         
         %% Constructor
-        function obj = primaryData(dataClass, N_TRIALS, N_CHANNELS)
-            switch dataClass
+        function obj = primaryData(dataType, N_TRIALS, N_CHANNELS)
+            switch dataType
                 case 'ppData'
                     S = dataCell.constructors.getPpDataHolder(N_TRIALS, N_CHANNELS); 
                     dataField = 'times'; 
@@ -153,11 +155,10 @@ classdef primaryData < handle & matlab.mixin.Copyable
             end
             obj.data        = S(1,:); 
             obj.trialMeta   = S(2,:); 
-            obj.dataType    = dataClass; 
+            obj.dataType    = dataType; 
             obj.dataField   = dataField; 
         end
-        
-        %% import 
+         
         function obj = import(obj, dataHolder, dataSource)
             arguments
                 obj
@@ -574,10 +575,10 @@ classdef primaryData < handle & matlab.mixin.Copyable
            function f = plot(obj, useTrials, useChannels, OFFSET, vars)
             arguments
                 obj
-                useTrials   double = 1:obj.nTrials; 
-                useChannels double = 1:obj.nChannels;  
-                OFFSET      double = [];  
-                vars.datafield char = obj.dataField; 
+                useTrials       double = 1:obj.nTrials; 
+                useChannels     double = 1:obj.nChannels;  
+                OFFSET          double = [];  
+                vars.datafield  char = obj.dataField; 
                 vars.trialTicks {mustBeNumericOrLogical} = 0; 
             end
             if ~obj.sampledData 
@@ -626,7 +627,8 @@ classdef primaryData < handle & matlab.mixin.Copyable
             if N_PLOT_ROWS > 1
                 nameDist = -offset*(N_PLOT_ROWS-1):offset:0; 
                 yticks(nameDist); 
-                if obj.haveSensorNames
+                %if obj.haveSensorNames
+                if ~isempty(obj.sensor)
                     yticklabels(flip(obj.sensor(useChannels))); 
                 end
             end
