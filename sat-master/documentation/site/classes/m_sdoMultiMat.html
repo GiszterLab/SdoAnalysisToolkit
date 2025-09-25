@@ -125,6 +125,14 @@
 </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="../demo/overview.html">
+<span class="md-ellipsis">
+    Walkthrough
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../analysis/overview.html">
 <span class="md-ellipsis">
     Analysis
@@ -170,6 +178,13 @@
 </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="#alias">
+<span class="md-ellipsis">
+      Alias
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="#overview">
 <span class="md-ellipsis">
       Overview:
@@ -207,6 +222,12 @@
 <h1 id="sdomultimatm"><em>sdoMultiMat.m</em></h1>
 <h2 id="utility">Utility:</h2>
 <p>Custom  Handle  class to generate single SDOs from instances of <a href="m_xtDataCell.html">xtDataCell</a> and <a href="m_ppDataCell.html">ppDataCell</a>. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This class is functional, but deprecated. The <a href="m_analyzer.html">SAT.analyzer</a> class eclipses this class in functionality. </p>
+</div>
+<h2 id="alias">Alias</h2>
+<p>Instances of this class in the documentation and annotations is assigned the alias <strong>smm</strong>. </p>
 <h2 id="overview">Overview:</h2>
 <div class="mermaid">classDiagram
     class sdoMultiMat {
@@ -412,8 +433,45 @@
 <p><em>sdoMultiMat</em> does not contain an explicit import method, instead this is called directly from the script. </p>
 </div>
 <ul>
-<li><code>.plot</code>()<ul>
+<li>
+<p><code>.findSigSdos(SIG_THRESH)</code></p>
+<ul>
+<li>Determines which SDOs significantly differ from shuffled-spike SDOs. </li>
+<li>If <code>SIG_THRESH</code> is not passed, tests will default to <code>smm.sigPval.</code></li>
+</ul>
+</li>
+<li>
+<p><code>.plot(XT_CH_NO, PP_CH_NO)</code></p>
+<ul>
 <li>Plots all sdo Plot features. </li>
+<li>If <code>XT_CH_NO</code> and <code>PP_CH_NO</code> positional indices are passed, then it will only plot those/that set of SDOs.</li>
+</ul>
+</li>
+<li>
+<p><code>.getPredictionError(xtdc, ppdc, XT_CH_NO, PP_CH_NO)</code></p>
+<ul>
+<li>Returns and instance of the <a href="m_predictionError.html">predictionError</a> class. </li>
+<li>Requires the original xtDataCell and ppDataCell class instances to construct, as with the channel indices of interest. </li>
+</ul>
+</li>
+<li>
+<p><code>.getSdos(XT_CH_RANGE, PP_CH_RANGE)</code></p>
+<ul>
+<li>Returns a {1, length(XT_CH_RANGE)} cell array of raw SDOs. <ul>
+<li>if only 1 xtChannel is used, will return a double matrix instead.</li>
+</ul>
+</li>
+<li>Each cell {1,n} contains a 3D doubles matrix with a third dimension of length(PP_CH_RANGE)</li>
+</ul>
+</li>
+<li>
+<p><code>.getNormSdos(XT_CH_RANGE, PP_CH_RANGE)</code></p>
+<ul>
+<li>Returns a {1, length(XT_CH_RANGE)} cell array of normalized SDOs. <ul>
+<li>if only 1 xtChannel is used, will return a double matrix instead.</li>
+</ul>
+</li>
+<li>Each cell {1,n} contains a 3D doubles matrix with a third dimension of length(PP_CH_RANGE)</li>
 </ul>
 </li>
 </ul>

@@ -12,6 +12,8 @@ Last Updated May 6th, 2023.
 ## Table of Contents
 * [Installing the Toolkit](./installation/overview.md)
 
+* [Demonstration Analysis](./demo/overview.md)
+
 * [Performing SDO Analysis](./analysis/overview.md)
 
 * [Using Custom Data Classes](./classes/overview.md)

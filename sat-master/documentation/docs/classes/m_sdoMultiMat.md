@@ -3,6 +3,12 @@
 ## Utility: 
 Custom  Handle  class to generate single SDOs from instances of [xtDataCell](./m_xtDataCell.md) and [ppDataCell](./m_ppDataCell.md). 
 
+!!! note
+    This class is functional, but deprecated. The [SAT.analyzer](m_analyzer.md) class eclipses this class in functionality. 
+
+## Alias
+Instances of this class in the documentation and annotations is assigned the alias **smm**. 
+
 
 ## Overview: 
 
@@ -139,6 +145,29 @@ smm = sdoMultiMat();
 !!! note
     _sdoMultiMat_ does not contain an explicit import method, instead this is called directly from the script. 
 
-*  ```.plot```()
+* ```.findSigSdos(SIG_THRESH)```
+    - Determines which SDOs significantly differ from shuffled-spike SDOs. 
+    - If ```SIG_THRESH``` is not passed, tests will default to ```smm.sigPval.```
+
+*  ```.plot(XT_CH_NO, PP_CH_NO)```
       - Plots all sdo Plot features. 
+      - If ```XT_CH_NO``` and ```PP_CH_NO``` positional indices are passed, then it will only plot those/that set of SDOs.
+
+* ```.getPredictionError(xtdc, ppdc, XT_CH_NO, PP_CH_NO)```
+    - Returns and instance of the [predictionError](../classes/m_predictionError.md) class. 
+    - Requires the original xtDataCell and ppDataCell class instances to construct, as with the channel indices of interest. 
+
+* ```.getSdos(XT_CH_RANGE, PP_CH_RANGE)```
+    - Returns a {1, length(XT_CH_RANGE)} cell array of raw SDOs. 
+        - if only 1 xtChannel is used, will return a double matrix instead.
+    - Each cell {1,n} contains a 3D doubles matrix with a third dimension of length(PP_CH_RANGE)
+
+* ```.getNormSdos(XT_CH_RANGE, PP_CH_RANGE)```
+    - Returns a {1, length(XT_CH_RANGE)} cell array of normalized SDOs. 
+        - if only 1 xtChannel is used, will return a double matrix instead.
+    - Each cell {1,n} contains a 3D doubles matrix with a third dimension of length(PP_CH_RANGE)
+
+
+
+
 

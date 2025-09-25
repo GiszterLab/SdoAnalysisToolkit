@@ -12,7 +12,7 @@
         <link rel="prev" href="../index.html">
       
       
-        <link rel="next" href="../analysis/overview.html">
+        <link rel="next" href="../demo/overview.html">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -399,6 +399,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../demo/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Walkthrough
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../analysis/overview.html" class="md-nav__link">
         
   
@@ -582,13 +604,11 @@
 
 
 <h1 id="installing-the-toolkit">Installing the Toolkit</h1>
-<div class="admonition bug">
-<p class="admonition-title">TODO</p>
-<p>Add back in the pictures from the original documentations. </p>
-</div>
+<p><em>This page provides the general instructions for installing the Toolkit to the MATLAB working environment.</em></p>
 <h2 id="installation-steps">Installation Steps.</h2>
 <hr />
 <h3 id="1-add-the-sdoanalysistoolkit-to-the-matlab-path">1. Add the <em>sdoAnalysisToolkit</em> to the MATLAB Path.</h3>
+<p><img alt="image" src="install_01.png" /></p>
 <ul>
 <li>
 <p>Open the 'Set Path' dialog in the MATLAB <em>HOME</em> ribbon. </p>
@@ -599,15 +619,18 @@
 <li>
 <p>Click 'Add with Subfolders'. </p>
 </li>
-<li>
-<p>A new window will pop up. </p>
-</li>
-<li>
-<p>Navigate to the folder containing <code>sdoAnalysis</code>, from the downloaded repository of the  SDO Analysis Toolkit  .  Click onnce on the ‘sat-master’ folder to select it,  and then click ‘Select Folder’ in the MATLAB user interface. </p>
-</li>
+</ul>
+<p><img alt="image" src="install_02.png" /></p>
+<ul>
+<li>A new window will pop up. </li>
+</ul>
+<p><img alt="image" src="install_03.png" /></p>
+<ul>
+<li>Navigate to the folder containing <code>sdoAnalysis</code>, from the downloaded repository of the  SDO Analysis Toolkit  .  Click onnce on the ‘sat-master’ folder to select it,  and then click ‘Select Folder’ in the MATLAB user interface. </li>
 <li>The pop-up will close, and return to the  ‘Set Path’  window in the MATLAB user interface.</li>
 <li>Save the changes to MATLAB path (if desired), for future MATLAB sessions. </li>
 </ul>
+<p><img alt="image" src="install_04.png" /></p>
 <p>!!! warning
       This option is not available on Linux. </p>
 <h2 id="-the-set-path-pop-up-window-will-close-and-matlab-will-return-to-the-command-window">-  The  ‘Set Path’  pop up window will close, and MATLAB  will return to the command window.</h2>
@@ -617,7 +640,7 @@
 <p>If you just want to validate that the toolkit is working, there are smaller data samples available in the base package. This step is only necessary if you want to replicate the paper figures. </p>
 </div>
 <ul>
-<li>Clone the full demonstrate data. 
+<li>Clone the full demonstration data. 
    <div class="highlight"><pre><span></span><code>git clone https://github.com/GiszterLab/SdoAnalysisToolkit_DemoData.git
 </code></pre></div></li>
 </ul>
@@ -625,6 +648,7 @@
 <p class="admonition-title">Optional</p>
 <p>Move the <code>xtData.mat</code> and <code>ppData.mat</code> from <code>\demoData\</code> directory from the demoData repo into the <code>sdoAnalysisToolkit\sat-master\demoData</code> directory. </p>
 </div>
+<p><img alt="image" src="install_05.png" /></p>
 <hr />
 <h3 id="3-run-the-demo">3. Run the Demo</h3>
 <ul>
@@ -635,26 +659,32 @@
 <p>!!! warning</p>
 <pre><code>MAC OS operating systems may have difficulties loading the demo data from ```.mat``` files.
 </code></pre>
+<p><img alt="image" src="install_06.png" /></p>
 <ul>
 <li>From within the MATLAB terminal: 
    <div class="highlight"><pre><span></span><code>sdoAnalysis_demo
 </code></pre></div></li>
-<li>A user interface will pop up. <ul>
-<li>Navigate to the folder containing the included demonstration data and click <code>example_xtData.mat</code>. (If you have downloaded the complete data set, you may alternatively select <code>xtData.mat</code>.) </li>
-</ul>
+<li>
+<p>A user interface will pop up. </p>
+<ul>
+<li>
+<p><img alt="image" src="install_07.png" /></p>
+</li>
+<li>
+<p>Navigate to the folder containing the included demonstration data and click <code>example_xtData.mat</code>. (If you have downloaded the complete data set, you may alternatively select <code>xtData.mat</code>.) </p>
 </li>
 <li>Click "Open" in the MATLAB user interface. </li>
-<li>
-<p>The interface window will close. After a moment, a second user interface window will pop up. </p>
-<ul>
+<li>The interface window will close. After a moment, a second user interface window will pop up. </li>
+<li><img alt="image" src="install_08.png" /></li>
 <li>Navigate to the folder containing the included demonstration data and click <code>example_ppData.mat</code>.  and then ‘Open’ in the MATLAB user interface. (If you have downloaded the complete data set, you may alternatively select <code>ppData.mat</code>.) </li>
 </ul>
 <p>!!! note
       If during the selection process, ‘Cancel’ is  hit, or the wrong data is loaded, the command window will demonstrate an error. Run  <code>sdoAnalysis_demo.m</code>  again,  and re-select the proper matfiles.</p>
 <ul>
-<li>
-<p>Once demonstration data has finished loading, <code>sdoAnalysis_demo.m</code> will automatically construct the SDO matrix structures, and plot a demonstrated spike-muscle pair. SDOs are constructed for every point process unit contained in  ppDataCell  (13) against every analog  time series data channel contained in  xtDataCell  (11). </p>
-</li>
+<li>Once demonstration data has finished loading, <code>sdoAnalysis_demo.m</code> will automatically construct the SDO matrix structures, and plot a demonstrated spike-muscle pair. SDOs are constructed for every point process unit contained in  ppDataCell  (13) against every analog  time series data channel contained in  xtDataCell  (11). </li>
+</ul>
+<p><img alt="image" src="install_10.png" /></p>
+<ul>
 <li>
 <p>An update message will be displayed after finishing each analog channel (i.e. 11 updates).</p>
 </li>
@@ -671,6 +701,7 @@
 <p>Successful completion of the  sdoAnalysis_demo  script  should also display “COMPLETE!” in the MATLAB command window. This confirms that the  SDO Analysis  Toolkit  has been installed successfully, has all dependencies, and may  be harnessed on custom data.</p>
 </li>
 </ul>
+<p><img alt="image" src="install_11.png" /></p>
 <hr />
 <ul>
 <li>
@@ -679,8 +710,10 @@
 </ul>
 </li>
 </ul>
-<p>!!! bug "TODO"
-       <em>fill this section</em></p>
+<div class="admonition bug">
+<p class="admonition-title">TODO</p>
+<p><em>fill this section</em></p>
+</div>
 
 
 

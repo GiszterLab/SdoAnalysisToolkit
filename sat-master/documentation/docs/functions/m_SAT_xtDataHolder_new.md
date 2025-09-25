@@ -101,4 +101,4 @@ example of one potential data format (structure array) into  xtData  is given be
 
 
 !!! tip
-     Proper parsing of these fields can be validated with the script [```SAT.validateDataCells.m```](m_SAT_validateDataCells.md)
+     Proper parsing of these fields can be validated with the script [```SAT.validateDataHolders.m```](m_SAT_validateDataHolders.md)

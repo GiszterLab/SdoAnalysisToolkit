@@ -13,7 +13,7 @@ _Constructor for ppData_
 
 _Constructor for xtData_
 
-[SAT.validateDataHolders()](m_SAT_validateDataCells.md)
+[SAT.validateDataHolders()](m_SAT_validateDataHolders.md)
 
 ### SDO Estimation (SAT.compute.)
 

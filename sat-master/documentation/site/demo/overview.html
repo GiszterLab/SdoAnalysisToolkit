@@ -1,0 +1,990 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../installation/overview.html">
+      
+      
+        <link rel="next" href="../analysis/overview.html">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Walkthrough - SDO Analysis Toolkit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=rockwell:300,300i,400,400i,700,700i%7Ccourier:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"rockwell";--md-code-font:"courier"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="red">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#demonstration-of-the-sdo-analysis-toolkit" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="SDO Analysis Toolkit" class="md-header__button md-logo" aria-label="SDO Analysis Toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SDO Analysis Toolkit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Walkthrough
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="red"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="white" data-md-color-accent="red"  aria-label="switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="SDO Analysis Toolkit" class="md-nav__button md-logo" aria-label="SDO Analysis Toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    SDO Analysis Toolkit
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Walkthrough
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="overview.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Walkthrough
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#option-1-oop-based-code-version-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option 1: OOP-Based [Code Version 1.0]
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option 1: OOP-Based [Code Version 1.0]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-initialize-an-empty-data-holders" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Initialize an empty data holders
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-populate-xtdataholder-xtdata-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Populate xtDataHolder (xtData) Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-populate-ppdataholder-ppdata-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Populate ppDataHolder (ppData) Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-validate-dataholders-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Validate dataholders (Optional)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-generate-an-xtdatacell-from-xtdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Generate an xtDataCell from xtData
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-assign-xtdatacell-state-mapping-parameters-if-necessary" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Assign xtDataCell state-mapping parameters, if necessary;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-generate-a-ppdatacell-class-and-import-from-ppdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Generate a ppDataCell class, and import from ppData
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-shuffle-spike-occurrences-in-ppdatacell" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Shuffle spike occurrences in ppDataCell
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-generate-an-instance-of-the-sdomultimat-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Generate an instance of the sdoMultiMat class
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#10-adjust-relevant-parameters-of-the-sdomultimat" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. Adjust relevant parameters of the sdoMultiMat.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#11-import-data-compute-sdos" class="md-nav__link">
+    <span class="md-ellipsis">
+      11. Import Data + Compute SDOs.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-find-significant-sdos" class="md-nav__link">
+    <span class="md-ellipsis">
+      12. Find Significant SDOs.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-plot-significant-sdos-of-interest" class="md-nav__link">
+    <span class="md-ellipsis">
+      13. Plot Significant SDOs of interest.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-test-predictive-efficacy-of-significant-sdos" class="md-nav__link">
+    <span class="md-ellipsis">
+      14. Test predictive efficacy of significant SDOs.
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analysis/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analysis
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../classes/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Custom Classes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../functions/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Code Library
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#option-1-oop-based-code-version-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option 1: OOP-Based [Code Version 1.0]
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option 1: OOP-Based [Code Version 1.0]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-initialize-an-empty-data-holders" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Initialize an empty data holders
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-populate-xtdataholder-xtdata-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Populate xtDataHolder (xtData) Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-populate-ppdataholder-ppdata-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Populate ppDataHolder (ppData) Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-validate-dataholders-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Validate dataholders (Optional)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-generate-an-xtdatacell-from-xtdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Generate an xtDataCell from xtData
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-assign-xtdatacell-state-mapping-parameters-if-necessary" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Assign xtDataCell state-mapping parameters, if necessary;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-generate-a-ppdatacell-class-and-import-from-ppdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Generate a ppDataCell class, and import from ppData
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-shuffle-spike-occurrences-in-ppdatacell" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Shuffle spike occurrences in ppDataCell
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-generate-an-instance-of-the-sdomultimat-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Generate an instance of the sdoMultiMat class
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#10-adjust-relevant-parameters-of-the-sdomultimat" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. Adjust relevant parameters of the sdoMultiMat.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#11-import-data-compute-sdos" class="md-nav__link">
+    <span class="md-ellipsis">
+      11. Import Data + Compute SDOs.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-find-significant-sdos" class="md-nav__link">
+    <span class="md-ellipsis">
+      12. Find Significant SDOs.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-plot-significant-sdos-of-interest" class="md-nav__link">
+    <span class="md-ellipsis">
+      13. Plot Significant SDOs of interest.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-test-predictive-efficacy-of-significant-sdos" class="md-nav__link">
+    <span class="md-ellipsis">
+      14. Test predictive efficacy of significant SDOs.
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="demonstration-of-the-sdo-analysis-toolkit">Demonstration of the SDO Analysis Toolkit.</h1>
+<p><em>Here we walk through the basics of using the OOP-classes, and what each step is for.</em></p>
+<h2 id="option-1-oop-based-code-version-10">Option 1: OOP-Based [Code Version 1.0]</h2>
+<h3 id="1-initialize-an-empty-data-holders">1. Initialize an empty data holders</h3>
+<p>The easiest way to use the SDO Analysis toolkit is to call, then populate the miminal data structures, when import these into the public classes. </p>
+<p>For time-series data (e.g., EMG, force traces, calcium transients, etc), we use the constructor <em>xtDataHolder</em>. </p>
+<p>Intialize an instance of this structure. </p>
+<p><div class="highlight"><pre><span></span><code>&gt;&gt; numberTrials = 20;
+&gt;&gt; numberChannels = 5;
+xtData = SAT.xtDataHolder_new(numberTrials, numberChannels);
+
+xtData = SAT.xtDataHolder_new(N_TRIALS, N_XT_CHANNELS); 
+</code></pre></div>
+- Here, <code>N_TRIALS</code> refers to the number of independent divisions in your data. If your data is broken into multiple recording sessions, each should be assigned to an individual trial (trials do not need to be the same length). If your data is taken as a single, long, recording, you can leave N_TRIALS = 1. 
+    - <strong>NOTE</strong>: The number of trials and time indexing (but not sample frequency) must be the same between <em>xtdh</em> and <em>ppdh</em>
+- Here, <code>N_XT_CHANNELS</code> is the number of independent recording channels in your time-series dataset. Note that the length of these channels must be identical within trials (i.e., for all time points, all channels must have some data). </p>
+<p>For point-process data (e.g., neural spikes, discrete events, calcium peaks), we use the construcor <em>ppDataHolder</em>. </p>
+<p><div class="highlight"><pre><span></span><code>&gt;&gt; numberTrials = 20;
+&gt;&gt; numberNeurons = 10;
+ppData = SAT.ppDataHolder_new(numberTrials, numberNeurons);
+
+ppData = SAT.ppDataHolder_new(N_TRIALS, N_PP_CHANNELS)
+</code></pre></div>
+- Here, <code>N_TRIALS</code> refers to the number of independent divisions in your data. If your data is broken into multiple recording sessions, each should be assigned to an individual trial (trials do not need to be the same length). If your data is taken as a single, long, recording, you can leave N_TRIALS = 1. </p>
+<pre><code>- **NOTE**: The number of trials and time indexing (but not sample frequency) must be the same between _xtdh_ and _ppdh_
+</code></pre>
+<ul>
+<li>Here, <code>N_PP_CHANNELS</code> is the number of independent recording channels in your point-process dataset (e.g., number of neurons/clusters). It is assumed that all channels have the potential for events over all time events (i.e., that regions with no spikes are due to no spiking events, not due to an inabiliy to record). </li>
+</ul>
+<h3 id="2-populate-xtdataholder-xtdata-structure">2. Populate xtDataHolder (xtData) Structure</h3>
+<p>You will need to write a (minimal) amount of code to populate the <em>xtDataHolder</em> structure with <em>your</em> specific data structure. </p>
+<hr />
+<p><strong>xtData:</strong> A {2 x N_TRIALS} Cell array containing analog time-series signals collected during recording trials.Each trial is represented as a column of the cell array. SDO Analysis assumes a level of stationarity to the signal; that different trials differ in time, but not in principle signal behavior.</p>
+<p><strong>xtData{1,:}</strong> Each cell in the first row contains primary data within 1 x N_PP_CHANNELS struct. This struct contains the following fields:</p>
+<ul>
+<li>
+<p><code>.electrode</code>: A string or character unique identifier corresponding to this time series data channel.</p>
+</li>
+<li>
+<p><code>.envelope</code>: A [1 x N] (Row) vector containing the time-varying amplitude signal (or representation of the signal). This is the primary data used for STA and SDO analysis.</p>
+</li>
+<li><code>.fs</code> : The signal sampling frequency, used to align observations to time points.</li>
+<li><code>.times</code>: A [1 x N] (Row) Vector containing the matching time values, defined for each element of .envelope. These time points should be in the same units and relative start time as the data in the ppData against which it will be compared.</li>
+</ul>
+<p><strong>xtData{2,:}</strong>: Each cell in the second row contains metadata associated with each trial. This data will be
+appended to the sdo structure later, to keep track of associated pre-processing parameters associated
+with SDO generation. It is a structure composed of the following fields:</p>
+<ul>
+<li><code>.trialNumber</code>: [Integer]: A simple index of trial number by position. This value is not directly
+utilized by the computeSDO code, and may be overridden.</li>
+</ul>
+<div class="admonition notes">
+<p class="admonition-title">IMPORTANT NOTES</p>
+<ul>
+<li><strong>xtData</strong> is a homogeneous structure. During data population, the row index for each trial should be consistent across the entire data cell. (e.g. ‘signal 3’ on row 3 in trial 1 should also be on row 3 of trial 10).</li>
+<li>Events which do not occur during a trial should still be given a field (and ‘time’ field left empty) to thus maintain this homogenous data structure.</li>
+<li>Additional fields may be incorporated into the first row of <strong>xtData</strong> (primary data) array, however, these will not be used for SDO analysis, nor passed to the sdo structure.</li>
+<li>Additional fields may be incorporated into the second row of <strong>xtData</strong> (metadata) array. These fields will be passively passed to the sdo structure. This permits an investigator to pass trial-wise notes, annotation, and data pre-processing parameters into the sdo structure for later comparison or review.</li>
+</ul>
+</div>
+<hr />
+<p>Due to the plurality of possible data formats and structures, a single method for populating xtData from user data structures is not defined. Users will need to write a solution which navigates this process. An example of one potential data format (structure array) into xtData is given below.</p>
+<div class="highlight"><pre><span></span><code>%// load 1xN structure with fields ‘signal’, ‘channelName’, ‘Hz’
+&gt;&gt; ourEmgData = load(‘emgdata.mat’);
+
+&gt;&gt; numberTrials = 20;
+&gt;&gt; numberEmg = 8;
+
+for tr = 1:numberTrials
+    for m = 1:numberEmg
+        %// populate xtData;
+        emgName = ourEmgData(m).channelName;
+        xtData{1,tr}(m).electrode = emgName;
+        xtData{1,tr}(n).envelope = abs(ourEmgData(m).signal);
+        sigLen = length(xtData{1,tr}(m).envelope);
+        fs = ourEmgData(m).Hz; %// signal frequency
+        xtData{1,tr}(n).fs = fs;
+        %// Here, assume data signal is contiguous
+        xtData{1,tr}(n).times = [1/fs:1/fs:sigLen/fs]’;
+    end
+end
+</code></pre></div>
+<div class="admonition notes">
+<p class="admonition-title">Notes</p>
+<ul>
+<li>Time series data passed to the <code>.envelope</code> field should be in a [1xN] (row vector) format.</li>
+<li>Time data contained in the <code>.times</code> field should be in a [1xN] (row vector) format.</li>
+<li>Currently, frequency data, <code>.fs</code>, is assumed to be constant over all trials and observations.</li>
+</ul>
+</div>
+<h3 id="3-populate-ppdataholder-ppdata-structure">3. Populate ppDataHolder (ppData) Structure</h3>
+<p>You will need to write a (minimal) amount of code to populate the <em>ppDataHolder</em> structure with <em>your</em> specific data structure. </p>
+<hr />
+<p><strong>ppData</strong>: A {2 x N_TRIALS} Cell array containing point-process observations collected during recording trials. Each trial is represented as a column of the cell array. SDO Analysis assumes a level of stationarity to the signal; that different trials differ in time, but not in principle signal behavior.</p>
+<p><strong>ppData{1,:}</strong> Each cell in the first row contains primary data within 1 x N_PP_CHANNELS struct. This
+struct contains the following fields:</p>
+<ul>
+<li><code>.electrode</code>: A string or character unique identifier corresponding to this point-process data channel.</li>
+<li><code>.time</code>: A [1 x N] (Row) Vector containing the event times for the given point-process. These time points should be in the same units and relative start time as the data in the xtData against which it will be compared.</li>
+<li><code>.counts</code>: An integer count of the number of elements in <code>.time</code></li>
+</ul>
+<p><strong>ppData{2,:}</strong>: Each cell in the second row contains metadata associated with each trial. This data will be passively appended to the sdo structure later, to keep track of associated pre-processing parameters associated with SDO generation. It is a structure composed of the following fields:</p>
+<ul>
+<li><code>.trialNumber</code>: [Integer]: A simple index of trial number by position. This value is not directly
+utilized by the computeSDO code, and may be overridden.</li>
+</ul>
+<hr />
+<div class="admonition notes">
+<p class="admonition-title">Important Notes</p>
+<ul>
+<li>ppData is a homogeneous structure. During data population, the row index for each trial should be consistent across the entire data cell. (e.g. ‘Neuron 3’ on row 3 in trial 1 should also be on row 3 of trial 10).</li>
+<li>Events which do not occur during a trial should still be given a field (and ‘time’ field left empty) to thus maintain this homogenous data structure.</li>
+<li>Additional fields may be incorporated into the first row of ppData (primary data) array, however, these   will not be used for SDO analysis, nor passed to the sdo structure.</li>
+<li>Additional fields may be incorporated into the second row of ppData(metadata) array. These fields will be passively passed to the sdo structure. This permits an investigator to pass trial-wise notes, annotation, and data pre-processing parameters into the sdo structure for later comparison or review.</li>
+</ul>
+</div>
+<p>Due to the plurality of possible data formats and structures, a single method for populating ppData from user data structures is not defined. Users will need to write a solution which navigates this process. An example of one potential data format (structure array) into ppData is given below.</p>
+<div class="highlight"><pre><span></span><code>%// load Nx1 cell array of spike times;
+&gt;&gt; ourSpikeData = load(‘spikedata.mat’);
+&gt;&gt; numberTrials = 20;
+&gt;&gt; numberNeurons = 10;
+for tr = 1:numberTrials
+    for n = 1:numberNeurons
+        %// populate ppData;
+        neuronName = strcat(‘neuron’, num2str(n));
+        ppData{1,tr}(n).electrode = neuronName;
+        ppData{1,tr}(n).time = ourSpikeData{n};
+        ppData{1,tr}(n).counts = length(ppData{1,tr}(n).time);
+    end
+end
+
+
+!!! notes
+    - Ideally, sets of spike times passed to the .time field of the ppDatafield should be represented as a [1 x numberSpikes] *row* vector.
+    - The units of time used in the ppData should match those used in xtData.
+</code></pre></div>
+<h3 id="4-validate-dataholders-optional">4. Validate dataholders (Optional)</h3>
+<p>If you are not confident in your code, or your input data structures are not homogenously passed through to the dataHolder structures, you can use the validation script <a href="../functions/m_SAT_validateDataHolders.html">SAT.validateDataHolders</a>. </p>
+<div class="highlight"><pre><span></span><code>SAT.validateDataHolders(xtData, ppData, FIX_FLAG)
+</code></pre></div>
+<h3 id="5-generate-an-xtdatacell-from-xtdata">5. Generate an xtDataCell from xtData</h3>
+<div class="highlight"><pre><span></span><code>$ xtdc = xtDataCell;
+$ xtdc.import(xtData); %original xtData format;
+</code></pre></div>
+<h3 id="6-assign-xtdatacell-state-mapping-parameters-if-necessary">6. Assign xtDataCell state-mapping parameters, if necessary;</h3>
+<div class="highlight"><pre><span></span><code>$ xtdc.discretize()
+</code></pre></div>
+<p>Qualitatively validate discretization schema.
+<div class="highlight"><pre><span></span><code>$ xtdc.plot(1:22, 1:11, [], &#39;stateSignal&#39;);
+%// plot trials 1-22, rows 1-11, using the ‘stateSignal’
+</code></pre></div></p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<ul>
+<li>Adjust parameters of interest until the discretized data captures the phenomenon of interest (i.e. state definitions are sufficient to describe physiological signal)</li>
+<li>Alternatively, check out the <em>SDO Parameter Explorer App</em></li>
+</ul>
+</div>
+<h3 id="7-generate-a-ppdatacell-class-and-import-from-ppdata">7. Generate a ppDataCell class, and import from ppData</h3>
+<div class="highlight"><pre><span></span><code>$ ppdc = ppDataCell;
+$ ppdc.import(spikeTimeCell); %original ppData format
+</code></pre></div>
+<h3 id="8-shuffle-spike-occurrences-in-ppdatacell">8. Shuffle spike occurrences in ppDataCell</h3>
+<p><div class="highlight"><pre><span></span><code>$ ppdc = ppdc.shuffle
+</code></pre></div>
+<em>This step is only specifically necessary if you want to validate the shuffle independently; if ppdc is not shuffled, it will be shuffled during compute</em></p>
+<h3 id="9-generate-an-instance-of-the-sdomultimat-class">9. Generate an instance of the sdoMultiMat class</h3>
+<div class="highlight"><pre><span></span><code>smm = sdoMultiMat(); 
+</code></pre></div>
+<h3 id="10-adjust-relevant-parameters-of-the-sdomultimat">10. Adjust relevant parameters of the sdoMultiMat.</h3>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>It's worthwhile to first understand what these parameters do. </p>
+</div>
+<h3 id="11-import-data-compute-sdos">11. Import Data + Compute SDOs.</h3>
+<div class="highlight"><pre><span></span><code>smm.compute(xtdc, ppdc); 
+</code></pre></div>
+<p>Here, we both import data + compute SDOs. </p>
+<p>There are alternative options to the compute step with the sdoMultiMat. If you want to perform background subtraction, for instance, you could perform: </p>
+<div class="highlight"><pre><span></span><code>smm.compute(xtdc, ppdc, &#39;backgroundSubtraction&#39;, 1); 
+</code></pre></div>
+<h3 id="12-find-significant-sdos">12. Find Significant SDOs.</h3>
+<p>Here, you can screen for significant spike-triggered SDOs (defined as substantially different from the populated of shuffled-time null SDOs) across a number of tests. </p>
+<p>This step will let you short-list for interesting SDOs by performing these tests and generating a table. </p>
+<div class="highlight"><pre><span></span><code>smm.findSigSdos(); 
+</code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If this is called without additional parameters, it uses a pVal as defiend within the sdoMultiMat property smm.sigPVal. </p>
+</div>
+<p>This method will populate the property <code>smm.sigMat</code>. Within this property will be a table listing the xtdc and ppdc channel IDs for significant neurons, and the number of significant tests. </p>
+<h3 id="13-plot-significant-sdos-of-interest">13. Plot Significant SDOs of interest.</h3>
+<p>Using the channel IDs, as above, use the plot method to visualize the SDOs. </p>
+<p><div class="highlight"><pre><span></span><code>smm.plot(XT_CH_ID, PP_CH_ID) 
+</code></pre></div>
+(Here, substituting <code>XT_CH_ID</code> and <code>PP_CH_ID</code> with actual numbers). </p>
+<h3 id="14-test-predictive-efficacy-of-significant-sdos">14. Test predictive efficacy of significant SDOs.</h3>
+<p>Use the 'getPredictionError` method to extract an instance of the <a href="../classes/m_predictionError.html">predictionError</a> class. 
+<div class="highlight"><pre><span></span><code>pe = smm.getPredictionError(xtdc, ppdc, XT_CH_ID, PP_CH_ID)
+</code></pre></div>
+(Here, again, substituting <code>XT_CH_ID</code> and <code>PP_CH_ID</code> with integer indices). </p>
+<p>The instance of the <a href="../classes/m_predictionError.html">predictionError</a> class directly contains the prediction error deviation in tabular form. If you want to visualize the prediction Error, you can plot it directly. </p>
+<div class="highlight"><pre><span></span><code>pe.plot(); 
+</code></pre></div>
+<p>This will generate a number of plots which are helpful for inuiting the prediction using the various fit SDOs. </p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
