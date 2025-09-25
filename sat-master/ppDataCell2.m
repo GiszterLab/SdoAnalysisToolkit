@@ -339,6 +339,14 @@ classdef ppDataCell2 < handle & matlab.mixin.Copyable %& dataCellSuperClass & da
             xtdc.data = xtData; % No need to call import directly; just rip primaryData; 
             
         end
+        %----- 
+        function [ppdc_out] = getVersion(obj, VERSION)
+            arguments
+                obj
+                VERSION = 1;
+            end
+            ppdc_out = dataCell.utils.versionConvert(obj, VERSION); 
+        end
         
         %% PLOTTER METHODS
         %// Plot Spike-Rasters Rasters; 

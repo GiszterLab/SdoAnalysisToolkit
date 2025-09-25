@@ -23,7 +23,7 @@
 %__________________________________________
 
 
-classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataCellSuperClass & dataCell.dependencies.primaryData
+classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataCellSuperClass & dataCell.deprecated.primaryData
     %% 'Inherited Properties'
         %data                = []; 
         %metadata            = []; 
@@ -618,7 +618,14 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             
         end
                 
-
+        function xtdc_out = getVersion(obj, VERSION)
+            arguments
+                obj
+                VERSION = 2; 
+            end
+            xtdc_out = dataCell.utils.versionConvert(obj, VERSION); 
+        end
+        
         %% __ Write xtdata to a CSV file
         % __>> Allow for a tidy data format. 
         %{

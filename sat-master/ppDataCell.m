@@ -26,7 +26,7 @@
 %__________________________________________
 
 
-classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataCellSuperClass & dataCell.dependencies.primaryData
+classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataCellSuperClass & dataCell.deprecated.primaryData
         %% 'Inherited Properties'
         % data
         % metadata
@@ -36,12 +36,14 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
         % sensor
         % fs; 
         % 
+        
     properties
+        %data = {}; 
         %// List of values; 
         trTimeLen   = []; 
         dataSource  char = []; 
         % __ 
-        nTrialEvents = 0; %counter for spikes/trial
+        %nTrialEvents = 0; %counter for spikes/trial
 
         % __ Shuffling Parameters; 
         nShuffles   {mustBeInteger} = 1000; 
@@ -51,6 +53,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
     end
     properties (Dependent)
         shuffledSpikes 
+        nTrialEvents
     end
     %
     methods
@@ -80,7 +83,19 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                 LI = true; 
             end
         end
-
+        %-------------------------------------------------
+        function nTrialEvents = get.nTrialEvents(obj)
+            if isempty(obj.data)
+                nTrialEvents = 0; 
+                return
+            end
+           nTrialEvents = zeros(obj.nChannels, obj.nTrials); 
+           for tr =1:obj.nTrials
+               for ch = 1:obj.nChannels
+                   nTrialEvents(ch,tr) = obj.data{1,tr}(ch).nEvents; 
+               end
+           end
+        end   
         %% __ CONSTRUCTOR
         function obj = ppDataCell(N_TRIALS, N_CHANNELS)
             arguments
@@ -121,7 +136,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             obj.dataSource  = inputname(2); 
             obj.trTimeLen   = zeros(1,obj.nTrials); 
             
-            obj.nTrialEvents = zeros(obj.nChannels, obj.nTrials); 
+            %obj.nTrialEvents = zeros(obj.nChannels, obj.nTrials); 
             
             obj.data = dataCell.constructors.getPpDataHolder(obj.nTrials, obj.nChannels); 
             %obj.data = SAT.ppDataHolder_new(obj.nTrials, obj.nChannels);
@@ -150,7 +165,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                             obj.data{1,tr}(ch).envelope     = 1; 
                         end
                     end
-                    obj.nTrialEvents(ch,tr) = obj.data{1,tr}(ch).nEvents; 
+                    %obj.nTrialEvents(ch,tr) = obj.data{1,tr}(ch).nEvents; 
                 end
                 % __ Metadata (copy)
                 try
@@ -203,7 +218,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
 
             %// added concrete implementation for extra fields
             ppdc = subsample@dataCell.deprecated.dataCellSuperClass(obj, useTrials, useChannels); 
-            ppdc.nTrialEvents = obj.nTrialEvents(useChannels, useTrials); 
+            %ppdc.nTrialEvents = obj.nTrialEvents(useChannels, useTrials); 
             obj = ppdc;
         end
 
@@ -697,14 +712,37 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             plotSpikes(obj, useTrials, useRows, PLOT_ALL); 
             plotWaves( obj, useTrials, useRows, PLOT_ALL); 
         end
+        %__ conversion/upgrade
+        function ppdc_out = getVersion(obj, VERSION)
+            arguments
+                obj
+                VERSION = 2; 
+            end
+            ppdc_out = dataCell.utils.versionConvert(obj, VERSION); 
+        end
         %% UTILITIES; 
         %___ validate dataFormats (Fix Alignment)
         function validateData(obj)
-            if ~obj.sampledData
-                return; 
+            %classtype = class(obj.data); 
+            %hack acround for deprec loading
+            if isa(obj.data, 'dataCell.primaryData')
+                sfields = {'trTimeLen', 'dataSource', 'metadata',  'fs', 'dataField'}; 
+                for f = 1:length(sfields); obj.(sfields{f}) = obj.data.(sfields{f}); end
+                obj.data = obj.data.data; 
             end
+            obj.nTrials = size(obj.data,2); 
+            if obj.nTrials > 0 
+                obj.nChannels = length(obj.data{1,1}); 
+                obj.sensor = {obj.data{1,1}(:).sensor};
+            end
+             if ~obj.sampledData
+                return; 
+             end           
+            %obj.nTrialEvents = zeros(obj.nChannels, obj.nTrials); 
+            
             for tr = 1:obj.nTrials
                 for u =1:obj.nChannels
+                    %obj.nTrialEvents(tr,u) = obj.data{1,tr}(u).nEvents; 
                     % Horizontal Time row vectors; 
                     % (Maybe one day we can flip this to cols...)
                     if ~isempty(obj.data{1,tr}(u).times)

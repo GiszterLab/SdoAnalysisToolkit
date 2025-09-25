@@ -37,7 +37,7 @@
 %       -- 'notch'
 %           - (Frequency Domain) 60 Hz Line noise notch filtering,
 %           harmonics 1-8
-%       -- 'notchrms'
+%       -- 'notchRMS'
 %           - (Hybrid) 60Hz Notch filter + RMS moving average. 
 %           - Useful for raw EMG. 
 %   POSITIONAL ARGUMENTS
@@ -80,181 +80,19 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-function [fSignal] = callAfilter(signal, type, VAR_1, VAR_2, vars)
-arguments
-    signal
-    type {mustBeMember(type, {'mov', 'gaussmov', 'trimov', 'expmov', ...
-        'rmsmov', 'hamming', 'hanning', 'blackman', 'bandpass', ...
-        'highpass','lowpass', 'butter', 'emgButter', 'trirmsmov',...
-        'notchrms'})}
-    VAR_1 = 25; % Either a nPoints (for time domain) or Hz (for freq domain)
-    VAR_2 = 1;
-    vars.fs = 1000;
-    vars.nHarmonics {mustBeInteger} = 8; 
-end
-
-SIG_HZ = vars.fs;
-if VAR_2 > 1
-    NOTCH_HZ = VAR_2; 
-else
-    NOTCH_HZ = 60; 
-end
-%NOTCH_HZ = SUPPORT_VAR > 1 ? SUPPORT_VAR : 60;
-
-% Ensure signal is row vector
-[signal, TRANSPOSE] = ensureRowVector(signal);
-
-% Apply bookending
-sigLen = size(signal,1); 
-bkLen = min( ceil(sigLen*0.1), SIG_HZ)  ; % At most, 10% of signal; 
-
-signal = bookendSignal(signal', bkLen,2)'; % type 2 = reflect
-
-% Dispatch filter
-switch type
-    %% Time-domain filters
-    case {'mov', 'gaussmov', 'trimov', 'expmov', 'rmsmov', ...
-          'hamming', 'hanning', 'blackman'}
-        b = generateKernel(type, VAR_1, VAR_2);
-        if ismember(type, {'rmsmov'})
-            fSignal = sqrt(abs(ffxt(b, 1, signal.^2)));
-        else
-            if VAR_2 == 1 && ismember(type, {'hamming', 'hanning', 'blackman'})
-                signal = abs(signal);
-            end
-            fSignal = ffxt(b, 1, signal);
-        end
-
-    %% Frequency-domain filters
-    case {'bandpass'}
-        fSignal = bandpass(signal, [VAR_1(1), VAR_1(2)], SIG_HZ);
-    case 'highpass'
-        fSignal = highpass(signal, VAR_1, SIG_HZ);
-    case 'lowpass'
-        fSignal = lowpass(signal, VAR_1, SIG_HZ);
-    case 'butter'
-        Wn = VAR_1 / SIG_HZ * 2;
-        [B, A] = butter(4, Wn);
-        fSignal = ffxt(B, A, signal);
-    case 'emgButter'
-        [B, A] = butter(4, 10 / SIG_HZ * 2, 'high');
-        signalH = ffxt(B, A, signal);
-        Wn = VAR_1 / SIG_HZ * 2;
-        [BL, AL] = butter(4, Wn, 'low');
-        fSignal = ffxt(BL, AL, abs(signalH));
-    case 'notch'
-        fSignal = applyNotch(signal, NOTCH_HZ, vars.nHarmonics, SIG_HZ);
-
-    %% Hybrid filters
-    case {'trirmsmov', 'triRMSmov'}
-        fSignal = triRMSMov(signal', VAR_1)';
-    case {'notchRMS', 'notchrms'}
-        signal = applyNotch(signal, NOTCH_HZ, vars.nHarmonics, SIG_HZ);
-        [B, A] = butter(4, 10 / SIG_HZ * 2, 'high');
-        b2 = ones(1, VAR_1) / VAR_1;
-        signalH = ffxt(B, A, signal);
-        fSignal = sqrt(ffxt(b2, 1, signalH.^2));
-end
-
-% Restore original orientation
-if TRANSPOSE
-    fSignal = fSignal';
-end
-
-% Remove bookends
-fSignal = fSignal(:,bkLen+1:end-bkLen); 
-end
-
-function [signal, transposeFlag] = ensureRowVector(signal)
-    [sz_y, sz_x] = size(signal);
-    transposeFlag = false;
-    if sz_y > 1 && sz_x > 1
-        transposeFlag = true;
-        signal = signal';
-    elseif sz_y > 1 && sz_x == 1
-        transposeFlag = false;
-    elseif sz_y == 1 && sz_x > 1
-        transposeFlag = true;
-        signal = signal';
-    end
-end
-% -- Helper Function --- 
-function signal = applyBookend(signal, fs)
-    sigLen = size(signal, 1);
-    bkLen = min(ceil(sigLen * 0.1), fs);
-    signal = bookendSignal(signal', bkLen, 2)';
-end
-function b = generateKernel(type, N, supportVar)
-    switch type
-        case 'mov'
-            b = ones(1, N) / N;
-        case 'gaussmov'
-            b = getgausskernel(N/2, supportVar);
-        case 'trimov'
-            b0 = 1/N:1/N:1;
-            b = b0 / sum(b0);
-        case 'expmov'
-            tau = supportVar;
-            b0 = exp(tau * (1/N:1/N:1));
-            b = b0 / sum(b0);
-        case 'rmsmov'
-            b = ones(1, N) / N;
-        case 'hamming'
-            b = hamming(N);
-        case 'hanning'
-            b = hann(N);
-        case 'blackman'
-            b = blackman(N);
-        otherwise
-            b = [];
-    end
-end
-
-function signal = applyNotch(signal, notchHz, nHarmonics, fs)
-    for h = 1:nHarmonics
-    %for i = 1:8
-        wo = h * notchHz / (fs / 2);
-        bw = notchHz / fs * 2 / 35;
-        try
-            [b, a] = iirnotch(wo, bw);
-        catch
-            Q = 30;
-            alpha = sin(wo * pi) / (2 * Q);
-            cos_w0 = cos(wo * pi);
-            b1 = [1, -2 * cos_w0, 1];
-            a1 = [1 + alpha, -2 * cos_w0, 1 - alpha];
-            b1 = b1 * (1 + alpha) / (1 + alpha + alpha);
-            b = conv(b1, b1);
-            a = conv(a1, a1);
-        end
-        signal = filtfilt(b, a, signal);
-    end
-end
-
-
 %% Maryam's filtersets
-%{
 %function [fSignal, filterparams]=callAfilter(tinterval,signal,type,argvarin)
-function [fSignal]=callAfilter(signal,type,N_POINTS, SUPPORT_VAR, vars) %varargin)
-arguments
-    signal
-    type {mustBeMember(type, {'mov', 'gaussmov', 'trimov', 'expmov', ...
-        'rmsmov', 'hamming', 'hanning', 'blackman', 'bandpass', ...
-        'highpass','lowpass', 'butter', 'emgButter', 'trirmsmov',...
-        'notchrms'})}
-    N_POINTS = 25; 
-    SUPPORT_VAR = 1; 
-    vars.fs = 1000; 
-end
+function [fSignal]=callAfilter(sig,type,varargin)
 
-SIG_HZ = vars.fs; 
-%{
 p = inputParser; 
 addOptional(p, 'nPoints', 25);  
 addOptional(p, 'auxVar', 1); 
 addParameter(p, 'fs', 1000); 
 parse(p, varargin{:}); 
 pR = p.Results; 
+%____
+
+signal = sig; 
 
 %// Pass to either time-domain of frequency-domain filters; 
 N_POINTS    = pR.nPoints; 
@@ -263,9 +101,6 @@ SIG_HZ      = pR.fs;
 
 %// Filter-dependent secondary support var; defaulted to 1; 
 SUPPORT_VAR = pR.auxVar; 
-%}
-
-%____
 
 NOTCH_HZ = 60; 
 switch type
@@ -282,6 +117,7 @@ if (sz_y > 1) && (sz_x > 1)
     %// Assume [N_CHANNELS x N_OBSERVATIONS]
     TRANSPOSE = 1; 
 end
+
 
 
 %// we use a row-vector notation for our input to this function, but MATLAB
@@ -308,6 +144,7 @@ sigLen = size(signal,1);
 bkLen = min( ceil(sigLen*0.1), SIG_HZ)  ; % At most, 10% of signal; 
 
 signal = bookendSignal(signal', bkLen,2)'; % type 2 = reflect
+%signal = bookendSignal(signal', bkLen,1)'; %type 1 = meanpad
 
 switch type
     
@@ -318,8 +155,8 @@ switch type
         
     case 'gaussmov' 
         %// gaussian-weighted moving-average
-        signal = SUPPORT_VAR; 
-        b = getgausskernel(N_POINTS/2, signal); 
+        sig = SUPPORT_VAR; 
+        b = getgausskernel(N_POINTS/2, sig); 
         fSignal = ffxt(b, 1, signal); 
     case 'trimov'
         %// Triangular-Weighted Moving Average
@@ -340,12 +177,13 @@ switch type
         
     case {'rmsmov', 'rms', 'RMS', 'RMSmov', 'movRMS'}
         %// Root-mean Squared Filtering
+        signal = abs(signal); 
         sig2 = signal.^2; 
-        %signal = abs(signal); 
-        %sig2 = signal.^2; 
         mov = N_POINTS; %IDK why this was set to 'support_var' ? 
+        %mov = SUPPORT_VAR; 
         b = 1/mov*ones(1,mov); 
         fsig2 = ffxt(b,1,sig2); 
+        %fsig2 = filtfilt(b,1,sig2); 
         fSignal = sqrt(abs(fsig2)); 
     case 'hamming'
         %// Hamming-Type window; Requires the DSP toolbox
@@ -374,21 +212,27 @@ switch type
     %% Frequency-based Filters
     case {'bandpass', 'bp'} 
        %// Book-ended variant of Bandpass filter to avoid artifacting
-       %endpoints 
+       %endpoints
+       %signal_bkend = [fliplr(signal(1:SIG_HZ)) signal fliplr(signal(end-SIG_HZ+1:end))];
+       %fSig = bandpass(signal_bkend, FILT_HZ, SIG_HZ); 
        fSignal = bandpass(signal, FILT_HZ, SIG_HZ); 
+       %fSignal = fSig(SIG_HZ+1:end-SIG_HZ);
+       1; 
         
     case {'highpass'}
         fSignal = highpass(signal, FILT_HZ, SIG_HZ); 
+        1; 
 
     case {'lowpass'}
         fSignal = lowpass(signal, FILT_HZ, SIG_HZ); 
+        1; 
 
    case 'butter'
        %// Generic butterworth (default = 4th order)
        cutHz = FILT_HZ; 
        Wn=cutHz/SIG_HZ*2;
        [B,A]=butter(4,Wn);
-       fSignal = ffxt(B,A,signal); 
+        fSignal = ffxt(B,A,signal); 
     %{
     case 'nonlinear'
         [B,A] = butter(4,10/SIG_HZ*2,'high');
@@ -474,6 +318,7 @@ switch type
         [b2] = 1/N_POINTS*ones(1,N_POINTS); 
         signalH = ffxt(B,A,signal); 
         fSignal = sqrt(ffxt(b2,1,signalH.^2)); 
+        1; 
 end
 
 if TRANSPOSE
@@ -481,11 +326,105 @@ if TRANSPOSE
 end
 
 
+1; 
+
+
+
 % __ Remove Bookends
+
 fSignal = fSignal(:,bkLen+1:end-bkLen); 
+
 
 % ______ 
 
 
+
+
+end
+
+%// CUT
+%// if the type is butter argvarin is cutoff
+%// if type is moving average then argvarin is the order of it
+%{
+if length(tinterval) >1 
+    stepSec=tinterval(2)-tinterval(1);
+else
+    stepSec = tinterval; 
 end
 %}
+% __ We could term the SIG_HZ later in the equation, as necessary; 
+
+%{
+nargs = length(varargin); 
+argType = class(varargin); %// see if we're passing doubles, arrays, or cells 
+
+supVar_1 = 1; 
+supVar_2 = []; 
+
+%// Parse Vars by FType
+switch type
+    case {'mov', 'gaussmov', 'trimov', 'expmov', 'rmsmov'}
+        %// Time-Domain Filtering
+        % First val = Points;
+        % Second val = Auxillary/Support var
+        switch argType
+            case {'double'}
+                N_POINTS = varargin(1); 
+                if nargs > 1
+                    supVar_1 = varargin(2); 
+                end
+            case {'cell'}
+                N_POINTS = varargin{1}; 
+                if nargs > 1
+                    supVar_1 = varargin{2}; 
+                end
+        end
+        
+    case {'bandpass', 'bp', 'butter', 'nonlinear', 'notch'}
+        %// Frequency-Domain Filtering
+        
+        %// find filtering frequency
+        
+        switch argType
+            case {'double'}
+                SIG_HZ = varargin(1); 
+                %ffs = argvarin(1); 
+                if nargs > 1
+                    %supVar_1 = argvarin(2); 
+                    ffs = varargin(2); 
+                end
+            case {'cell'}
+                %// may be necessary for passing a band
+                %ffs = argvarin{1}; 
+                SIG_HZ = varargin(1); 
+                if nargs > 1
+                    %supVar_1 = argvarin{2};
+                    ffs = varargin{2}; 
+                end
+        end
+        
+    case {'notchRMS', 'notchrms'}
+        %// Hybrid Filters
+        switch argType
+            case {'double'}
+                SIG_HZ = varargin(1); 
+                if nargs > 1
+                    N_POINTS = varargin(2); 
+                end
+            case {'cell'}
+                SIG_HZ = varargin{1}; 
+                if nargs > 1
+                    N_POINTS = varargin{2}; 
+                end
+        end
+        
+end
+
+
+SIG_HZ=1/stepSec;
+fSignal=[];
+filterparams=[];
+
+%}
+%steps=diff(tinterval)%check for even steps
+%if all(diff(steps)<=0.1*steps(1))\
