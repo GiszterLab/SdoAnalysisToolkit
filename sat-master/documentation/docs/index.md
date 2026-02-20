@@ -18,6 +18,7 @@ Last Updated May 6th, 2023.
 
 * [Using Custom Data Classes](./classes/overview.md)
 
+* [Appendices](./appendix/overview.md)
 
 ## License Information: 
 
