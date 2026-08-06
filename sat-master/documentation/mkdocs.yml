@@ -55,6 +55,8 @@ use_directory_urls: false
 nav: 
 - Home: index.md
 - Installation: installation/overview.md
+- Walkthrough: demo/overview.md
 - Analysis: analysis/overview.md
 - Custom Classes: classes/overview.md
 - Code Library: functions/overview.md
+- Appendix: appendix/overview.md

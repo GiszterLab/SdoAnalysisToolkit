@@ -6,6 +6,10 @@ Custom  Handle  class to import, manipulate,  and subsample trialwise point proc
 !!! note deprecated
       This class is deprecated, and is kept for archival purposes with historical code. We recommend usage of [ppDataCell2](./m_ppDataCell2.md) instead, which may be replaced in-place.
 
+## Alias
+Instances of this class in the documentation and annotations is assigned the alias **ppdc**. 
+
+
 ## Overview: 
 
 

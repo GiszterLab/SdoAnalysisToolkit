@@ -7,7 +7,7 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="../assets/images/favicon.png" rel="icon"/>
 <meta content="mkdocs-1.6.1, mkdocs-material-9.6.14" name="generator"/>
-<title>SAT.validateDataHolders() - SDO Analysis Toolkit</title>
+<title>sdoMat2.m - SDO Analysis Toolkit</title>
 <link href="../assets/stylesheets/main.342714a4.min.css" rel="stylesheet"/>
 <link href="../assets/stylesheets/palette.06af60db.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -21,7 +21,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#satvalidatedataholders">
+<a class="md-skip" href="#sdomat2m">
           Skip to content
         </a>
 </div>
@@ -45,7 +45,7 @@
 <div class="md-header__topic" data-md-component="header-topic">
 <span class="md-ellipsis">
             
-              SAT.validateDataHolders()
+              sdoMat2.m
             
           </span>
 </div>
@@ -125,6 +125,14 @@
 </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="../demo/overview.html">
+<span class="md-ellipsis">
+    Walkthrough
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../analysis/overview.html">
 <span class="md-ellipsis">
     Analysis
@@ -133,7 +141,7 @@
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../classes/overview.html">
+<a class="md-nav__link" href="overview.html">
 <span class="md-ellipsis">
     Custom Classes
     
@@ -141,9 +149,17 @@
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="overview.html">
+<a class="md-nav__link" href="../functions/overview.html">
 <span class="md-ellipsis">
     Code Library
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../appendix/overview.html">
+<span class="md-ellipsis">
+    Appendix
     
   </span>
 </a>
@@ -163,38 +179,6 @@
     </label>
 <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#overview">
-<span class="md-ellipsis">
-      Overview:
-    </span>
-</a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#usages">
-<span class="md-ellipsis">
-      Usages:
-    </span>
-</a>
-<nav aria-label="Usages:" class="md-nav">
-<ul class="md-nav__list">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#inputs">
-<span class="md-ellipsis">
-      Inputs
-    </span>
-</a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#output">
-<span class="md-ellipsis">
-      Output:
-    </span>
-</a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
 <a class="md-nav__link" href="#utility">
 <span class="md-ellipsis">
       Utility:
@@ -202,16 +186,30 @@
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#example-code">
+<a class="md-nav__link" href="#overview">
 <span class="md-ellipsis">
-      Example Code
+      Overview:
     </span>
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#important-notes">
+<a class="md-nav__link" href="#constructor">
 <span class="md-ellipsis">
-      IMPORTANT NOTES :
+      Constructor
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#properties">
+<span class="md-ellipsis">
+      Properties:
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#selected-methods">
+<span class="md-ellipsis">
+      (Selected) Methods :
     </span>
 </a>
 </li>
@@ -222,128 +220,286 @@
 </div>
 <div class="md-content" data-md-component="content">
 <article class="md-content__inner md-typeset">
-<h1 id="satvalidatedataholders">SAT.validateDataHolders()</h1>
-<h2 id="overview">Overview:</h2>
-<p><em>A simple error-checking script to ensure that <a href="m_SAT_xtDataHolder_new.html">xtDataHolder</a> and <a href="m_SAT_ppDataHolder_new.html">ppDataHolder</a> structures have been properly and sufficiently populated.</em> </p>
-<p>Can perform limited error-correction. </p>
-<div class="mermaid">flowchart TD
-
-%% Define styles - CONSERVED!
-classDef dataObj fill: #EACE79,stroke:#333,stroke-width:2px; 
-classDef codeObj fill: #90B963,stroke:#333,stroke-width:2px;
-classDef classObj fill: #B1E2E9,stroke:#333,stroke-width:2px;
-classDef paramObj fill: #D6766F,stroke:#333,stroke-width:2px
-
-A(xtDataHolder)
-B(ppDataHolder)
-C(FIX_FLAG)
-D["SAT.xtDataHolder_new.m()"]
-E(exitFlag)
-
-A--reads--&gt;D
-B--reads--&gt;D
-D--modifies--&gt;A
-D--modifies--&gt;B
-D--exports--&gt;E
-C--param--&gt;D
-
-
-%% Assign classes to Nodes
-class A,B dataObj;
-class D codeObj;
-class 00 classObj;
-class C,E paramObj;</div>
-<h2 id="usages">Usages:</h2>
-<blockquote>
-<p>[xtdh, ppdh, exitFlag] = SAT.validateDataHolders(xtdh, ppdh, FIX_FLAG)</p>
-</blockquote>
-<h3 id="inputs">Inputs</h3>
-<ul>
-<li><code>xtdh</code>: <a href="m_SAT_xtDataHolder_new.html">xtDataHolder</a></li>
-<li><code>ppdh</code>: <a href="m_SAT_ppDataHolder_new.html">ppDataHolder</a></li>
-<li><code>FIX_FLAG</code>: (Positional) Boolean.<ul>
-<li><code>0</code>: Do not attempt to fix errors</li>
-<li><code>1</code>: Attempt to fix errors</li>
-</ul>
-</li>
-</ul>
-<h3 id="output">Output:</h3>
-<ul>
-<li><code>xtdh</code>: xtDataHolder. If FIX_FLAG == 1, with attempted correction. </li>
-<li><code>ppdh</code>: ppDataHolder. if FIX_FLAG == 1, with attempted correction. </li>
-<li><code>exitFlag</code>: (1,1)<ul>
-<li><code>0</code>: No errors detected; Compute SDO should work without issue. </li>
-<li><code>1</code>: Warnings detected; Compute SDO may compute, but there may be errors with plotting. </li>
-<li><code>2</code>: Critical errors detected; Compute SDO will fail. </li>
-</ul>
-</li>
-</ul>
+<h1 id="sdomat2m"><em>sdoMat2.m</em></h1>
 <h2 id="utility">Utility:</h2>
-<ul>
-<li>validate dataholders prior to use. </li>
-</ul>
-<h2 id="example-code">Example Code</h2>
-<p><em>Example of Successful Code</em>
-<div class="highlight"><pre><span></span><code>&gt;&gt; xtdh = xtData; 
- &gt;&gt; ppdh = ppData; 
- %// test validation without repair 
- &gt;&gt; SAT.validateDataHolders(xtdh, ppdh); 
- DataHolders passed validation! 
-</code></pre></div></p>
-<p><em>Example of Error Detection</em>
-<div class="highlight"><pre><span></span><code>&gt;&gt; xtdh = xtData; 
- %// intentionally remove terminal trial to mismatch number of observations between trials 
- &gt;&gt; xtdh2 = xtData(:,1:end-1); 
- &gt;&gt; ppdh = ppData; 
- %// trial lengths are not the same size 
- &gt;&gt; length(xtdh2) == length(ppdh) 
- ans = 
-     logical 
-     0 
- %// test validation without repair 
- &gt;&gt; SAT.validateDataHolders(xtdh2, ppdh); 
- WARNING!: Mismatch in number of trials between structures 
-</code></pre></div></p>
-<p><em>Example of Limited Error Detection</em>
-<div class="highlight"><pre><span></span><code>&gt;&gt; xtdh = xtData; 
- %// remove terminal trial, to mismatch number of observations between trials 
- &gt;&gt; xtdh2 = xtData(:,1:end-1); 
- &gt;&gt; ppdh = ppData; 
- %// trial lengths are not the same size 
- &gt;&gt; length(xtdh2) == length(ppdh) 
-      ans = 
-      logical 
-     0 
- &gt;&gt; FIX_FLAG = 1; 
- %// test validation without repair 
- &gt;&gt; [xtdh_out, ppdh_out] = SAT.validateDataHolders(xtdh2, ppdh, FIX_FLAG); 
- WARNING!: Mismatch in number of trials between structures 
- %// trial lengths are now the same size; 
- &gt;&gt; length(xtdh_out) == length(pdh_out) 
-      ans = 
-      Logical 
-      1 
- %// DataHolders now pass validation 
- &gt;&gt; SAT.validateDataHolders(xtdh_out, ppdh_out); 
- DataHolders passed validation! 
-</code></pre></div></p>
-<h2 id="important-notes">IMPORTANT NOTES  :</h2>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>While this function does have limited error correction, prevention is better than a cure! If you are running into an error during validation, you may need to tweak your code. </p>
+<p>Upgraded version of the custom classes which effectively overshadows the orignal <a href="m_sdoMat.html">sdoMat</a> and partially overshadows the <a href="m_sdoMultiMat.html">sdoMultiMat</a></p>
+<p>This class handles the core interfacing with the primary data classes ( <a href="m_xtDataCell.html">xtDataCell</a>, <a href="m_xtDataCell2.html">xtDataCell2</a>, <a href="m_ppDataCell.html">ppDataCell</a>, <a href="m_ppDataCell2.html">ppDataCell2</a> ) with the <a href="m_sdoComputer.html">sdoComputer</a> elements.</p>
+<p>Custom  Handle  class to generate single SDOs from instances of <a href="m_pxtDataCell.html">pxtDataCell</a>, and to plot associated errorrs.</p>
+<h2 id="overview">Overview:</h2>
+<div class="mermaid">classDiagram
+    class sdoMat2 {
+        +nTrials
+        +nXtChannels
+        +nPpChannels
+        +xtSensor
+        +ppSensor
+        +nStates
+        -definedState
+        -shuffledPpData
+        -importedXtData
+        -importedPpData
+        -computedSdo
+        +import()
+        +drawIntervals()
+        +sampleIntervals()
+        +compute()
+        +getSdos()
+        +getStirpd()
+        +getTransitionMatrices()
+        +plot()
+    }
+    class dataCell.primaryData
+
+    class dataCell.shuffler
+
+    class dataCell.stateMap
+
+    class dataCell.intervalSampler
+
+    class dataCell.properties.intervalProperties
+
+    class dataCell.pxAssigner
+
+    class dataCell.properties.pxProperties
+
+    class SAT.properties.computerProperties
+
+    class SAT.properties.plotterProperties
+
+    class SAT.sdoComputer
+
+    sdoMat2 &lt;|-- dataCell.primaryData
+    sdoMat2 &lt;|-- dataCell.shuffler
+    sdoMat2 &lt;|-- dataCell.stateMap
+    sdoMat2 &lt;|-- dataCell.intervalSampler
+    sdoMat2 &lt;|-- dataCell.properties.intervalProperties
+    sdoMat2 &lt;|-- dataCell.pxAssigner
+    sdoMat2 &lt;|-- dataCell.properties.pxProperties
+    sdoMat2 &lt;|-- SAT.properties.computerProperties
+    sdoMat2 &lt;|-- SAT.properties.plotterProperties
+    sdoMat2 &lt;|-- SAT.sdoComputer
 </div>
-<p>This script checks that the number of rows (channels) in each trial is consistent across the entire data 
- Structure, and that each utilized field is populated.  It will give a false positive to validation if the  correct number of channels is passed to a trial, but these are in inconsistent order. 
- -  If one data structure contains more trials than the other, dummy trial data will be appended to the end of 
- the smaller data structure.  Depending on which trials  were missing on the smaller data structure, this 
- may result in a mismatching of trial data in the  xtData  and  ppData. 
- -  Dummied data structure trials pull information from the 1st trial (cell) of  xtData  and  ppData. This carries the implicit assumption that sampling frequency is consistent. 
- -  Frequency data,  <code>.fs</code>, must be consistent within a trial  field. 
- -  There is currently no support for having trials at differing frequencies in different trials. This may 
- result in errors or false-positive validations. 
- -  If any warnings are detected, data structures should be corrected by the user. 
- -  Vector data (e.g.  <code>.envelope</code>  ) which is present in a column vector will be transposed to a row vector 
- without raising an error.</p>
+<h2 id="constructor">Constructor</h2>
+<p><em>Call within MATLAB</em>
+<div class="highlight"><pre><span></span><code>sdoM = sdoMat(); 
+</code></pre></div></p>
+<p>!!! bug TODO: 
+       - Upgrade this section with metadata classes on xtDataCell, ppDataCell --&gt; pxtDataCell; import metadata from pxtDataCell. </p>
+<h2 id="properties">Properties:</h2>
+<ul>
+<li>
+<p><code>.xtData</code> </p>
+<ul>
+<li>An instance of the <code>dataCell.primaryData</code> class. </li>
+<li>Comprises the time-series data, x(t).</li>
+<li>Populated by  <code>.import()</code> from an <code>xtDataCell</code> or <code>xtDataCell2</code> instance.</li>
+</ul>
+</li>
+<li>
+<p><code>.ppData</code></p>
+<ul>
+<li>An instance of the <code>dataCell.primaryData</code> class. </li>
+<li>Comprises the point-process data. </li>
+<li>Populated by <code>.import()</code> from a <code>ppDataCell</code> or <code>ppDataCell2</code> instance.</li>
+</ul>
+</li>
+<li>
+<p><code>.eventShuffle</code></p>
+<ul>
+<li>An instance of the <code>dataCell.shuffler</code> class.</li>
+<li>Comprises the shuffling metrics for the point-process data. </li>
+<li>Populated by <code>.import()</code> from a <code>ppDataCell</code> or <code>ppDataCell2</code> instance. </li>
+</ul>
+</li>
+<li>
+<p><code>.ppName</code> </p>
+</li>
+<li>ppDataCell.dataField </li>
+<li>
+<p>Populated by  <code>.import</code> </p>
+</li>
+<li>
+<p><code>.xtChName</code></p>
+<ul>
+<li>xtDataCell channel name of imported data. </li>
+<li>Populated by  <code>.import</code> </li>
+</ul>
+</li>
+<li>
+<p><code>.ppChName</code> </p>
+<ul>
+<li>ppDataCell channel name of imported data.  </li>
+<li>Populated by  <code>.import</code> </li>
+</ul>
+</li>
+<li>
+<p><code>.pxtNames</code> </p>
+<ul>
+<li>{1x nPxtTypes} cell of of  char  . Corresponds to type  of prediction.     </li>
+<li>Populated by  <code>`.import</code> </li>
+<li>Populated by <code>.comparePxt</code> </li>
+</ul>
+</li>
+<li>
+<p><code>.nPxtTypes</code> </p>
+<ul>
+<li>[int]. Number of dataTypes/predictions contained within the  <a href="m_pxtDataCell.html">pxtDataCell</a>.   </li>
+</ul>
+</li>
+<li>
+<p><code>.nEvents</code> </p>
+<ul>
+<li>[int]. Number of events around which distributions are drawn. </li>
+</ul>
+</li>
+<li>
+<p><code>.nShuffles</code> </p>
+<ul>
+<li>[int]. Number of shuffles generated in  pxt. </li>
+<li>Populated by  <code>.import</code>  from  <a href="m_ppDataCell.html">ppDataCell</a></li>
+</ul>
+</li>
+<li>
+<p><code>.xtProperties</code> </p>
+<ul>
+<li>Metadata of  <a href="m_xtDataCell.html">xtDataCell</a> </li>
+</ul>
+</li>
+<li>
+<p><code>.ppProperties</code> </p>
+<ul>
+<li>Metadata of  <a href="m_ppDataCell.html">ppDataCell</a> </li>
+</ul>
+</li>
+<li>
+<p><code>.px0_duraMs</code> </p>
+<ul>
+<li>[double]. Duration of interval over which to derive event-wise distributions. </li>
+<li>If .duraMs  &lt; 0, then sample this interval PRIOR to  event. </li>
+<li>If .duraMs  &gt; 0, then sample this interval AFTER to  event. </li>
+</ul>
+</li>
+<li>
+<p><code>.px1_duraMs</code> </p>
+<ul>
+<li>[double]. Duration of interval over which to derive event-wise distributions.</li>
+<li>If .duraMs  &lt; 0, then sample this interval PRIOR to  event.-  If .duraMs  &gt; 0, then sample this interval AFTER to  event. </li>
+</ul>
+</li>
+<li>
+<p><code>.nShift</code> </p>
+<ul>
+<li>Shift in the the start time for pre/post spike interval. See  SAT.computeSDO.m </li>
+<li>Default = 1; </li>
+</ul>
+</li>
+<li>
+<p><code>.zDelay</code> </p>
+<ul>
+<li>Interval between pre/post spike interval. See <code>SAT.computeSDO.m</code> </li>
+<li>Default = 0; </li>
+</ul>
+</li>
+<li>
+<p><code>.sdo</code></p>
+<ul>
+<li>[N_STATES,N_STATES] SDO (differential) matrix corresponding to the combination of xtDataCell channel and ppDataCell channel. </li>
+<li>Populated by <code>.import</code> </li>
+</ul>
+</li>
+<li>
+<p><code>.filterWid</code> </p>
+<ul>
+<li>Width of the smoothing filter, in states. See  SAT.computeSDO.m </li>
+<li>Default = 0; </li>
+</ul>
+</li>
+<li>
+<p><code>.filterStd</code> </p>
+<ul>
+<li>Standard deviation of the smoothing filter, in states. See  <code>SAT.computeSDO.m</code> </li>
+<li>Default = 0; </li>
+</ul>
+</li>
+<li>
+<p><code>.nStates</code> </p>
+<ul>
+<li>Number of states used to rasterize signal. </li>
+<li>Populated by .import  from <a href="m_xtDataCell.html">xtDataCell</a>. </li>
+</ul>
+</li>
+<li>
+<p><code>.fs</code> </p>
+</li>
+<li>Sample frequency of timeseries data. </li>
+<li>Populated by  <code>.import</code>  method. </li>
+<li>
+<p>Modified by  <code>.resample</code>  method.   </p>
+</li>
+<li>
+<p><code>.stateMapping</code> </p>
+<ul>
+<li>[1 x N_STATES+1] corresponding to the edges of the state bins. </li>
+<li>Populated by <code>.import</code>  from  <a href="m_xtDataCell.html">xtDataCell</a>. </li>
+</ul>
+</li>
+<li>
+<p><code>.backgroundPx</code> </p>
+<ul>
+<li>[N_STATES x 1] Probability distribution; average P(x) </li>
+<li>Populated by  <code>.import</code> </li>
+</ul>
+</li>
+<li>
+<p><code>.backgroundMkv</code> </p>
+<ul>
+<li>[N_STATES x N_STATES] Markov Matrix, corresponding to background transitions (over <code>.duraMs</code>). </li>
+<li>Populated by  <code>.import</code></li>
+</ul>
+</li>
+<li>
+<p><code>.markovMatrix</code> </p>
+<ul>
+<li>[N_STATES x N_STATES] Markov Matrix, corresponding to transitions over adjacent states. </li>
+<li>Populated by  <code>.import</code></li>
+</ul>
+</li>
+<li>
+<p><code>.markovType</code></p>
+<ul>
+<li>{'px0', 'px1'}</li>
+<li>Whether to use the Markov Matrix from the prespike (px0) or postspike (px`) <a href="m_pxtDataCell.html">pxtDataCell</a> during import. </li>
+</ul>
+</li>
+<li>
+<p><code>.transitionMat</code></p>
+<ul>
+<li>Populated by <code>.matkeTransitionMatrices</code></li>
+<li>Comprises a version of the SDO for use in forward prediction (normalized). </li>
+</ul>
+</li>
+</ul>
+<h2 id="selected-methods">(Selected) Methods  :</h2>
+<ul>
+<li><code>.import</code> (<a href="m_pxtDataCell.html">pxtDataCell</a>, <a href="m_pxtDataCell.html">pxtDataCell</a>); 
+    <div class="highlight"><pre><span></span><code>sdoM.import(pxt0, pxt1)
+
+% Calculate the SDO measured between the observed probability distributions in pxt0 and the transitions (post-spike) to pxt1.
+</code></pre></div></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul>
+<li>Here, <em>pxt0</em> and <em>pxt1</em> must be <a href="m_pxtDataCell.html">pxtDataCell</a> classes with the same number of events, number of state, and state definition. </li>
+<li>This is most easily handled by first making <em>pxt0</em> making a copy as <em>pxt1</em>, then modifying the relevant parameters.</li>
+</ul>
+</div>
+<ul>
+<li><code>.plot</code>()<ul>
+<li>Plots the the probability data, as collected over time, using the <em>imagesc</em> MATLAB plotter. </li>
+</ul>
+</li>
+</ul>
 </article>
 </div>
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>

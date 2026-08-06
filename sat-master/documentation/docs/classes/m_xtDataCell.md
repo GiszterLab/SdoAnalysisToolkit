@@ -6,6 +6,9 @@ Custom  Handle  class to Import, manipulate,  and subsample trialwise time serie
 !!! warning deprecation
     This class is deprecated, and is no longer receiving regular updates. Use ```xtDataCell2``` instead.
 
+## Alias
+Instances of this class in the documentation and annotations is assigned the alias **xtdc**. 
+
 ## Overview: 
 
 
