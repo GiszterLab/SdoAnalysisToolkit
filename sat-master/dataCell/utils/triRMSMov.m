@@ -1,4 +1,4 @@
-function fxt = triRMSmov(xt, nPoints)
+function fxt = triRMSMov(xt, nPoints)
 % Hybrid Triangular-weighted RMS Filter
 % 
 % Define a window +/- nPoints/2 the reference point. Square all values

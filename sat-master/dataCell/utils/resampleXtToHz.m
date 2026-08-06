@@ -62,12 +62,21 @@ end
         end
     else
         %// Non integer upsample/downsample. Two stages; 
-        LC = lcm(FS, newFS); % least-common multiple of two Hz
+        try 
+            LC = lcm(FS, newFS); % least-common multiple of two Hz
+        catch
+            % if sample freq is non-integer this can cause issues over long points; 
+            LC = lcm(round(FS), round(newFS)); 
+        end
         % 1) Upsample 
         upXt = interp(Xt, round(LC/FS)); 
         %upXt = interpolate(Xt, round(LC/FS)); 
         % 2) Downsample
-        rsXt = decimate(upXt, round(LC/newFS));
+        try
+            rsXt = decimate(upXt, round(LC/newFS));
+        catch
+            rsXt = downsample(upXt, round(LC/newFS)); 
+        end
     end
 
 if CONFORM

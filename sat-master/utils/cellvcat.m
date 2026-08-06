@@ -2,7 +2,7 @@
 % perform vertical concatenation of array elements down a cell (dim 1)
 % assumes that the 2nd dimension is constant across all rows; tranpose if
 % this assumption is violated
-
+%
 % Potential Inputs and Behaviors: 
 % --------------- 
 % Nx1 cell array: 
@@ -130,7 +130,7 @@ el = reshape(el, sz0y, sz0x);
 ew = reshape(ew, sz0y, sz0x); 
 
 switch celltype
-    case {'Nx1_double' 'Nx1_cell', 'Nx1_logical'}
+    case {'Nx1_double' 'Nx1_cell', 'Nx1_logical', 'Nx1_struct'}
         ew2 = max(mode(mode(ew)),1);
         %
          if ~all(ew(ew>0) == ew(find(ew>0,1)))
@@ -194,7 +194,7 @@ end
 
 switch celltype
     % -- Original Use Case
-     case {'Nx1_double' 'NxK_double', 'Nx1_logical'}   
+     case {'Nx1_double' 'NxK_double', 'Nx1_logical', 'Nx1_struct'}   
         arr = cell(1, sz0x); 
         % -- can use colwise normal vertcat
         for col=1:sz0x
@@ -283,7 +283,7 @@ for cll = 1:sz0y
 
         % -- Probably not best to have the switch here, but whatever
         switch celltype
-            case {'Nx1_double', 'Nx1_logical', 'Nx1_cell'}
+            case {'Nx1_double', 'Nx1_logical', 'Nx1_cell', 'Nx1_struct'}
                 %arr(ew_itt,(col-1)*sum(ew(1:col))+1:col*sum(ew(1:col))) = cl{cll, col}; 
                 arr(ew_itt:ew_itt+num_el-1,col_itt0:col_itt1) =  cl{cll, col};
 

@@ -122,6 +122,41 @@ switch method
         else
             cArray = [cLo; cHi]; 
         end
+        
+    case 'redgreen'
+        
+    % Halfway point
+    mid = floor(N_COLORS/2); 
+    mid2 = ceil(N_COLORS/2);     
+    % Red to black
+    if N_COLORS > 2
+        %red = [linspace(1, 0, mid)', zeros(mid, 1), zeros(mid, 1)];
+        red = [linspace(1, 1/N_COLORS, mid)', zeros(mid, 1), zeros(mid, 1)];
+    elseif N_COLORS == 2
+        red = [1,0,0]; 
+    else
+        red = []; 
+    end
+    
+    % Add Black-Black for odd number midpoint; 
+    if mod(N_COLORS,2) > 0 || N_COLORS == 1
+        black = [0,0,0]; 
+    else
+        black = []; 
+    end
+        
+    % Black to green
+    %green = [zeros(N_COLORS - mid, 1), linspace(0, 1, N_COLORS - mid)', zeros(N_COLORS - mid, 1)];
+    if N_COLORS > 2
+        green = [zeros(N_COLORS - mid2, 1), linspace(1/N_COLORS, 1, N_COLORS - mid2)', zeros(N_COLORS - mid2, 1)];
+    elseif N_COLORS == 2
+        green = [0,1,0]; 
+    else
+        green = []; 
+    end
+    % Combine
+    cArray = [red; black; green];
+        
 
 end
 

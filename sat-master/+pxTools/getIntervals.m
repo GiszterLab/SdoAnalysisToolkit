@@ -87,6 +87,10 @@ for xx = 1:sz_x
         [xOff_ix] = repmat(xDat,1, nPts); 
         [xRng_ix,~] = meshgrid(xRng, 1:nK); 
         %
+        if isempty(xOff_ix)% No spikes = no perispikes
+            continue; 
+        end
+        
         xTen = reshape(xOff_ix+xRng_ix, nRows(xx,yy), nCols(xx,yy), []); 
         xi_cell{xx,yy} = permute(xTen, [3,2,1]); 
     end

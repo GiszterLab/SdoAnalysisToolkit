@@ -38,13 +38,9 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
         % 
         
     properties
-        %data = {}; 
         %// List of values; 
         trTimeLen   = []; 
         dataSource  char = []; 
-        % __ 
-        %nTrialEvents = 0; %counter for spikes/trial
-
         % __ Shuffling Parameters; 
         nShuffles   {mustBeInteger} = 1000; 
         shuffMethod char    {mustBeMember(shuffMethod, {'isi', 'cif'})} = 'isi'; 
@@ -65,9 +61,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             end
             % Find first trial w/ data
             ix_tr = find(sum(obj.nTrialEvents,1)>1,1);
-            %ix_tr = find(any(obj.nTrialEvents),1); 
             ix_n = find(obj.nTrialEvents(:,ix_tr),1);
-            %ix_n = find(any(obj.nTrialEvents(:,1:ix_tr),1)); 
             if isempty(ix_tr)
                 LI = false; 
                 return
@@ -136,10 +130,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             obj.dataSource  = inputname(2); 
             obj.trTimeLen   = zeros(1,obj.nTrials); 
             
-            %obj.nTrialEvents = zeros(obj.nChannels, obj.nTrials); 
-            
             obj.data = dataCell.constructors.getPpDataHolder(obj.nTrials, obj.nChannels); 
-            %obj.data = SAT.ppDataHolder_new(obj.nTrials, obj.nChannels);
           
             %// Grab elements from the existing 'spikeTimeCell'; 
             for tr = 1:obj.nTrials
@@ -165,7 +156,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                             obj.data{1,tr}(ch).envelope     = 1; 
                         end
                     end
-                    %obj.nTrialEvents(ch,tr) = obj.data{1,tr}(ch).nEvents; 
                 end
                 % __ Metadata (copy)
                 try
@@ -190,8 +180,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
         end
 
         % Added 8.29.2024
+        % Concatenate and flatten multiple trials; 
         function obj = concat(obj, useTrials)
-            % Concatenate and flatten multiple trials; 
             arguments
                 obj
                 useTrials = 1:obj.nTrials;
@@ -204,8 +194,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             arguments
                 obj
                 % __ Default to empty to allow for better parsing
-                %useTrials   = 1:obj.nTrials
-                %useChannels = 1:obj.nChannels
                 useTrials = []; 
                 useChannels = []; 
             end
@@ -218,10 +206,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
 
             %// added concrete implementation for extra fields
             ppdc = subsample@dataCell.deprecated.dataCellSuperClass(obj, useTrials, useChannels); 
-            %ppdc.nTrialEvents = obj.nTrialEvents(useChannels, useTrials); 
             obj = ppdc;
         end
-
 
 
         function [obj] = combine(obj, dcList) %varargin)
@@ -359,11 +345,10 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                 for chi = 1:N_USE_CHANNELS
                     ch = useChannels(chi); 
                     ts = obj.data{1,tr}(ch).(vars.dataField); 
-                    idxArr{chi,tr} = round(ts*SAMPLE_HZ); %/SAMPLE_HZ; 
+                    idxArr{chi,tr} = round(ts*SAMPLE_HZ); %/SAMPLE_HZ; > time to indices
                 end
             end
         end
-
 
         function [idx0_Cell, idx1_Cell] = getPerieventIndices(obj, useTrials, useChannels, vars)
             arguments
@@ -437,11 +422,14 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                 que_st = que_st{1}; %strip
 
                 xhist = dataCell.calculate.spikeCorrelogram(ref_st, que_st, ...
+                    vars, 'autoISI', AUTO); 
+            %{
                     'dt', vars.dt, ...
                     'leadDura', vars.leadDura, ...
                     'lagDura', vars.lagDura, ...
                     'autoISI', AUTO, ...
                     'norm',   vars.norm); 
+                    %}
                 xpsth_cell{ri,qi} = xhist; 
             end
         end
@@ -478,7 +466,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
         function obj = shuffle(obj, useChannels, N_SHUFFLES, SHUFF_METHOD) 
             arguments
                 obj
-                useChannels    {mustBeNumeric} = 1:obj.nChannels; 
+                useChannels {mustBeNumeric} = 1:obj.nChannels; 
                 N_SHUFFLES  {mustBeInteger} = obj.nShuffles;  
                 SHUFF_METHOD char = obj.shuffMethod; 
             end
@@ -512,7 +500,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                  ppdc ppDataCell
             end
             % ___ 
-
             if ~(obj.nTrials == ppdc.nTrials)
                 disp("ppDataCells do not have compatible sizes"); 
                 return
@@ -526,17 +513,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                     1; 
                 end
             end
-
-            newFs = min(obj.fs, ppdc.fs); 
-            %{
-            if obj.fs > newFs
-                obj.resample(newFs); 
-            elseif ppdc.fs > newFs
-                ppdc.resample(newFs); 
-            end
-            %}
-            obj.fs = newFs; 
-            obj.nTrialEvents = [obj.nTrialEvents; ppdc.nTrialEvents]; 
+            obj.fs          = min(obj.fs, ppdc.fs); 
             obj.trTimeLen   = max(obj.trTimeLen, ppdc.trTimeLen);
             obj.sensor      = [obj.sensor, ppdc.sensor]; 
             obj.nChannels   = obj.nChannels + ppdc.nChannels;  
@@ -565,7 +542,6 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             for tr = 1:N_USE_TR
                 %__ Subset
                 trial_times = trialTimeStamps{tr}(useChannels); 
-                
                 for ch = 1:N_USE_CH
                     %// Now, bin
                     LI = (trial_times(ch).times >= tStart) & (trial_times(ch).times <= tStop); 
@@ -595,13 +571,20 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             xtDC = xtDataCell();
             %// Copy-Over Primary data; 
             %___
+            sFields = {'data', 'metadata', 'nTrials', 'nChannels', 'sensor', 'trTimeLen'};
+            
+            for sf = 1:numel(sFields)
+                xtDC.(sFields{sf}) = obj.(sFields{sf});
+            end
+            %{
             xtDC.data       = obj.data; 
             xtDC.metadata   = obj.metadata; 
             xtDC.nTrials    = obj.nTrials; 
             xtDC.nChannels  = obj.nChannels; 
             xtDC.sensor     = obj.sensor; 
+            xtDC.trTimeLen  = obj.trTimeLen;
+            %}
             xtDC.fs         = SAMPLE_HZ; 
-            xtDC.trTimeLen  = obj.trTimeLen; 
             xtDC.dataField  = 'envelope'; %obj.dataField; 
             %____
             binXtCell = getBinaryImpulses(obj, SAMPLE_HZ, 'rateCode', vars.rateCode); %, useTrials, useChannels)
@@ -615,12 +598,11 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                     end
                     S{1,tr}(ch).sensor  = xtDC.sensor{ch}; 
                     S{1,tr}(ch).fs      = xtDC.fs; 
-                    S{1,tr}(ch).raw = binXtCell{tr}(ch,:); 
+                    S{1,tr}(ch).raw     = binXtCell{tr}(ch,:); 
                     S{1,tr}(ch).(xtDC.dataField) = binXtCell{tr}(ch,:); 
                 end
             end
             xtDC.import(S); 
-
         end
         
         %% PLOTTER METHODS
@@ -683,6 +665,12 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                 useRows     {mustBeNumeric} = 1:obj.nChannels; 
                 PLOT_ALL  = 0; 
             end            
+            % Arguments: 
+            % - useTrials (IDX range)
+            % - useRows (IDX range) - corresponding to channel index
+            % - PLOT_All [0/1]. Whether to plot all traces (1), or only an
+            %       average (0).
+            
             % __ Add pre-check here to exclude completely-empty channels
             try 
                 useRows = intersect(useRows, find(sum(obj.nTrialEvents, 2))); 
@@ -738,12 +726,10 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
              if ~obj.sampledData
                 return; 
              end           
-            %obj.nTrialEvents = zeros(obj.nChannels, obj.nTrials); 
             
             for tr = 1:obj.nTrials
                 for u =1:obj.nChannels
-                    %obj.nTrialEvents(tr,u) = obj.data{1,tr}(u).nEvents; 
-                    % Horizontal Time row vectors; 
+                    % 1. Horizontal Time row vectors; 
                     % (Maybe one day we can flip this to cols...)
                     if ~isempty(obj.data{1,tr}(u).times)
                         [sz_y,sz_x] = size(obj.data{1,tr}(u).times);  
@@ -751,7 +737,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                             obj.data{1,tr}(u).times = obj.data{1,tr}(u).times'; 
                         end
                     end
-                    % Horizontal Envelopes
+                    %_________________________
+                    %  2.Horizontal Envelopes
                     if ~isempty(obj.data{1,tr}(u).envelope)
                         [sz_y,sz_x] = size(obj.data{1,tr}(u).envelope);
                         if (sz_x == obj.data{1,tr}(u).nEvents) && ~(sz_x == sz_y)
@@ -764,7 +751,8 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                             obj.data{1,tr}(u).envelope = ones(obj.data{1,tr}(u).nEvents, 2); 
                         end
                     end
-                    % --> Could insert validate shuffles; 
+                    %______________________
+                    % 3. --> Could insert validate shuffles; 
                     if obj.shuffledSpikes 
                         if obj.data{1,tr}(u).nEvents > 0
                             [sz_y, sz_x] = size(obj.data{1,tr}(u).shuffle); 
@@ -786,7 +774,7 @@ classdef ppDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
         function [dcCombine] = combinePpDataCells(dataCellCell)
             nDC = length(dataCellCell); 
             for c = 1:nDC
-                if ~isa(dataCellCell{c}, 'xtDataCell')
+                if ~isa(dataCellCell{c}, 'ppDataCell')
                     disp("Error: Unlike DataCells provided")
                     dcCombine = []; 
                     return

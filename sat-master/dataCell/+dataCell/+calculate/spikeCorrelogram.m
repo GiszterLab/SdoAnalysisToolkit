@@ -41,16 +41,22 @@
 
 
 
-function [hh, sampPct] = spikeCorrelogram(ref_st, que_st, vars)
+function [hh, sampPct] = spikeCorrelogram(ref_st, que_st, params, vars)
 arguments
     ref_st          % reference
     que_st          % reference
+    %
+    params          = []; 
+    %
     vars.dt         = 0.005; 
     vars.leadDura   = 0.200; 
     vars.lagDura    = 0.200; 
     vars.autoISI    = 0; % Temporary; for debugging; 
     vars.norm       = 0; 
 end
+
+
+vars = parseArgs(vars, params); 
 
 nSpikes_ref = length(ref_st); 
 nSpikes_que = length(que_st); 

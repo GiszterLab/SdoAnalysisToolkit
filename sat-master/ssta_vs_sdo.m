@@ -53,7 +53,6 @@ MAP_METHOD  = 'linearsigned'; %[log,linear,logsigned,linearsigned]
 %___
 DATA_FIELD = 'envelope'; % {'envelope','raw'}; 
 
-COMPOSITE   = 1; %[0/1] %/whether to assemble figures into subplot
 LEVEL = 0; 
 RECTIFY = 0; 
 
@@ -69,10 +68,10 @@ if ~exist('xtData', 'var') || ~exist('ppData', 'var')
 
     xtDataCell0 = load(ffile1); 
     ppDataCell0 = load(ffile2); 
-    xtfield = fields(xtDataCell0); 
-    ppfield = fields(ppDataCell0); 
-    xtData = xtDataCell0.(xtfield{1}); 
-    ppData = ppDataCell0.(ppfield{1}); 
+    xtfield     = fields(xtDataCell0); 
+    ppfield     = fields(ppDataCell0); 
+    xtData      = xtDataCell0.(xtfield{1}); 
+    ppData      = ppDataCell0.(ppfield{1}); 
 end
 
 USE_TRIALS = 1:size(xtData,2); 
@@ -132,12 +131,12 @@ useSpikes = any(abs(at01) > baselineThresh);
 %mean values of amplitude around spike 
 
 
-if RECTIFY
+if RECTIFY == 1
     rest_mean = mean(abs(at0(1:40,:)), 'all'); 
     rest_std = mean(std(abs(at0(1:40,:)'))); 
 else
-    mn0 = mean(at0'); 
-    mn1 = mean(at1'); 
+    mn0 = mean(at0, 2); 
+    mn1 = mean(at1, 2); 
     rest_mean = mean(mn0(1:40)); %if > 30 ms; 
     rest_std = std(mn0(1:40)); 
 end
@@ -146,7 +145,7 @@ thresh_pos = rest_mean+2*rest_std;
 thresh_neg = rest_mean-2*rest_std; 
 
 
-if LEVEL
+if LEVEL == 1
     bsline = mean(at0(1:10,:)); 
     % intial state leveling
     bsArr = ones(N_T0_PTS+N_T1_PTS, length(bsline)) *  diag(bsline); 
@@ -155,10 +154,10 @@ else
 end
 %
 f = figure; 
-if RECTIFY
+if RECTIFY == 1
     plot(abs(at01-bsArr), 'color', [0.3, 0.3, 0.3, 0.3]);
     hold on; 
-    plot(mean(abs(at01-bsArr)'), 'color', 'k', 'lineWidth', 2); 
+    plot(mean(abs(at01-bsArr), 2), 'color', 'k', 'lineWidth', 2); 
     %plot(abs([mn0, mn1]), 'color', 'k', 'lineWidth', 2); 
 else
     plot(at01-bsArr, 'color', [0.3, 0.3, 0.3, 0.3]);

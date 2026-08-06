@@ -165,6 +165,10 @@ classdef predictionError2 < handle & matlab.mixin.Copyable
                     obs_px0_data = cellhcat(obs_px0_data); 
                     obs_px1_data = cellhcat(obs_px1_data); 
                     xx_x0Data    = cellhcat(xx_x0Data.data); 
+                else
+                    obs_px0_data = obs_px0_data{1}; 
+                    obs_px1_data = obs_px1_data{1}; 
+                    xx_x0Data    = xx_x0Data.data{1}; 
                 end
                 obs_x0_data = pxTools.getXfromPx(obs_px0_data, STATE_ASSIGNMENT); 
                 obs_x1_data = pxTools.getXfromPx(obs_px1_data, STATE_ASSIGNMENT);                 

@@ -258,13 +258,21 @@ classdef analyzer < handle & matlab.mixin.Copyable
                 disp("Data already imported"); return;
             end
             
+            if isa(xtdc, 'xtDataCell') 
+                xtdc = xtdc.getVersion(2); 
+            end
+            if isa(ppdc, 'ppDatacell') 
+                ppdc = ppdc.getVersion(2); 
+            end
+            
             N_XT = length(useXtChannels); N_PP = length(usePpChannels);
             % __ Expand computers __ 
             % // We have to modify this to avoid pointing to the same handl
-            
+            %
             unit_proto = obj.unitSDO.sdo; 
             shff_proto = obj.shuffleSDO.sdo; 
             bkgd_proto = obj.backgroundSDO.sdo; 
+            
             if (obj.nXtChannels < N_XT) && (obj.nPpChannels < N_PP)
                 % -- force recopy
                 for m = 1:N_XT
@@ -274,7 +282,9 @@ classdef analyzer < handle & matlab.mixin.Copyable
                         obj.backgroundSDO.sdo(m,u)  = copy(bkgd_proto); 
                     end
                 end
+                
             end
+            %}
             %
             obj.stateMapping = xtdc.stateMap; 
             %

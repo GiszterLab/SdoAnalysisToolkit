@@ -51,12 +51,17 @@ pR = p.Results;
 N_STD = pR.N_STD; 
 SCALAR = pR.SCALAR; %basically unnecessary here
 
-%% Prepare Discretely Sampled ConSig
+%% Prepare Discretely Sampled ConSig (Max expected)
 xt_length = round(T_MAX * SIG_HZ); %number bins = num sec * num *bins/sec
 
 xt = zeros(1, xt_length); 
 %st_conform = round(timestamps*SIG_HZ); %convert spiketimes into indexed impulse times
 st_conform = ceil(timestamps*SIG_HZ); 
+
+if any(st_conform > xt_length)
+    st_conform = st_conform(st_conform <= xt_length); % Trim out-of-bounds
+end
+
 if length(unique(st_conform)) == length(st_conform)
     xt(st_conform) = 1; 
     %xt(st_conform(st_conform>0)) = 1; 

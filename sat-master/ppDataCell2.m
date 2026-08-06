@@ -402,7 +402,6 @@ classdef ppDataCell2 < handle & matlab.mixin.Copyable %& dataCellSuperClass & da
             end
             plot_spikeISI(obj.data, useTrials, useRows, 'useField', obj.dataField, 'type', method); 
         end
-        
         %__ Plot all
         function plot(obj, useTrials, useRows, PLOT_ALL)
             arguments

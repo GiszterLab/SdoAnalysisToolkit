@@ -2,7 +2,7 @@
 %
 % Primary Data Dependencies 
 %
-% Used a plugin for public classes.
+% Used a plugin composite for public classes.
 %
 % primaryData is used for the classes which directly interact with data,
 % ensuring good handling, interconversion, and sampling; 
@@ -799,7 +799,7 @@ classdef primaryData < handle & matlab.mixin.Copyable
             trLenPt = ceil(obj.trTimeLen*obj.fs+1); 
 
             N_TEN_DIM = ndims(ten); 
-            [sz_x, sz_y, sz_z] = size(ten); 
+            %[sz_x, sz_y, sz_z] = size(ten); 
             
             
             if N_TEN_DIM == 3

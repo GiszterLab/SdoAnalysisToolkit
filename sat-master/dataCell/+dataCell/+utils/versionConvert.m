@@ -1,6 +1,6 @@
 %% versionConvert
 % Support script for handling upgrade/downgrades between older and better
-% methods; 
+% methods; e.g. xtDataCell <> xtDataCell2
 
 function obj_out = versionConvert(obj, VERSION)
     arguments
@@ -80,7 +80,7 @@ function obj_out = versionConvert(obj, VERSION)
                     return
                 elseif (VERSION == 1) % v.2 --> v.1
                     obj_out = ppDataCell(obj.nTrials, obj.nChannels); 
-                    obj_out.import([obj.data.data; obj.data.metdata]); 
+                    obj_out.import([obj.data.data; obj.data.metadata]); 
                     for f = 1:length(sfields)
                         try
                             obj_out.(sfields{f}) = obj.shuffler.(sfields{f}); 

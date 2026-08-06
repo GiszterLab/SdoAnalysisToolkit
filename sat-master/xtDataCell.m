@@ -168,7 +168,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                        sigArr = repmat(sigLv, obj.nTrials,1); 
                    case {'pTrial'}
                        sigArr    = zeros(obj.nTrials, obj.nBins+1); 
-                       %sigArr   = zeros(obj.nBins+1, obj.nTrials);
                        for tr = 1:obj.nTrials
                            sigLv = pxTools.getXtSignalLevels(xtMaxArr(tr), xtMinArr(tr), obj.nBins, obj.mapMethod); 
                            sigArr(tr,:) = sigLv; 
@@ -210,7 +209,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             for tr = 1:obj.nTrials 
                 % --> upgraded callAfilter
                 xt = squeeze(xtData(:,:,tr)); 
-                fxt = callAfilter(xt,FILTERTYPE, obj.fs, 'nPoints', N_POINTS, 'auxVar', F_VAR); 
+                fxt = callAfilter(xt,FILTERTYPE, N_POINTS, 'fs', obj.fs); %, 'nPoints', ); %, 'auxVar', F_VAR); 
                 xtData2(:,:,tr) = fxt(:,1:size(xt,2)); 
             end
             obj.importTensor(xtData2); 
@@ -290,8 +289,13 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             dataField = obj.dataField; 
             for tr = 1:obj.nTrials
                 for ch = 1:obj.nChannels
-                    maxV(ch,tr) = max(obj.data{1,tr}(ch).(dataField)); 
-                    minV(ch,tr) = min(obj.data{1,tr}(ch).(dataField)); 
+                    if ~isempty(obj.data{1,tr}(ch).(dataField))
+                        maxV(ch,tr) = max(obj.data{1,tr}(ch).(dataField)); 
+                        minV(ch,tr) = min(obj.data{1,tr}(ch).(dataField));
+                    else
+                        maxV = 0;
+                        minV = 0; 
+                    end
                 end
             end
             obj.channelAmpMax = maxV; 
@@ -327,7 +331,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
 
                 case {'std'}
                     xt = getTensor(obj); 
-                    %W = zeros(obj.nChannels); 
                     V1 = std(xt, [], 3); 
                     V0 = mean(V1,2); 
                     obj.weightMatrix = diag(1./V0); 
@@ -584,10 +587,7 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             end
             if ~(obj.fs == xtdc.fs)
                 xtdc.resample(obj.fs); 
-                1;
             end
-            
-           
             
             for tr = 1:obj.nTrials
                 if ~(obj.trTimeLen(tr) == xtdc.trTimeLen(tr))
@@ -626,13 +626,6 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             xtdc_out = dataCell.utils.versionConvert(obj, VERSION); 
         end
         
-        %% __ Write xtdata to a CSV file
-        % __>> Allow for a tidy data format. 
-        %{
-        function write2csv()
-                writematrix
-        end
-        %}
         %% ___ Plotter/ Visualization Methods; 
         function plot(obj, useTrials, useChannels, OFFSET, vars)
             arguments
@@ -661,13 +654,17 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             end
 
             dataArr = cellvcat(dataCellArr(useChannels,:)); 
-            xtDataCell.plot_with_offset(dataArr, OFFSET); 
+            
+            % Upgrade for nans
+            nnLI = any(~isnan(dataArr));
+            
             %
             if ~isempty(OFFSET)
                 offset = OFFSET; 
             else
-                offset = 0.5*max( abs(diff(dataArr,1)), [], 'all'); 
+                offset = 0.5*max( abs(diff(dataArr(:,nnLI),1)), [], 'all'); 
             end
+            xtDataCell.plot_with_offset(dataArr, OFFSET); 
             %__ Probably useful for a parser here
             if vars.trialTicks
                 trPopNum = obj.trTimeLen(useTrials); 
@@ -725,9 +722,11 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
             end
             N_PLOT_ROWS = size(dataArr, 1); 
 
+            nnLI = any(~isnan(dataArr)); 
+            
             %// Estimate the ideal offset for co-plotting
             if isempty(OFFSET)      
-                maxVal = max(max(abs(diff(dataArr,1)))); 
+                maxVal = max(max(abs(diff(dataArr(:,nnLI),1)))); 
                 offset = 0.5*maxVal; 
             else
                 offset = OFFSET; 
@@ -753,13 +752,14 @@ classdef xtDataCell < handle & matlab.mixin.Copyable & dataCell.deprecated.dataC
                 xMax = max(xt); 
                 xMin = min(xt); 
             end
-            % __ Patch 6.8.24
-
             yvect = -(N_PLOT_ROWS-1)*offset:offset:0; 
             yticks(yvect); 
 
             % __ 
-
+            if xMin == +inf; xMin = -inf; end
+            if xMax == -inf; xMax = +inf; end 
+            
+            
             %// Rewindow axes to center on data 
             axis([-inf, inf,xMin, xMax]); 
             ylabel(strcat("Channel Offset = ", num2str(offset))); 
